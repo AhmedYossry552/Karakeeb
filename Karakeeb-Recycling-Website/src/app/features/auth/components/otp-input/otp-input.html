@@ -1,0 +1,42 @@
+<div class="space-y-4 text-center">
+  <p class="text-sm text-gray-500">{{ t('auth.otp.instruction') }}</p>
+  
+  <div class="flex gap-2 justify-center" dir="ltr">
+    <input
+      *ngFor="let control of otpArray.controls; let i = index"
+      #otpInput
+      type="text"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      maxlength="1"
+      [value]="control.value || ''"
+      class="w-10 h-10 text-lg border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-center"
+      dir="ltr"
+      (input)="handleChange($event, i)"
+      (keydown)="handleKeyDown($event, i)"
+      (paste)="handlePaste($event)"
+    />
+  </div>
+
+  <p class="text-sm text-gray-500">
+    {{ t('auth.otp.resend_question') }}
+    <button
+      type="button"
+      (click)="handleResendOtp()"
+      class="text-green-600 hover:underline font-medium"
+      [disabled]="loading"
+    >
+      {{ t('auth.otp.resend_button') }}
+    </button>
+  </p>
+  
+  <button
+    type="button"
+    (click)="handleSubmit()"
+    [disabled]="!canSubmit || loading"
+    class="bg-green-700 text-white m-auto w-50 h-10 rounded-lg hover:bg-green-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed px-5"
+  >
+    {{ loading ? t('auth.otp.confirming') : t('auth.otp.confirm') }}
+  </button>
+</div>
+

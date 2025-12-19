@@ -1,0 +1,212 @@
+.ewallet-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, rgb(240, 253, 244), rgb(219, 234, 254));
+  padding: 2rem 1rem;
+}
+
+.ewallet-card {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.ewallet-header {
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-icon {
+  font-size: 2rem;
+}
+
+.header-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: rgb(31, 41, 55);
+  margin: 0;
+}
+
+.header-subtitle {
+  color: rgb(75, 85, 99);
+}
+
+.balance-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.balance-header {
+  margin-bottom: 1.5rem;
+}
+
+.balance-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(22, 163, 74);
+  margin-bottom: 0.5rem;
+}
+
+.balance-subtitle {
+  color: rgb(107, 114, 128);
+  font-size: 0.875rem;
+}
+
+.balance-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.balance-value {
+  font-size: 3rem;
+  font-weight: bold;
+  color: rgb(22, 163, 74);
+}
+
+.balance-currency {
+  font-size: 1.5rem;
+  color: rgb(107, 114, 128);
+}
+
+.balance-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-cashout,
+.btn-recycle {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  border: none;
+}
+
+.btn-cashout {
+  background-color: rgb(22, 163, 74);
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: rgb(21, 128, 61);
+  }
+
+  &:disabled {
+    background-color: rgb(209, 213, 219);
+    color: rgb(156, 163, 175);
+    cursor: not-allowed;
+  }
+}
+
+.btn-recycle {
+  background-color: white;
+  border: 2px solid rgb(22, 163, 74);
+  color: rgb(22, 163, 74);
+
+  &:hover {
+    background-color: rgb(240, 253, 244);
+  }
+}
+
+.activity-section {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.activity-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(31, 41, 55);
+  margin: 0;
+}
+
+.view-all-btn {
+  background: none;
+  border: none;
+  color: rgb(22, 163, 74);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover {
+    color: rgb(21, 128, 61);
+  }
+}
+
+.empty-activity {
+  text-align: center;
+  padding: 2rem;
+  color: rgb(107, 114, 128);
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: rgb(249, 250, 251);
+  border-radius: 0.5rem;
+}
+
+.transaction-icon {
+  font-size: 1.5rem;
+}
+
+.transaction-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.transaction-type {
+  font-weight: 500;
+  color: rgb(31, 41, 55);
+}
+
+.transaction-date {
+  font-size: 0.75rem;
+  color: rgb(107, 114, 128);
+}
+
+.transaction-amount {
+  font-weight: 600;
+  font-size: 1.125rem;
+
+  &.positive {
+    color: rgb(22, 163, 74);
+  }
+
+  &.negative {
+    color: rgb(220, 38, 38);
+  }
+}

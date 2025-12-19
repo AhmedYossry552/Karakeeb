@@ -1,0 +1,307 @@
+.marketplace-section {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+
+  @media (min-width: 768px) {
+    padding: 6rem 1rem;
+  }
+
+  @media (min-width: 1920px) {
+    max-width: 96rem;
+    padding: 8rem 2rem;
+  }
+
+  @media (min-width: 2560px) {
+    max-width: 120rem;
+    padding: 10rem 3rem;
+  }
+
+  @media (min-width: 3072px) {
+    max-width: 160rem;
+    padding: 12rem 4rem;
+  }
+}
+
+.marketplace-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.marketplace-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--section-gradient, #22c55e);
+
+  @media (min-width: 768px) {
+    font-size: 3rem;
+  }
+}
+
+.marketplace-subtitle {
+  font-size: 1.25rem;
+  color: rgb(75, 85, 99);
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.marketplace-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.marketplace-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-base-100, white);
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color, rgb(243, 244, 246));
+  transform: translateY(0);
+
+  &:hover {
+    transform: translateY(-0.5rem);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.marketplace-card:hover .card-overlay {
+  opacity: 1;
+}
+
+.card-content {
+  position: relative;
+  padding: 2rem;
+  text-align: center;
+}
+
+.card-icon {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+  background: linear-gradient(to bottom right, var(--gradient-from), var(--gradient-to));
+}
+
+.marketplace-card:hover .card-icon {
+  transform: scale(1.1);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: rgb(17, 24, 39);
+}
+
+.card-description {
+  color: rgb(75, 85, 99);
+  margin-bottom: 1.5rem;
+  line-height: 1.75;
+}
+
+.card-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: rgb(55, 65, 81);
+}
+
+.feature-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
+
+.marketplace-cta {
+  text-align: center;
+}
+
+.cta-content {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  background: linear-gradient(to right, rgb(249, 250, 251), rgb(243, 244, 246));
+  border-radius: 1.5rem;
+  border: 1px solid rgb(229, 231, 235);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    text-align: left;
+  }
+}
+
+.cta-text {
+  text-align: center;
+
+  @media (min-width: 640px) {
+    flex: 1;
+    text-align: left;
+  }
+}
+
+.cta-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: rgb(17, 24, 39);
+}
+
+.cta-description {
+  color: rgb(75, 85, 99);
+}
+
+.cta-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to right, #10b981, #2563eb);
+  color: white;
+  font-weight: 700;
+  padding: 1rem 2rem;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+
+  &:hover {
+    background: linear-gradient(to right, #059669, #1d4ed8);
+    transform: scale(1.05);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    
+    .arrow-icon {
+      transform: translateX(4px);
+    }
+  }
+}
+
+.cta-button-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.cta-button:hover .cta-button-overlay {
+  transform: scaleX(1);
+}
+
+.arrow-icon {
+  transition: transform 0.2s ease;
+}
+
+.cta-button-text {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Gradient classes
+.from-green-400 {
+  --gradient-from: #4ade80;
+}
+
+.to-emerald-500 {
+  --gradient-to: #10b981;
+}
+
+.from-blue-400 {
+  --gradient-from: #60a5fa;
+}
+
+.to-indigo-500 {
+  --gradient-to: #6366f1;
+}
+
+.from-amber-400 {
+  --gradient-from: #fbbf24;
+}
+
+.to-orange-500 {
+  --gradient-to: #f97316;
+}
+
+.bg-green-400 {
+  background-color: #4ade80;
+}
+
+.bg-blue-400 {
+  background-color: #60a5fa;
+}
+
+.bg-amber-400 {
+  background-color: #fbbf24;
+}
+
+// Dark Mode Styles
+:host-context(.dark) {
+  .marketplace-subtitle {
+    color: var(--text-gray-600, #d1d5db);
+  }
+
+  .marketplace-card {
+    background: var(--color-base-100, #1f2937);
+    border-color: var(--border-color, #374151);
+  }
+
+  .card-title {
+    color: var(--foreground, #f9fafb);
+  }
+
+  .card-description {
+    color: var(--text-gray-600, #d1d5db);
+  }
+
+  .feature-item {
+    color: var(--text-gray-600, #d1d5db);
+  }
+
+  .cta-content {
+    background: linear-gradient(to right, var(--color-base-200, #374151), var(--color-base-300, #4b5563));
+    border-color: var(--border-color, #4b5563);
+  }
+
+  .cta-title {
+    color: var(--foreground, #f9fafb);
+  }
+
+  .cta-description {
+    color: var(--text-gray-600, #d1d5db);
+  }
+}
+

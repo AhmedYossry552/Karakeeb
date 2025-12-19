@@ -1,0 +1,99 @@
+@if (isOpen) {
+  <div class="modal-overlay" (click)="handleClose()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-info">
+          <div class="header-icon">
+            {{ getTotalQuantity() }}
+          </div>
+          <div>
+            <h3>{{ translation.t('itemsModal.headerTitle') || 'Order Items' }}</h3>
+            <p>{{ translation.t('itemsModal.headerSubtitle') || 'A detailed list of the items in this order' }}</p>
+          </div>
+        </div>
+        <button (click)="handleClose()" class="close-button" aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (isLoading()) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading order details...</p>
+          </div>
+        } @else if (items().length === 0) {
+          <div class="empty-state">
+            <p>No items found in this order.</p>
+          </div>
+        } @else {
+          <div class="items-list">
+            @for (item of items(); track item._id || $index) {
+              <div class="item-card">
+                <div class="item-header-row">
+                  <h4 class="item-name">{{ getItemName(item) }}</h4>
+                  <img [src]="item.image" [alt]="getItemName(item)" class="item-image" />
+                  @if (getCategoryName(item)) {
+                    <span class="category-tag">{{ getCategoryName(item) }}</span>
+                  }
+                </div>
+
+                <div class="item-details-grid">
+                  <div class="detail-card">
+                    <div class="detail-header">
+                      <div class="detail-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 010 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4z" />
+                        </svg>
+                      </div>
+                      <div class="detail-label">QUANTITY</div>
+                    </div>
+                    <div class="detail-value">{{ item.quantity }} {{ getMeasurementUnit(item) }}</div>
+                  </div>
+
+                  <div class="detail-card">
+                    <div class="detail-header">
+                      <div class="detail-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div class="detail-label">UNIT PRICE</div>
+                    </div>
+                    <div class="detail-value">EGP{{ item.price }}</div>
+                  </div>
+
+                  <div class="detail-card">
+                    <div class="detail-header">
+                      <div class="detail-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-5m-6 5v-5m6 5H9m6 0h3a2 2 0 002-2V9a2 2 0 00-2-2h-3m-6 0H6a2 2 0 00-2 2v11a2 2 0 002 2h3m6 0h3" />
+                        </svg>
+                      </div>
+                      <div class="detail-label">POINTS</div>
+                    </div>
+                    <div class="detail-value">{{ (item.points || 0) * (item.quantity || 0) }}</div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="order-total">
+            <div class="total-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-5m-6 5v-5m6 5H9m6 0h3a2 2 0 002-2V9a2 2 0 00-2-2h-3m-6 0H6a2 2 0 00-2 2v11a2 2 0 002 2h3m6 0h3" />
+              </svg>
+            </div>
+            <div class="total-info">
+              <div class="total-label">Order Total</div>
+              <div class="total-items">{{ getTotalQuantity() }} items</div>
+              <div class="total-price">{{ getTotalPrice() }} EGP</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+

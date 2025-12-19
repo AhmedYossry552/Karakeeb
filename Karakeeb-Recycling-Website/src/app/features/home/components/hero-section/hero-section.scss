@@ -1,0 +1,229 @@
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: 90vh;
+  min-height: 700px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), transparent);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: white;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.hero-text {
+  max-width: 64rem;
+  margin-bottom: 2.5rem;
+
+  @media (min-width: 1920px) {
+    max-width: 80rem;
+  }
+
+  @media (min-width: 2560px) {
+    max-width: 96rem;
+  }
+
+  @media (min-width: 3072px) {
+    max-width: 128rem;
+  }
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+
+  @media (min-width: 768px) {
+    font-size: 4.5rem;
+  }
+
+  @media (min-width: 1920px) {
+    font-size: 5.5rem;
+  }
+
+  @media (min-width: 2560px) {
+    font-size: 6.5rem;
+  }
+
+  @media (min-width: 3072px) {
+    font-size: 8rem;
+  }
+}
+
+.gradient-text {
+  display: block;
+  background: linear-gradient(to right, #4ade80, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  margin-bottom: 2.5rem;
+  color: rgb(229, 231, 235);
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.75;
+
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (min-width: 1920px) {
+    font-size: 1.75rem;
+    max-width: 56rem;
+  }
+
+  @media (min-width: 2560px) {
+    font-size: 2rem;
+    max-width: 64rem;
+  }
+
+  @media (min-width: 3072px) {
+    font-size: 2.25rem;
+    max-width: 80rem;
+  }
+}
+
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+  }
+}
+
+.btn {
+  font-weight: 600;
+  padding: 1rem 2.5rem;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  transform: scale(1);
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(to right, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.2);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover {
+    background: linear-gradient(to right, #16a34a, #15803d);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    
+    &::before {
+      transform: scaleX(1);
+    }
+  }
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: white;
+    color: rgb(17, 24, 39);
+    border-color: white;
+  }
+}
+
+.hero-decoration {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(12px);
+  opacity: 0.05;
+}
+
+.hero-decoration-1 {
+  top: 5rem;
+  left: 2.5rem;
+  width: 5rem;
+  height: 5rem;
+  background: #4ade80;
+}
+
+.hero-decoration-2 {
+  bottom: 8rem;
+  right: 4rem;
+  width: 8rem;
+  height: 8rem;
+  background: #60a5fa;
+}
+
+// Dark Mode Styles
+:host-context(.dark) {
+  .hero-overlay {
+    background: linear-gradient(to bottom right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6), transparent);
+  }
+
+  .hero-description {
+    color: rgb(209, 213, 219);
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+  }
+}
+

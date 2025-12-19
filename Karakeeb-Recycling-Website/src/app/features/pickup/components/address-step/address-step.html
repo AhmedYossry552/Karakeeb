@@ -1,0 +1,352 @@
+<div class="address-step">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <p>{{ translation.t('Loading...') || 'Loading...' }}</p>
+    </div>
+  } @else {
+    <!-- Saved Addresses List View -->
+    @if (savedAddresses().length > 0 && !showAddressForm()) {
+      <div class="saved-addresses-section">
+        <h3 class="section-title">{{ translation.t('Your Saved Addresses') || 'Your Saved Addresses' }}</h3>
+        
+        <div class="addresses-list">
+          @for (address of (savedAddresses() | slice:0:2); track address.id || address.Id || address._id || $index) {
+            <div 
+              class="address-card" 
+              [class.selected]="selectedAddressId() === (address.id || address.Id || address._id)"
+              [class.expanded]="expandedAddressId() === (address.id || address.Id || address._id)"
+            >
+              <div class="address-info" (click)="selectSavedAddress(address)">
+                <p class="address-main">
+                  {{ address.Street || address.street }}, {{ address.Building || address.building }} 
+                  @if (address.Apartment || address.apartment) {
+                    #{{ address.Apartment || address.apartment }}
+                  }
+                </p>
+                <p class="address-sub">
+                  {{ translation.t('Area') || 'Area' }}: {{ address.Area || address.area }}, {{ translation.t('City') || 'City' }}: {{ address.City || address.city }}
+                </p>
+                @if (address.Landmark || address.landmark) {
+                  <p class="address-landmark">
+                    📍 {{ translation.t('Landmark') || 'Landmark' }}: {{ address.Landmark || address.landmark }}
+                  </p>
+                }
+                @if (expandedAddressId() === (address.id || address.Id || address._id)) {
+                  <div class="address-full-details">
+                    <div class="detail-row">
+                      <strong>{{ translation.t('Street') || 'Street' }}:</strong>
+                      <span>{{ address.Street || address.street || '-' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <strong>{{ translation.t('Building') || 'Building' }}:</strong>
+                      <span>{{ address.Building || address.building || '-' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <strong>{{ translation.t('Floor') || 'Floor' }}:</strong>
+                      <span>{{ address.Floor || address.floor || '-' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <strong>{{ translation.t('Apartment') || 'Apartment' }}:</strong>
+                      <span>{{ address.Apartment || address.apartment || '-' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <strong>{{ translation.t('Area') || 'Area' }}:</strong>
+                      <span>{{ address.Area || address.area || '-' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <strong>{{ translation.t('City') || 'City' }}:</strong>
+                      <span>{{ address.City || address.city || '-' }}</span>
+                    </div>
+                    @if (address.Landmark || address.landmark) {
+                      <div class="detail-row">
+                        <strong>{{ translation.t('Landmark') || 'Landmark' }}:</strong>
+                        <span>{{ address.Landmark || address.landmark }}</span>
+                      </div>
+                    }
+                    @if (address.Notes || address.notes) {
+                      <div class="detail-row">
+                        <strong>{{ translation.t('Notes') || 'Notes' }}:</strong>
+                        <span>{{ address.Notes || address.notes }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="address-actions-inline">
+                <button 
+                  type="button"
+                  class="btn-expand"
+                  (click)="toggleAddressDetails(address); $event.stopPropagation()"
+                  [title]="expandedAddressId() === (address.id || address.Id || address._id) ? (translation.t('Hide Details') || 'Hide Details') : (translation.t('Show Details') || 'Show Details')"
+                >
+                  {{ expandedAddressId() === (address.id || address.Id || address._id) ? '▼' : '▶' }}
+                </button>
+                <div class="address-radio" (click)="$event.stopPropagation()">
+                  <input 
+                    type="radio" 
+                    [checked]="selectedAddressId() === (address.id || address.Id || address._id)"
+                    [name]="'address'"
+                    [value]="address.id || address.Id || address._id"
+                    (click)="selectSavedAddress(address); $event.stopPropagation()"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="address-actions">
+          <button 
+            type="button" 
+            (click)="editSelectedAddress()" 
+            class="btn-secondary"
+            [disabled]="!selectedAddressId() || loading()"
+          >
+            {{ translation.t('Edit Address') || 'Edit Address' }}
+          </button>
+          <button 
+            type="button" 
+            (click)="createNewAddress()" 
+            class="btn-secondary"
+            [disabled]="loading()"
+          >
+            {{ translation.t('Add New Address') || 'Add New Address' }}
+          </button>
+        </div>
+
+        <div class="form-actions">
+          <button 
+            type="button" 
+            (click)="onNext()" 
+            class="btn-primary"
+            [disabled]="!selectedAddressId() || loading()"
+          >
+            {{ translation.t('Next Step') || 'Next Step' }}
+          </button>
+          <button 
+            type="button" 
+            (click)="onNext()" 
+            class="btn-primary"
+            [disabled]="!selectedAddressId() || loading()"
+            style="margin-left: 0.5rem;"
+          >
+            {{ translation.t('Complete Address') || 'Complete Address' }}
+          </button>
+        </div>
+      </div>
+    } @else if (savedAddresses().length === 0 && !showAddressForm()) {
+      <!-- No addresses - show message -->
+      <div class="no-addresses-message">
+        <p>{{ translation.t('No saved addresses found') || 'No saved addresses found' }}</p>
+        <p class="subtitle">{{ translation.t('Create your first address to proceed') || 'Create your first address to proceed' }}</p>
+        <button 
+          type="button" 
+          (click)="createNewAddress()" 
+          class="btn-primary"
+          style="margin-top: 1rem;"
+        >
+          {{ translation.t('Add New Address') || 'Add New Address' }}
+        </button>
+      </div>
+    }
+
+    <!-- Single Form for Create/Edit -->
+    @if (showAddressForm()) {
+      <form [formGroup]="form" class="address-form">
+        <fieldset class="address-fieldset">
+          <legend class="fieldset-legend">
+            @if (isCreatingNew()) {
+              {{ translation.t('Add New Address') || 'Add New Address' }}
+            } @else {
+              {{ translation.t('Edit Address') || 'Edit Address' }}
+            }
+          </legend>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="city" class="form-label">
+                {{ translation.t('Select City') || 'Select City' }} <span class="required">*</span>
+              </label>
+              <select
+                id="city"
+                formControlName="city"
+                (change)="onCityChange()"
+                class="form-select"
+                [class.error]="cityControl?.invalid && cityControl?.touched"
+              >
+                    <option value="">{{ translation.t('Select City') || 'Select City' }}</option>
+                @for (city of cities; track city) {
+                  <option [value]="city">{{ city }}</option>
+                }
+              </select>
+              @if (cityControl?.invalid && cityControl?.touched) {
+                <p class="error-text">{{ translation.t('City is required') || 'City is required' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="area" class="form-label">
+                {{ translation.t('Select Area') || 'Select Area' }} <span class="required">*</span>
+              </label>
+              <select
+                id="area"
+                formControlName="area"
+                class="form-select"
+                [class.error]="areaControl?.invalid && areaControl?.touched"
+              >
+                <option value="">{{ translation.t('Select Area') || 'Select Area' }}</option>
+                @for (area of availableAreas; track area) {
+                  <option [value]="area">{{ area }}</option>
+                }
+              </select>
+              @if (areaControl?.invalid && areaControl?.touched) {
+                <p class="error-text">{{ translation.t('Area is required') || 'Area is required' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="street" class="form-label">
+                {{ translation.t('Street') || 'Street' }} <span class="required">*</span>
+              </label>
+              <input
+                id="street"
+                type="text"
+                formControlName="street"
+                class="form-input"
+                [class.error]="streetControl?.invalid && streetControl?.touched"
+                [placeholder]="translation.t('Street') || 'Enter street name'"
+              />
+              @if (streetControl?.invalid && streetControl?.touched) {
+                <p class="error-text">{{ translation.t('Street is required') || 'Street is required' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="building" class="form-label">
+                {{ translation.t('Building') || 'Building' }} <span class="required">*</span>
+              </label>
+              <input
+                id="building"
+                type="text"
+                formControlName="building"
+                maxlength="25"
+                class="form-input"
+                [class.error]="buildingControl?.invalid && buildingControl?.touched"
+                [placeholder]="translation.t('e.g., 123') || 'e.g., 123'"
+              />
+              @if (buildingControl?.invalid && buildingControl?.touched) {
+                <p class="error-text">{{ translation.t('Building is required') || 'Building is required' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="floor" class="form-label">
+                {{ translation.t('Floor') || 'Floor' }} <span class="required">*</span>
+              </label>
+              <input
+                id="floor"
+                type="text"
+                formControlName="floor"
+                maxlength="3"
+                class="form-input"
+                [class.error]="floorControl?.invalid && floorControl?.touched"
+                [placeholder]="translation.t('e.g., 5') || 'e.g., 5'"
+              />
+              @if (floorControl?.invalid && floorControl?.touched) {
+                <p class="error-text">{{ translation.t('Floor is required') || 'Floor is required' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="apartment" class="form-label">
+                {{ translation.t('Apartment') || 'Apartment' }} <span class="required">*</span>
+              </label>
+              <input
+                id="apartment"
+                type="text"
+                formControlName="apartment"
+                maxlength="5"
+                class="form-input"
+                [class.error]="apartmentControl?.invalid && apartmentControl?.touched"
+                [placeholder]="translation.t('e.g., 10') || 'e.g., 10'"
+              />
+              @if (apartmentControl?.invalid && apartmentControl?.touched) {
+                <p class="error-text">{{ translation.t('Apartment is required') || 'Apartment is required' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="landmark" class="form-label">
+                {{ translation.t('Landmark (Optional)') || 'Landmark (Optional)' }}
+              </label>
+              <input
+                id="landmark"
+                type="text"
+                formControlName="landmark"
+                class="form-input"
+                [placeholder]="translation.t('Enter nearby landmark') || 'Enter nearby landmark'"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="notes" class="form-label">
+                {{ translation.t('Notes (Optional)') || 'Notes (Optional)' }}
+              </label>
+              <textarea
+                id="notes"
+                formControlName="notes"
+                maxlength="200"
+                class="form-input"
+                [placeholder]="translation.t('Notes (Optional)') || 'Notes (Optional)'"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button 
+              type="button" 
+              (click)="saveAddress()" 
+              [disabled]="form.invalid || loading()" 
+              class="btn-secondary"
+            >
+              @if (loading()) {
+                {{ translation.t('Saving...') || 'Saving...' }}
+              } @else {
+                @if (isCreatingNew()) {
+                  {{ translation.t('Save Address') || 'Save Address' }}
+                } @else {
+                  {{ translation.t('Update Address') || 'Update Address' }}
+                }
+              }
+            </button>
+            <button 
+              type="button" 
+              (click)="onNext()" 
+              [disabled]="form.invalid || loading()" 
+              class="btn-primary"
+            >
+              @if (loading()) {
+                {{ translation.t('Saving...') || 'Saving...' }}
+              } @else {
+                {{ translation.t('Complete Address') || 'Complete Address' }}
+              }
+            </button>
+            @if (savedAddresses().length > 0) {
+              <button 
+                type="button" 
+                (click)="cancelEdit()" 
+                class="btn-secondary"
+                [disabled]="loading()"
+              >
+                {{ translation.t('Cancel') || 'Cancel' }}
+              </button>
+            }
+          </div>
+        </fieldset>
+      </form>
+    }
+  }
+</div>
+

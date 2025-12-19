@@ -1,0 +1,407 @@
+<div class="fixed bottom-5 right-5 z-50">
+  <!-- Items Display Card -->
+  @if (showItemsCard() && structuredData() && structuredData()!.length > 0) {
+    <app-items-display-card
+      [items]="structuredData()!"
+      (close)="showItemsCard.set(false)"
+    ></app-items-display-card>
+  }
+
+  <!-- Recording Card - Show when button is clicked -->
+  @if (showCard()) {
+    <div class="absolute bottom-20 right-0 rounded-2xl shadow-2xl border border-gray-200 w-80 mb-4 transform transition-all duration-300 ease-in-out bg-green-60">
+      <div class="flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-800">
+            @if (isRecording()) {
+              {{ translation.t('Recording...') || 'Recording...' }}
+            } @else if (audioBlob) {
+              {{ translation.t('Recording Complete') || 'Recording Complete' }}
+            } @else {
+              {{ translation.t('Voice Recording') || 'Voice Recording' }}
+            }
+          </h3>
+          <button
+            (click)="cancelRecording()"
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+            type="button"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Usage Display -->
+        @if (isAuthenticated && usage) {
+          <div class="flex items-center justify-between bg-white/50 rounded-lg p-3 border border-gray-200">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span class="text-sm font-medium text-gray-700">
+                {{ translation.t('Usage Today') || 'Usage Today' }}
+              </span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="flex space-x-1">
+                @for (dot of [].constructor(usage.limit); track $index) {
+                  <div
+                    class="w-2 h-2 rounded-full"
+                    [class.bg-blue-500]="$index < usage.count"
+                    [class.bg-gray-300]="$index >= usage.count"
+                  ></div>
+                }
+              </div>
+              <span class="text-sm font-bold text-gray-800">
+                {{ usage.count }}/{{ usage.limit }}
+              </span>
+            </div>
+          </div>
+        }
+
+        <!-- Reset Time Display -->
+        @if (isAuthenticated && usage && usage.remaining <= 0) {
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-sm text-orange-700">
+                {{ translation.t('Resets in') || 'Resets in' }} {{ usage.hoursUntilReset }} {{ translation.t('hours') || 'hours' }}
+              </span>
+            </div>
+          </div>
+        }
+
+        <!-- Login Required Message -->
+        @if (!isAuthenticated) {
+          <div class="text-center">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div class="flex items-center justify-center space-x-2 mb-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span class="text-sm font-medium text-blue-700">
+                  {{ translation.t('Login Required') || 'Login Required' }}
+                </span>
+              </div>
+              <p class="text-sm text-blue-600">
+                {{ translation.t('Please log in to use our voice AI assistant and enjoy 3 free transcriptions daily!') || 'Please log in to use our voice AI assistant and enjoy 3 free transcriptions daily! 🎤✨' }}
+              </p>
+            </div>
+          </div>
+        }
+
+        <!-- Info Message -->
+        @if (isAuthenticated && !isRecording() && !audioBlob) {
+          <div class="text-center space-y-3">
+            <p class="text-sm text-gray-600 bg-gradient-to-r from-primary/10 to-secondary/10 px-3 py-2 rounded-lg">
+              <span class="font-medium">{{ translation.t('Feeling lazy?') || 'Feeling lazy?' }}</span>
+              {{ translation.t('Let AI order instead of you') || 'Let AI order instead of you' }} 🤖
+            </p>
+
+            <!-- Manual text input -->
+            <div class="text-left">
+              <label class="block text-xs font-medium text-gray-700 mb-1">
+                {{ translation.t('Or type your order') || 'Or type your order' }}
+              </label>
+              <textarea
+                [value]="manualText()"
+                (input)="manualText.set($any($event.target).value)"
+                rows="2"
+                class="w-full text-sm border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/60 resize-none"
+                [placeholder]="translation.t('e.g. 3 KG plastic, 2 chairs, 1 laptop') || 'e.g. 3 KG plastic, 2 chairs, 1 laptop'"
+              ></textarea>
+              <button
+                type="button"
+                (click)="handleManualTextSubmit(manualText())"
+                class="mt-2 w-full bg-primary text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="loading() || isLoading"
+              >
+                @if (loading()) {
+                  {{ translation.t('AI Analyzing...') || 'AI Analyzing...' }}
+                } @else {
+                  {{ translation.t('Analyze Text') || 'Analyze Text' }}
+                }
+              </button>
+            </div>
+
+            <!-- Image upload input -->
+            <div class="text-left mt-2 image-upload-card">
+              <div class="flex items-center justify-between image-upload-header">
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">
+                    {{ translation.t('Or upload an image') || 'Or upload an image' }}
+                  </label>
+                  <p class="image-upload-hint text-xs text-gray-600">
+                    {{ translation.t('Take a clear photo of your recyclables for AI to detect them automatically.') || 'Take a clear photo of your recyclables for AI to detect them automatically.' }}
+                  </p>
+                </div>
+                <div class="image-upload-icon">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 7h4l2-2h6l2 2h4v11H3V7z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 11a3 3 0 100 6 3 3 0 000-6z" />
+                  </svg>
+                </div>
+              </div>
+
+              <label class="image-upload-dropzone mt-2">
+                <div class="flex items-center justify-between">
+                  <div class="text-xs text-gray-700">
+                    <span class="font-medium">
+                      {{ translation.t('Click to choose an image') || 'Click to choose an image' }}
+                    </span>
+                    <div class="text-[11px] text-gray-500">
+                      {{ translation.t('Max 1 image, JPG or PNG') || 'Max 1 image, JPG or PNG' }}
+                    </div>
+                  </div>
+                  <span class="image-upload-badge text-[11px] font-medium">
+                    {{ translation.t('Browse') || 'Browse' }}
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="handleImageFileChange($event)"
+                  class="sr-only"
+                />
+              </label>
+
+              @if (imagePreviewUrl) {
+                <div class="mt-2 flex items-center space-x-2 image-upload-preview">
+                  <img
+                    [src]="imagePreviewUrl"
+                    alt="Selected image preview"
+                    class="rounded-md object-cover border border-gray-200"
+                  />
+                  <div class="text-xs text-gray-700">
+                    <div class="font-medium">
+                      {{ translation.t('Image selected') || 'Image selected' }}
+                    </div>
+                    <div class="text-[11px] text-gray-500">
+                      {{ translation.t('Click \"Analyze Image\" to let AI detect the materials.') || 'Click \"Analyze Image\" to let AI detect the materials.' }}
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <button
+                type="button"
+                (click)="handleImageAnalyze()"
+                class="image-upload-action mt-2 w-full bg-secondary text-white font-medium hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="loading() || isLoading"
+              >
+                @if (loading()) {
+                  {{ translation.t('AI Analyzing...') || 'AI Analyzing...' }}
+                } @else {
+                  {{ translation.t('Analyze Image') || 'Analyze Image' }}
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Recording Timer -->
+        @if (canRecord()) {
+          <div class="flex items-center space-x-3">
+            @if (isRecording()) {
+              <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <span class="text-red-500 font-medium">REC</span>
+              </div>
+            }
+            <span class="text-2xl font-mono text-gray-700">
+              {{ formatTime(recordingTime()) }}
+            </span>
+          </div>
+        }
+
+        <!-- Loading States -->
+        @if (isLoading) {
+          <div class="flex items-center space-x-3 bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div class="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-sm font-medium text-blue-700">
+              {{ translation.t('Processing your voice...') || 'Processing your voice...' }}
+            </span>
+          </div>
+        }
+
+        @if (loading() && !isLoading) {
+          <div class="flex items-center space-x-3 bg-purple-50 p-3 rounded-lg border border-purple-200">
+            <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-sm font-medium text-purple-700">
+              {{ translation.t('AI is analyzing your order...') || 'AI is analyzing your order...' }}
+            </span>
+          </div>
+        }
+
+        <!-- Error Messages -->
+        @if (isError) {
+          <div class="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-sm font-medium">{{ isError }}</span>
+          </div>
+        }
+
+        @if (error() && !isError) {
+          <div class="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-sm font-medium">{{ error() }}</span>
+          </div>
+        }
+
+        <!-- Audio Visualizer -->
+        @if (canRecord()) {
+          <div class="flex items-center justify-center space-x-1 h-12">
+            @for (bar of [].constructor(20); track $index) {
+              <div
+                class="w-1 bg-gradient-to-t from-primary to-secondary rounded-full transition-all duration-150"
+                [class.animate-pulse]="isRecording()"
+                [style.height.px]="isRecording() ? (Math.random() * 30 + 10) : 8"
+                [style.animation-delay.ms]="$index * 100"
+              ></div>
+            }
+          </div>
+        }
+
+        <!-- Audio Player -->
+        @if (audioUrl && !isRecording()) {
+          <div class="bg-gray-50 rounded-xl p-4">
+            <audio
+              controls
+              [src]="audioUrl"
+              class="w-full"
+              preload="metadata"
+            ></audio>
+          </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="flex space-x-3">
+          @if (!isRecording() && !audioBlob) {
+            <button
+              (click)="startRecording()"
+              [disabled]="!canRecord()"
+              type="button"
+              class="flex-1 font-medium transition-colors flex items-center justify-center"
+              [class.bg-gray-300]="!canRecord()"
+              [class.text-gray-500]="!canRecord()"
+              [class.cursor-not-allowed]="!canRecord()"
+              [class.bg-green-600]="canRecord()"
+              [class.hover:bg-green-700]="canRecord()"
+              [class.text-white]="canRecord()"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              <span class="text-sm">{{ getButtonText() }}</span>
+            </button>
+          }
+
+          @if (isRecording()) {
+            <button
+              (click)="stopRecording()"
+              type="button"
+              class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium transition-colors flex items-center justify-center"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z" />
+              </svg>
+              <span>{{ translation.t('Stop Recording') || 'Stop Recording' }}</span>
+            </button>
+          }
+
+          @if (audioBlob && !isRecording()) {
+            <button
+              (click)="cancelRecording()"
+              [disabled]="isLoading || loading()"
+              type="button"
+              class="flex-1 font-medium transition-colors"
+              [class.bg-gray-300]="isLoading || loading()"
+              [class.text-gray-500]="isLoading || loading()"
+              [class.cursor-not-allowed]="isLoading || loading()"
+              [class.bg-gray-500]="!isLoading && !loading()"
+              [class.hover:bg-gray-600]="!isLoading && !loading()"
+              [class.text-white]="!isLoading && !loading()"
+            >
+              {{ translation.t('Cancel') || 'Cancel' }}
+            </button>
+
+            @if (!lastTranscription) {
+              <button
+                (click)="handleDoneClick()"
+                [disabled]="!canRecord() || isLoading || loading()"
+                type="button"
+                class="flex-1 font-medium transition-colors flex items-center justify-center"
+                [class.bg-gray-300]="!canRecord() || isLoading || loading()"
+                [class.text-gray-500]="!canRecord() || isLoading || loading()"
+                [class.cursor-not-allowed]="!canRecord() || isLoading || loading()"
+                [class.bg-green-600]="canRecord() && !isLoading && !loading()"
+                [class.hover:bg-green-700]="canRecord() && !isLoading && !loading()"
+                [class.text-white]="canRecord() && !isLoading && !loading()"
+              >
+                @if (isLoading || loading()) {
+                  <div class="w-5 h-5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span>
+                    {{ isLoading ? (translation.t('Processing...') || 'Processing...') : (translation.t('AI Analyzing...') || 'AI Analyzing...') }}
+                  </span>
+                } @else {
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>{{ translation.t('Done') || 'Done' }}</span>
+                }
+              </button>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Floating Button -->
+  <button
+    (click)="handleButtonClick()"
+    type="button"
+    class="w-14 h-14 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 text-white font-bold flex items-center justify-center"
+    [class.bg-red-500]="isRecording()"
+    [class.hover:bg-red-600]="isRecording()"
+    [class.animate-pulse]="isRecording()"
+    [class.bg-green-600]="showItemsCard() && !isRecording()"
+    [class.hover:bg-green-700]="showItemsCard() && !isRecording()"
+    [class.bg-green-600]="!isRecording() && !showItemsCard()"
+    [class.hover:bg-green-700]="!isRecording() && !showItemsCard()"
+  >
+    
+    @if (isRecording()) {
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z" />
+      </svg>
+    } @else if (showItemsCard()) {
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    } @else {
+      <svg
+        class="w-6 h-6"
+        [class.opacity-50]="!isAuthenticated || (usage && usage.remaining <= 0)"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+      </svg>
+    }
+  </button>
+</div>
+

@@ -1,0 +1,20 @@
+<div class="customer-address-form">
+  <form [formGroup]="addressForm">
+    <div class="form-group">
+      <app-floating-input
+        *ngIf="address"
+        id="address"
+        [label]="t('auth.register.address')"
+        type="text"
+        [error]="address?.hasError('required') ? t('auth.errors.required.address') : ''"
+        [formControl]="address"
+      ></app-floating-input>
+    </div>
+  </form>
+  <app-smart-navigation
+    [prevStep]="prevStep.bind(this)"
+    [onSubmit]="onSubmit.bind(this)"
+    [disableNext]="!addressForm.valid"
+  ></app-smart-navigation>
+</div>
+

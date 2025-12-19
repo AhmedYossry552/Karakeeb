@@ -1,0 +1,119 @@
+<div class="notification-container">
+  <!-- Bell Button -->
+  <button
+    type="button"
+    (click)="toggleDropdown()"
+    class="notification-button"
+    [attr.aria-label]="translation.t('Notifications') || 'Notifications'"
+  >
+    <fa-icon [icon]="faBell" class="w-5 h-5"></fa-icon>
+    @if (unreadCount() > 0) {
+      <span class="notification-badge">
+        {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+      </span>
+    }
+  </button>
+
+  <!-- Notification Dropdown -->
+  @if (isOpen()) {
+    <div class="notification-dropdown">
+      <!-- Header -->
+      <div class="notification-header">
+        <h3 class="notification-title">
+          {{ translation.t('Notifications') || 'Notifications' }}
+        </h3>
+        @if (unreadCount() > 0) {
+          <button
+            type="button"
+            (click)="onMarkAllAsRead()"
+            [disabled]="isMarkingAllRead()"
+            class="mark-all-read-btn"
+          >
+            {{ isMarkingAllRead() 
+              ? (translation.t('Marking...') || 'Marking...')
+              : (translation.t('Mark all as read') || 'Mark all as read')
+            }}
+          </button>
+        }
+      </div>
+
+      <!-- Notifications List -->
+      <div class="notification-list">
+        @if (notifications().length > 0) {
+          @for (notification of notifications(); track notification._id) {
+            <div
+              class="notification-item"
+              [class.unread]="!notification.isRead"
+              (click)="onNotificationClick(notification)"
+            >
+              <!-- Icon -->
+              <div class="notification-icon" [class]="'icon-' + getNotificationColor(notification.type)">
+                <fa-icon [icon]="getNotificationIcon(notification.type)" class="w-4 h-4"></fa-icon>
+              </div>
+
+              <!-- Content -->
+              <div class="notification-content">
+                <div class="notification-title-row">
+                  <p class="notification-title-text">
+                    {{ getLocalizedText(notification.title) }}
+                  </p>
+                  @if (!notification.isRead) {
+                    <div class="unread-dot"></div>
+                  }
+                </div>
+
+                <p class="notification-body">
+                  {{ getLocalizedText(notification.body) }}
+                </p>
+
+                <div class="notification-footer">
+                  <p class="notification-time">
+                    {{ formatRelativeTime(notification.createdAt) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Load More Button -->
+          @if (hasMore()) {
+            <div class="notification-load-more">
+              <button
+                type="button"
+                (click)="onLoadMore()"
+                [disabled]="loadingMore()"
+                class="load-more-btn"
+              >
+                @if (loadingMore()) {
+                  <fa-icon [icon]="faSpinner" [spin]="true" class="w-4 h-4"></fa-icon>
+                  {{ translation.t('Loading...') || 'Loading...' }}
+                } @else {
+                  {{ translation.t('Load More') || 'Load More' }}
+                }
+              </button>
+            </div>
+          }
+
+          <!-- View All Link -->
+          <div class="notification-footer-link">
+            <a routerLink="/notifications" (click)="isOpen.set(false)" class="view-all-link">
+              {{ translation.t('View All') || 'View All' }}
+            </a>
+          </div>
+        } @else {
+          <!-- Empty State -->
+          <div class="notification-empty">
+            <fa-icon [icon]="faBellSlash" class="w-12 h-12 notification-empty-icon"></fa-icon>
+            <p class="notification-empty-text">
+                {{ translation.t('No notifications') || 'No notifications' }}
+            </p>
+            <p class="notification-empty-desc">
+              {{ translation.t('You\'re all caught up!') || 'You\'re all caught up!' }}
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

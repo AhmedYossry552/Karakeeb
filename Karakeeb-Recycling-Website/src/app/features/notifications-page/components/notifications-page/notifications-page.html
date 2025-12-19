@@ -1,0 +1,51 @@
+<section class="notifications-page">
+  <div class="notifications-container">
+    <header class="notifications-header">
+      <h1 class="notifications-title">
+        {{ translation.t('Notifications') || 'Notifications' }}
+      </h1>
+      <button
+        type="button"
+        class="notifications-mark-all"
+        *ngIf="unreadCount > 0"
+        (click)="onMarkAllAsRead()"
+      >
+        {{ translation.t('Mark all as read') || 'Mark all as read' }}
+      </button>
+    </header>
+
+    <div class="notifications-list" *ngIf="notifications.length > 0; else emptyState">
+      <div
+        class="notification-item"
+        *ngFor="let notification of notifications"
+        [class.unread]="!notification.isRead"
+      >
+        <div class="notification-title">
+          {{ notification.title | json }}
+        </div>
+        <div class="notification-body">
+          {{ notification.body | json }}
+        </div>
+        <div class="notification-meta">
+          {{ notification.type }} • {{ notification.createdAt | date: 'short' }}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="notifications-load-more"
+        (click)="onLoadMore()"
+      >
+        {{ translation.t('Load more') || 'Load more' }}
+      </button>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="notifications-empty">
+        {{ translation.t('No notifications yet.') || 'No notifications yet.' }}
+      </div>
+    </ng-template>
+  </div>
+</section>
+
+

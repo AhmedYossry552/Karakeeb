@@ -1,0 +1,37 @@
+<div class="w-full">
+  <div class="relative">
+    <input
+      [id]="id"
+      [type]="type"
+      [value]="currentValue"
+      [maxLength]="maxLength"
+      [disabled]="disabled"
+      placeholder=" "
+      [class]="'block rounded-t-lg px-2.5 pb-2.5 pt-5 pr-10 w-full text-sm text-gray-900 bg-gray-50 border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer ' + 
+        (displayError ? 'border-b-2 border-red-500 focus:border-red-600' : 'border-gray-300 focus:border-green-600')"
+      [disabled]="disabled"
+      (input)="onInput($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+    />
+
+    <ng-container *ngIf="icon">
+      <div class="absolute top-4 end-2 z-10 cursor-pointer" (click)="icon.onClick?.()">
+        <ng-container [ngComponentOutlet]="icon.component"></ng-container>
+      </div>
+    </ng-container>
+
+    <label
+      [for]="id"
+      [class]="'absolute text-sm duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-2.5 ' +
+        'peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 ' +
+        'peer-focus:scale-75 peer-focus:-translate-y-4 ' +
+        (displayError ? 'text-red-600 peer-focus:text-red-700' : 'text-gray-500 peer-focus:text-green-700')"
+    >
+      {{ label }}
+    </label>
+  </div>
+
+  <p *ngIf="displayError" class="mt-1 text-xs text-red-500">{{ displayError }}</p>
+</div>
+

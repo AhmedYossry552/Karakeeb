@@ -1,0 +1,156 @@
+<div class="delivery-vehicle-info">
+  <form [formGroup]="vehicleForm" class="delivery-form">
+    <!-- License Number -->
+    <app-floating-input
+      *ngIf="licenseNumber"
+      id="licenseNumber"
+      [label]="t('auth.roles.delivery.fields.licenseNumber.label') || 'Driver\'s License Number'"
+      type="text"
+      [error]="licenseNumber.hasError('required') ? (t('auth.roles.delivery.fields.licenseNumber.required') || 'License number is required') : ''"
+      [formControl]="licenseNumber"
+    ></app-floating-input>
+
+    <!-- Vehicle Type -->
+    <div class="form-group">
+      <label for="vehicleType">
+        {{ t('auth.roles.delivery.fields.vehicleType.label') || 'Vehicle Type' }}
+        <span class="required">*</span>
+      </label>
+      <select
+        id="vehicleType"
+        formControlName="vehicleType"
+        class="form-input"
+        [class.error]="vehicleType.invalid && vehicleType.touched"
+      >
+        <option value="">{{ t('auth.roles.delivery.fields.vehicleType.placeholder') || 'Select vehicle type' }}</option>
+        <option *ngFor="let type of vehicleTypes" [value]="type.value">
+          {{ t('auth.roles.delivery.fields.vehicleType.options.' + type.value) || type.label }}
+        </option>
+      </select>
+      <span *ngIf="vehicleType.invalid && vehicleType.touched" class="error-text">
+        {{ t('auth.roles.delivery.fields.vehicleType.required') || 'Vehicle type is required' }}
+      </span>
+    </div>
+
+    <!-- Delivery Image -->
+    <div class="form-group file-upload-group">
+      <label for="deliveryImage" class="file-label">
+        <span class="label-text">
+          {{ t('auth.roles.delivery.fields.deliveryImage.label') || 'Photo of Delivery Person' }}
+          <span class="required">*</span>
+        </span>
+        <span class="label-hint">{{ t('auth.roles.delivery.fields.deliveryImage.hint') || 'Upload a clear photo of yourself' }}</span>
+      </label>
+      <div class="file-upload-wrapper">
+        <input
+          id="deliveryImage"
+          type="file"
+          accept="image/*"
+          (change)="onFileSelect($event, 'deliveryImage')"
+          class="file-input"
+          [class.error]="deliveryImage.invalid && deliveryImage.touched"
+        />
+        <label for="deliveryImage" class="file-upload-button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>{{ deliveryImagePreview ? (t('auth.roles.delivery.fields.changeFile') || 'Change Photo') : (t('auth.roles.delivery.fields.selectFile') || 'Select Photo') }}</span>
+        </label>
+      </div>
+      <span *ngIf="deliveryImage.invalid && deliveryImage.touched" class="error-text">
+        {{ t('auth.roles.delivery.fields.deliveryImage.required') || 'Photo is required' }}
+      </span>
+      <div *ngIf="deliveryImagePreview" class="image-preview-container">
+        <img [src]="deliveryImagePreview" alt="Delivery person preview" class="image-preview" />
+        <button type="button" (click)="removeImage('deliveryImage')" class="remove-image-btn" aria-label="Remove image">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Vehicle Image -->
+    <div class="form-group file-upload-group">
+      <label for="vehicleImage" class="file-label">
+        <span class="label-text">
+          {{ t('auth.roles.delivery.fields.vehicleImage.label') || 'Photo of Vehicle' }}
+          <span class="required">*</span>
+        </span>
+        <span class="label-hint">{{ t('auth.roles.delivery.fields.vehicleImage.hint') || 'Upload a clear photo of your vehicle' }}</span>
+      </label>
+      <div class="file-upload-wrapper">
+        <input
+          id="vehicleImage"
+          type="file"
+          accept="image/*"
+          (change)="onFileSelect($event, 'vehicleImage')"
+          class="file-input"
+          [class.error]="vehicleImage.invalid && vehicleImage.touched"
+        />
+        <label for="vehicleImage" class="file-upload-button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>{{ vehicleImagePreview ? (t('auth.roles.delivery.fields.changeFile') || 'Change Photo') : (t('auth.roles.delivery.fields.selectFile') || 'Select Photo') }}</span>
+        </label>
+      </div>
+      <span *ngIf="vehicleImage.invalid && vehicleImage.touched" class="error-text">
+        {{ t('auth.roles.delivery.fields.vehicleImage.required') || 'Vehicle image is required' }}
+      </span>
+      <div *ngIf="vehicleImagePreview" class="image-preview-container">
+        <img [src]="vehicleImagePreview" alt="Vehicle preview" class="image-preview" />
+        <button type="button" (click)="removeImage('vehicleImage')" class="remove-image-btn" aria-label="Remove image">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Criminal Record -->
+    <div class="form-group file-upload-group">
+      <label for="criminalRecord" class="file-label">
+        <span class="label-text">
+          {{ t('auth.roles.delivery.fields.criminalRecord.label') || 'Criminal Record Certificate' }}
+          <span class="required">*</span>
+        </span>
+        <span class="label-hint">{{ t('auth.roles.delivery.fields.criminalRecord.hint') || 'Upload your criminal record certificate (PDF or Image)' }}</span>
+      </label>
+      <div class="file-upload-wrapper">
+        <input
+          id="criminalRecord"
+          type="file"
+          accept="image/*,.pdf"
+          (change)="onFileSelect($event, 'criminalRecord')"
+          class="file-input"
+          [class.error]="criminalRecord.invalid && criminalRecord.touched"
+        />
+        <label for="criminalRecord" class="file-upload-button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          <span>{{ criminalRecordPreview ? (t('auth.roles.delivery.fields.changeFile') || 'Change File') : (t('auth.roles.delivery.fields.selectFile') || 'Select File') }}</span>
+        </label>
+      </div>
+      <span *ngIf="criminalRecord.invalid && criminalRecord.touched" class="error-text">
+        {{ t('auth.roles.delivery.fields.criminalRecord.required') || 'Certificate is required' }}
+      </span>
+      <div *ngIf="criminalRecordPreview" class="image-preview-container">
+        <img *ngIf="criminalRecordPreview.startsWith('data:image')" [src]="criminalRecordPreview" alt="Criminal record preview" class="image-preview" />
+        <div *ngIf="!criminalRecordPreview.startsWith('data:image')" class="pdf-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          <span>PDF Document</span>
+        </div>
+        <button type="button" (click)="removeImage('criminalRecord')" class="remove-image-btn" aria-label="Remove file">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+

@@ -1,0 +1,298 @@
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+
+  .spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid #e5e7eb;
+    border-top-color: #10b981;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: #6b7280;
+  }
+}
+
+.edit-category {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .form-container {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .form-header {
+      background: linear-gradient(to right, #10b981, #14b8a6);
+      color: white;
+      padding: 1.5rem;
+      
+      h1 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0 0 0.5rem 0;
+      }
+
+      p {
+        margin: 0;
+        opacity: 0.9;
+      }
+    }
+
+    .category-form {
+      padding: 1.5rem;
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+
+        label {
+          display: block;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-textarea {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid #d1d5db;
+          border-radius: 0.5rem;
+          font-size: 1rem;
+          transition: all 0.2s;
+
+          &:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+          }
+        }
+
+        .form-textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        .current-image {
+          margin-bottom: 1rem;
+          padding: 1rem;
+          background-color: #f9fafb;
+          border-radius: 0.5rem;
+
+          .current-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+          }
+
+          .current-image-preview {
+            width: 128px;
+            height: 128px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+          }
+        }
+
+        .file-upload-area {
+          border: 2px dashed #d1d5db;
+          border-radius: 0.5rem;
+          padding: 2rem;
+          text-align: center;
+          transition: all 0.2s;
+          margin-top: 0.5rem;
+
+          &:hover {
+            border-color: #10b981;
+          }
+
+          &.has-file {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+          }
+
+          .upload-content {
+            .upload-icon {
+              width: 3rem;
+              height: 3rem;
+              color: #9ca3af;
+              margin: 0 auto 1rem;
+            }
+
+            .upload-text {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.5rem;
+              font-size: 0.875rem;
+              color: #6b7280;
+
+              .upload-label {
+                color: #10b981;
+                font-weight: 500;
+                cursor: pointer;
+
+                &:hover {
+                  color: #059669;
+                }
+              }
+
+              .file-input {
+                display: none;
+              }
+            }
+
+            .file-types {
+              font-size: 0.75rem;
+              color: #9ca3af;
+              margin-top: 0.5rem;
+            }
+          }
+        }
+
+        .uploading-text {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-top: 1rem;
+          font-size: 0.875rem;
+          color: #10b981;
+
+          .upload-spinner {
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+
+            .spinner-circle {
+              fill: none;
+              stroke: currentColor;
+              stroke-width: 4;
+              stroke-dasharray: 32;
+              stroke-dashoffset: 24;
+            }
+          }
+        }
+
+        .preview-container {
+          margin-top: 1rem;
+          padding: 1rem;
+          background-color: #f0fdf4;
+          border-radius: 0.5rem;
+
+          .preview-label {
+            font-size: 0.875rem;
+            color: #059669;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+          }
+
+          .preview-image {
+            width: 128px;
+            height: 128px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 1px solid #10b981;
+          }
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 1.5rem;
+
+        .cancel-button {
+          padding: 0.75rem 1.5rem;
+          border: 1px solid #d1d5db;
+          border-radius: 0.5rem;
+          background: white;
+          color: #374151;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:hover:not(:disabled) {
+            background-color: #f9fafb;
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+
+        .submit-button {
+          padding: 0.75rem 1.5rem;
+          background: #10b981;
+          color: white;
+          border: none;
+          border-radius: 0.5rem;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:hover:not(:disabled) {
+            background: #059669;
+          }
+
+          &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+          }
+
+          .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            .spinner {
+              width: 1rem;
+              height: 1rem;
+              animation: spin 1s linear infinite;
+
+              .spinner-circle {
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 4;
+                stroke-dasharray: 32;
+                stroke-dashoffset: 24;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

@@ -1,0 +1,46 @@
+<section class="community-section">
+  <div class="community-background">
+    <div class="community-decoration decoration-1"></div>
+    <div class="community-decoration decoration-2"></div>
+  </div>
+
+  <div class="community-content">
+    <div class="community-header">
+      <h2 class="community-title">
+        {{ translation.t('Join Our') || 'Join Our' }}
+        <span class="gradient-text">
+          {{ translation.t('Karakeeb Community') || 'Karakeeb Community' }}
+        </span>
+      </h2>
+      <div class="community-descriptions">
+        <p class="community-desc-1">
+          {{ translation.t('Get exclusive recycling tips, sustainability insights, and special offers delivered straight to your inbox.') || 'Get exclusive recycling tips, sustainability insights, and special offers delivered straight to your inbox.' }}
+        </p>
+        <p class="community-desc-2">
+          {{ translation.t('Join 10,000+ eco-warriors making a difference') || 'Join 10,000+ eco-warriors making a difference' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="subscription-form-wrapper">
+      <form (ngSubmit)="handleSubscribe()" class="subscription-form">
+        <input
+          type="email"
+          [(ngModel)]="email"
+          [placeholder]="translation.t('Enter your email') || 'Enter your email'"
+          name="email"
+          class="email-input"
+          required
+        />
+        <button type="submit" class="subscribe-button">
+          <span class="button-text">
+                {{ translation.t('Subscribe Now') || 'Subscribe Now' }}
+            <svg class="w-5 h-5 arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,30 @@
+.tab-navigation {
+  display: flex;
+  border-bottom: 1px solid rgb(229, 231, 235);
+  gap: 1.5rem;
+  overflow-x: auto;
+}
+
+.tab-button {
+  padding: 0.5rem 0.25rem;
+  text-transform: capitalize;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  color: rgb(107, 114, 128);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  
+  &:hover {
+    color: rgb(21, 128, 61);
+  }
+  
+  &.active {
+    border-bottom-color: rgb(22, 163, 74);
+    color: rgb(22, 101, 52);
+  }
+}
+

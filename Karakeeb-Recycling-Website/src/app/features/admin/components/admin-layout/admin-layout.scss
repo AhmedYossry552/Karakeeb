@@ -1,0 +1,21 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background, #f9fafb);
+}
+
+.admin-main {
+  flex: 1;
+  min-height: 100vh;
+  padding: 1.5rem;
+  overflow: auto;
+  background: var(--background, #f9fafb);
+}
+
+@media (max-width: 768px) {
+  .admin-main {
+    padding: 1rem;
+  }
+}
+
+

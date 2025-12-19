@@ -1,0 +1,58 @@
+<div *ngIf="isOpen" class="modal-overlay" (click)="onBackdropClick($event)">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <fa-icon [icon]="faCalendar" class="title-icon"></fa-icon>
+        {{ translation.t('Points History') || 'Points History' }}
+      </h2>
+      <button type="button" (click)="closeModal()" class="close-btn">
+        <fa-icon [icon]="faX" class="close-icon"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <div *ngIf="loading()" class="loading-container">
+        <div class="spinner"></div>
+      </div>
+
+      <div *ngIf="!loading()" class="history-content">
+        <div *ngIf="pointsHistory().length === 0" class="empty-state">
+          <p>{{ translation.t('No points history available') || 'No points history available' }}</p>
+        </div>
+
+        <div *ngIf="pointsHistory().length > 0" class="entries-list">
+          <app-points-entry-item
+            *ngFor="let entry of pointsHistory(); trackBy: trackByEntryId"
+            [entry]="entry"
+          ></app-points-entry-item>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!loading() && pointsHistory().length > 0 && totalPages() > 1" class="modal-footer">
+      <div class="pagination">
+        <button
+          (click)="handlePageChange(currentPage() - 1)"
+          [disabled]="currentPage() === 1"
+          class="pagination-btn"
+        >
+          {{ translation.t('Previous') || 'Previous' }}
+        </button>
+        <span class="pagination-info">
+          {{ translation.t('Page') || 'Page' }} {{ currentPage() }} {{ translation.t('of') || 'of' }} {{ totalPages() }}
+        </span>
+        <button
+          (click)="handlePageChange(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages()"
+          class="pagination-btn"
+        >
+          {{ translation.t('Next') || 'Next' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

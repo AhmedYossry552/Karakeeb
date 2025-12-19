@@ -1,0 +1,64 @@
+<div class="buyer-dashboard">
+  <!-- Promotion Slider -->
+  <app-promotion-slider></app-promotion-slider>
+  
+  <div class="dashboard-container">
+    <!-- Featured Items Section -->
+    <section class="featured-items-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          {{ translation.t('common.FeaturedItems') || 'Featured Items' }}
+        </h2>
+        <a routerLink="/marketplace" class="view-all-link">
+          {{ translation.t('common.viewAll') || 'view all' }}
+          <svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Loading State -->
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>{{ translation.t('common.loading') || 'Loading items...' }}</p>
+        </div>
+      }
+
+      <!-- Items Grid -->
+      @if (!isLoading() && filteredItems().length > 0) {
+        <div class="items-grid">
+          @for (item of filteredItems(); track item._id) {
+            <app-item-card [item]="item"></app-item-card>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (pagination().totalPages > 1) {
+          <app-pagination
+            [pagination]="pagination()"
+            (pageChange)="onPageChange($event)"
+          ></app-pagination>
+        }
+      }
+
+      <!-- Empty State -->
+      @if (!isLoading() && filteredItems().length === 0) {
+        <div class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <h3>{{ translation.t('marketplace.noItemsFound') || 'No items found' }}</h3>
+          <p>{{ translation.t('marketplace.tryDifferentSearch') || 'Try different search terms or check back later' }}</p>
+        </div>
+      }
+    </section>
+
+    <!-- Recycling Banner -->
+    <app-recycling-banner [statsData]="statsData"></app-recycling-banner>
+
+    <!-- Top Materials Section -->
+    <app-top-materials></app-top-materials>
+  </div>
+</div>
+

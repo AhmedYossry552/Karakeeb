@@ -1,0 +1,126 @@
+<div class="tracking-container" *ngIf="!loading()">
+  <div class="tracking-card" *ngIf="order()">
+    <div class="tracking-header">
+      <h1 class="tracking-title">
+        {{ translation.t('Track Your Order') || 'Track Your Order' }}
+      </h1>
+      <p class="order-id">Order #{{ order()!._id.slice(-8).toUpperCase() }}</p>
+    </div>
+
+    <!-- Tracking Steps -->
+    <div class="tracking-steps">
+      @for (step of trackingSteps; track step.id; let i = $index) {
+        <div class="step-item" [class.completed]="isStepCompleted(i)" [class.active]="isStepActive(i)">
+          <div class="step-icon">
+            <span>{{ step.icon }}</span>
+          </div>
+          <div class="step-content">
+            <h3 class="step-label">{{ step.label }}</h3>
+            <p class="step-description">{{ step.description }}</p>
+          </div>
+          @if (i < trackingSteps.length - 1) {
+            <div class="step-connector" [class.completed]="isStepCompleted(i)"></div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Order Details -->
+    <div class="order-details-section">
+      <h3 class="section-title">{{ translation.t('Order Details') || 'Order Details' }}</h3>
+      <div class="details-grid">
+        <!-- Address Section -->
+        <div class="detail-item address-item">
+          <div class="address-header">
+            <svg class="address-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="detail-label">{{ translation.t('Pickup Address') || 'Pickup Address' }}</span>
+          </div>
+          <div class="address-content">
+            @if (getAddressParts().length > 0) {
+              <div class="address-parts">
+                @for (part of getAddressParts(); track part.label) {
+                  <div class="address-part">
+                    <span class="address-part-label">{{ part.label }}:</span>
+                    <span class="address-part-value">{{ part.value }}</span>
+                  </div>
+                }
+              </div>
+              <div class="address-full">
+                <span class="address-text">{{ getFormattedAddress() }}</span>
+              </div>
+            } @else {
+              <span class="address-text no-address">Address not available</span>
+            }
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="detail-item">
+          <span class="detail-label">{{ translation.t('Status') || 'Status' }}:</span>
+          <span class="detail-value status-badge" [class]="'status-' + order()!.status">
+            {{ getStatusLabel(order()!.status) }}
+          </span>
+        </div>
+
+        <!-- Total Price -->
+        <div class="detail-item price-item">
+          <span class="detail-label">{{ translation.t('Total Price') || 'Total Price' }}:</span>
+          <span class="detail-value price-value">
+            <span class="price-amount">{{ getTotalPrice() | number:'1.2-2' }}</span>
+            <span class="price-currency">EGP</span>
+          </span>
+        </div>
+
+        <!-- Order Items Count -->
+        @if (order()!.items && order()!.items.length > 0) {
+          <div class="detail-item">
+            <span class="detail-label">{{ translation.t('Items') || 'Items' }}:</span>
+            <span class="detail-value">{{ order()!.items.length }} {{ translation.t('item(s)') || 'item(s)' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="tracking-actions">
+      <button
+        (click)="showCancelDialog.set(true)"
+        *ngIf="order()!.status !== 'completed' && order()!.status !== 'cancelled' && order()!.status !== 'assigntocourier' && order()!.status !== 'collected'"
+        class="btn-danger"
+      >
+        {{ translation.t('pickup.cancelOrder') !== 'pickup.cancelOrder' ? translation.t('pickup.cancelOrder') : 'Cancel Order' }}
+      </button>
+      <button
+        (click)="showSafetyDialog.set(true)"
+        *ngIf="order()!.status === 'assigntocourier' || order()!.status === 'collected'"
+        class="btn-warning"
+      >
+        {{ translation.t('pickup.reportSafety') !== 'pickup.reportSafety' ? translation.t('pickup.reportSafety') : 'Report Safety Issue' }}
+      </button>
+      <a [routerLink]="['/buyer-orders']" class="btn-secondary">
+            {{ translation.t('Back to Orders') || 'Back to Orders' }}
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading()">
+  <div class="spinner"></div>
+</div>
+
+<!-- Dialogs -->
+<app-cancel-order-dialog
+  [open]="showCancelDialog()"
+  (close)="showCancelDialog.set(false)"
+  (confirm)="onCancelOrder($event)"
+></app-cancel-order-dialog>
+
+<app-safety-dialog
+  [open]="showSafetyDialog()"
+  [orderNumber]="orderId || ''"
+  (close)="showSafetyDialog.set(false)"
+></app-safety-dialog>
+

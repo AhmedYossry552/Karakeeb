@@ -1,0 +1,81 @@
+<div class="order-card">
+  <div class="order-header">
+    <div class="order-info">
+      <p class="order-date">
+        {{ translation.t('Date') || 'Date' }}: {{ getFormattedDate() }}
+      </p>
+    </div>
+    <span class="order-status" [ngClass]="getStatusClass()">
+      <span class="status-icon">{{ getStatusIcon() }}</span>
+      <span class="status-text">{{ getStatusText() }}</span>
+    </span>
+  </div>
+
+  <div 
+    class="order-address" 
+    [class.expanded]="showAddressDetails()"
+    (click)="toggleAddressDetails()"
+  >
+    <div class="address-content">
+      <span class="address-text">{{ getFormattedAddress() }}</span>
+      <span class="address-toggle-icon">{{ showAddressDetails() ? '▼' : '▶' }}</span>
+    </div>
+    @if (showAddressDetails() && order.address) {
+      <div class="address-details">
+        <div class="address-detail-item">
+          <strong>{{ translation.t('Street') || 'Street' }}:</strong>
+          <span>{{ getAddressField('street') }}</span>
+        </div>
+        <div class="address-detail-item">
+          <strong>{{ translation.t('Building') || 'Building' }}:</strong>
+          <span>{{ getAddressField('building') }}</span>
+        </div>
+        <div class="address-detail-item">
+          <strong>{{ translation.t('Floor') || 'Floor' }}:</strong>
+          <span>{{ getAddressField('floor') }}</span>
+        </div>
+        <div class="address-detail-item">
+          <strong>{{ translation.t('Apartment') || 'Apartment' }}:</strong>
+          <span>{{ getAddressField('apartment') }}</span>
+        </div>
+        <div class="address-detail-item">
+          <strong>{{ translation.t('Area') || 'Area' }}:</strong>
+          <span>{{ getAddressField('area') }}</span>
+        </div>
+        <div class="address-detail-item">
+          <strong>{{ translation.t('City') || 'City' }}:</strong>
+          <span>{{ getAddressField('city') }}</span>
+        </div>
+        @if (getAddressField('landmark') !== '-') {
+          <div class="address-detail-item">
+            <strong>{{ translation.t('Landmark') || 'Landmark' }}:</strong>
+            <span>{{ getAddressField('landmark') }}</span>
+          </div>
+        }
+        @if (getAddressField('notes') !== '-') {
+          <div class="address-detail-item">
+            <strong>{{ translation.t('Notes') || 'Notes' }}:</strong>
+            <span>{{ getAddressField('notes') }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="order-actions">
+    <button (click)="onViewDetails()" class="view-details-btn">
+      {{ translation.t('View Details') || 'View Details' }}
+    </button>
+    @if (canCancel()) {
+      <button (click)="onCancel($event)" class="cancel-btn">
+        {{ translation.t('Cancel Order') || 'Cancel Order' }}
+      </button>
+    }
+    @if (canDelete()) {
+      <button (click)="onDelete($event)" class="delete-btn">
+        {{ translation.t('Delete') || 'Delete' }}
+      </button>
+    }
+  </div>
+</div>
+

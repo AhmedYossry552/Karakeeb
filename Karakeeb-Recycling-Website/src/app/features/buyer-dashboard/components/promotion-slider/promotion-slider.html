@@ -1,0 +1,117 @@
+<div 
+  class="promotion-slider"
+  [class.rtl]="isRTL"
+  (mouseenter)="onMouseEnter()"
+  (mouseleave)="onMouseLeave()"
+>
+  <!-- Slides Container -->
+  <div 
+    class="slides-container"
+    [style.transform]="'translateX(-' + (currentSlide() * 100) + '%)'"
+  >
+    @for (slide of slides; track slide.id) {
+      <div class="slide">
+        <!-- Background Image -->
+        <div 
+          class="slide-background"
+          [style.background-image]="'linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(' + slide.image + ')'"
+        ></div>
+
+        <!-- Gradient Overlay -->
+        <div class="gradient-overlay"></div>
+
+        <!-- Slide Content -->
+        <div class="slide-content" [class.rtl]="isRTL">
+          <div class="content-wrapper">
+            <!-- Badge with Icon -->
+            <div class="badge-container" [class.rtl]="isRTL">
+              <div class="badge-icon">
+                <svg *ngIf="slide.isStatistic" class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngIf="!slide.isStatistic" class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+              <span class="badge" [ngClass]="slide.isStatistic ? 'badge-green' : 'badge-amber'">
+                {{ translation.t(slide.badgeKey) || (slide.isStatistic ? 'Community Challenge' : 'Limited Offer') }}
+              </span>
+            </div>
+
+            <!-- Title -->
+            <h2 class="slide-title">
+              {{ translation.t(slide.titleKey) || 'Join Our 10K Device Challenge' }}
+            </h2>
+
+            <!-- Description -->
+            <p class="slide-description">
+              {{ translation.t(slide.descriptionKey) || 'We\'re aiming to responsibly recycle 10,000 devices this month - be part of the solution!' }}
+            </p>
+
+            <!-- Buttons -->
+            <div class="slide-actions" [class.rtl]="isRTL">
+              <a 
+                [routerLink]="slide.ctaLink" 
+                class="btn"
+                [ngClass]="slide.isStatistic ? 'btn-white' : 'btn-amber'"
+              >
+                {{ translation.t(slide.ctaTextKey) || 'Participate' }}
+                <svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+              <a 
+                [routerLink]="translation.t(slide.learnMoreLinkKey) || '/about'" 
+                class="btn btn-learn-more"
+              >
+                {{ translation.t('slider.common.learnMore') || 'Learn More' }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Navigation Arrows -->
+  <button 
+    class="nav-arrow nav-arrow-left"
+    (click)="prevSlide()"
+    [attr.aria-label]="translation.t('slider.navigation.previous') || 'Previous'"
+  >
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+  </button>
+  <button 
+    class="nav-arrow nav-arrow-right"
+    (click)="nextSlide()"
+    [attr.aria-label]="translation.t('slider.navigation.next') || 'Next'"
+  >
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+  </button>
+
+  <!-- Slide Indicators -->
+  <div class="slide-indicators">
+    @for (slide of slides; track slide.id; let i = $index) {
+      <button
+        class="indicator"
+        [class.active]="currentSlide() === i"
+        (click)="goToSlide(i)"
+        [attr.aria-label]="'Go to slide ' + (i + 1)"
+      ></button>
+    }
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar">
+    <div 
+      class="progress-fill"
+      [style.width]="isHovered() ? '0%' : '100%'"
+      [style.animation]="isHovered() ? 'none' : 'progress 5s linear'"
+    ></div>
+  </div>
+</div>
+

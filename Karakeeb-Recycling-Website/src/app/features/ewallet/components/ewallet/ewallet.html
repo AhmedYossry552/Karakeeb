@@ -1,0 +1,87 @@
+<div class="ewallet-container" *ngIf="user()">
+  <div class="ewallet-card">
+    <!-- Header -->
+    <div class="ewallet-header">
+      <div class="header-content">
+        <span class="header-icon">♻️</span>
+        <h1 class="header-title">{{ translation.t('EcoWallet') || 'EcoWallet' }}</h1>
+      </div>
+      <p class="header-subtitle">{{ translation.t('Earn rewards for your recycling efforts ') || 'Earn rewards for your recycling efforts' }}</p>
+    </div>
+
+    <!-- Balance Card -->
+    <div class="balance-card">
+      <div class="balance-header">
+        <h2 class="balance-title">{{ translation.t('Eco Rewards Balance') || 'Eco Rewards Balance' }}</h2>
+        <p class="balance-subtitle">{{ translation.t('Earned through sustainable recycling') || 'Earned through sustainable recycling' }}</p>
+      </div>
+      <div class="balance-amount">
+        <span class="balance-value">{{ balance() | number:'1.2-2' }}</span>
+        <span class="balance-currency">{{ translation.t('EGP') || 'EGP' }}</span>
+      </div>
+      <div class="balance-actions">
+        <button (click)="showRedeemPointsModal.set(true)" class="btn-redeem">
+          {{ translation.t('Redeem Points') || 'Redeem Points' }}
+        </button>
+        <button (click)="showWithdrawModal.set(true)" class="btn-cashout" [disabled]="balance() <= 0">
+          {{ translation.t('Cash Out') || 'Cash Out' }}
+        </button>
+        <a [routerLink]="['/marketplace']" class="btn-recycle">
+          {{ translation.t('Recycle More') || 'Recycle More' }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section">
+      <div class="activity-header">
+        <h3 class="activity-title">{{ translation.t('Recent Activity') || 'Recent Activity' }}</h3>
+        <button (click)="showTransactionsModal.set(true)" class="view-all-btn">
+          {{ translation.t('View All') || 'View All' }}
+        </button>
+      </div>
+      
+      @if (recentTransactions().length === 0) {
+        <div class="empty-activity">
+            <p>{{ translation.t('No transactions yet') || 'No transactions yet' }}</p>
+        </div>
+      } @else {
+        <div class="transactions-list">
+          @for (transaction of recentTransactions(); track transaction._id || $index) {
+            <div class="transaction-item">
+              <div class="transaction-icon">{{ getTransactionIcon(transaction.type) }}</div>
+              <div class="transaction-details">
+                <span class="transaction-type">{{ translation.t(transaction.type) || transaction.type }}</span>
+                <span class="transaction-date">{{ transaction.date | date:'short' }}</span>
+              </div>
+              <span class="transaction-amount" [class.positive]="transaction.type === 'cashback' || transaction.type === 'deposit'" [class.negative]="transaction.type === 'withdrawal' || transaction.type === 'purchase'">
+                {{ transaction.type === 'withdrawal' || transaction.type === 'purchase' ? '-' : '+' }}{{ transaction.amount | number:'1.2-2' }} {{ translation.t('EGP') || 'EGP' }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <app-withdraw-modal
+    [show]="showWithdrawModal()"
+    [balance]="balance()"
+    [gateways]="gateways"
+    (close)="showWithdrawModal.set(false)"
+    (success)="onWithdrawSuccess()"
+  ></app-withdraw-modal>
+
+  <app-transactions-modal
+    [show]="showTransactionsModal()"
+    [transactions]="transactions()"
+    (close)="showTransactionsModal.set(false)"
+  ></app-transactions-modal>
+
+  <app-redeem-points
+    [show]="showRedeemPointsModal()"
+    (close)="showRedeemPointsModal.set(false)"
+    (success)="onRedeemSuccess()"
+  ></app-redeem-points>
+</div>

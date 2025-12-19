@@ -1,0 +1,43 @@
+<section class="hero-section">
+  <div class="hero-background">
+    <img 
+      src="global-recycling.jpg" 
+      alt="Recycling hero image"
+      class="hero-image"
+    />
+    <div class="hero-overlay"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1 class="hero-title">
+        {{ translation.t('Recycle Today for a') || 'Recycle Today for a' }}
+        <span class="gradient-text">
+          {{ translation.t('Better Tomorrow') || 'Better Tomorrow' }}
+        </span>
+      </h1>
+      <p class="hero-description">
+        {{ translation.t('Join our community-driven platform and make recycling simple, rewarding, and impactful') || 'Join our community-driven platform and make recycling simple, rewarding, and impactful' }}
+      </p>
+    </div>
+
+    <div class="hero-actions">
+      <a 
+        routerLink="/category" 
+        class="btn btn-primary"
+      >
+        {{ translation.t('Drop Your Waste!') || 'Drop Your Waste!' }}
+      </a>
+      <a 
+        routerLink="/about" 
+        class="btn btn-secondary"
+      >
+            {{ translation.t('Learn More') || 'Learn More' }}
+      </a>
+    </div>
+  </div>
+
+  <!-- Decorative elements -->
+  <div class="hero-decoration hero-decoration-1"></div>
+  <div class="hero-decoration hero-decoration-2"></div>
+</section>

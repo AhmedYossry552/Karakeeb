@@ -1,0 +1,92 @@
+<div *ngIf="isOpen" class="modal-overlay" (click)="handleClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <fa-icon [icon]="faUser" class="icon-sm"></fa-icon>
+        Select Courier
+      </h2>
+      <button (click)="handleClose()" class="close-button" type="button">
+        <fa-icon [icon]="faTimes" class="icon-sm"></fa-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="availableCouriers.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <fa-icon [icon]="faUser" class="icon-lg"></fa-icon>
+        </div>
+        <h3 class="empty-title">No Couriers Available</h3>
+        <p class="empty-text">There are currently no available couriers to assign.</p>
+      </div>
+
+      <div *ngIf="availableCouriers.length > 0" class="courier-list">
+        <div
+          *ngFor="let courier of availableCouriers"
+          class="courier-item"
+        >
+          <div class="courier-content">
+            <!-- Avatar -->
+            <div class="courier-avatar">
+              <img
+                *ngIf="courier.attachments?.deliveryImage || courier.imgUrl || courier.imageUrl"
+                [src]="courier.attachments?.deliveryImage || courier.imgUrl || courier.imageUrl"
+                [alt]="courier.name"
+                class="avatar-image"
+                (error)="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'"
+              />
+              <div
+                *ngIf="!courier.attachments?.deliveryImage && !courier.imgUrl && !courier.imageUrl"
+                class="avatar-initials"
+              >
+                {{ getInitials(courier.name) }}
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="courier-info">
+              <div class="courier-header">
+                <h3 class="courier-name">{{ courier.name }}</h3>
+                <span *ngIf="courier.isAvailable !== false" class="available-badge">
+                  <fa-icon [icon]="faCheckCircle" class="icon-xs"></fa-icon>
+                  Available
+                </span>
+              </div>
+
+              <div *ngIf="courier.email" class="courier-details">
+                <div class="detail-item">
+                  <fa-icon [icon]="faEnvelope" class="icon-xs"></fa-icon>
+                  <span>{{ courier.email }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Assign Button -->
+            <button
+              (click)="handleSelectCourier(courier._id)"
+              [disabled]="loadingCourierId === courier._id"
+              class="assign-button"
+              type="button"
+            >
+              <fa-icon 
+                *ngIf="loadingCourierId === courier._id" 
+                [icon]="faSpinner" 
+                class="icon-xs spinning"
+              ></fa-icon>
+              <span>{{ loadingCourierId === courier._id ? 'Assigning...' : 'Assign' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="button"
+        (click)="handleClose()"
+        class="button button-secondary"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>

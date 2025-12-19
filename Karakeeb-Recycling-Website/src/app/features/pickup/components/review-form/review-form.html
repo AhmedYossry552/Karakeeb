@@ -1,0 +1,121 @@
+<div class="review-form">
+  <h3 class="review-title">{{ translation.t('Review Your Order') || 'Review Your Order' }}</h3>
+
+  <div class="review-content">
+    <!-- Cart Items -->
+    <div class="items-section">
+      @if (cartItems.length === 0) {
+        <p class="empty-cart">{{ translation.t('Cart is empty') || 'Cart is empty' }}</p>
+      } @else {
+        @for (item of cartItems; track item._id || $index) {
+          <div class="item-row">
+            <img [src]="item.image" [alt]="getItemName(item)" class="item-image" />
+            <div class="item-details">
+              <h4>{{ getItemName(item) }}</h4>
+              <p>{{ translation.t('Quantity') || 'Quantity' }}: <span class="value">{{ item.quantity }}</span></p>
+              <p>{{ translation.t('Price') || 'Price' }}: <span class="value">{{ getItemPrice(item) | number:'1.2-2' }} {{ translation.t('common.currency') !== 'common.currency' ? translation.t('common.currency') : 'EGP' }}</span></p>
+              @if (item.points) {
+                <p>{{ translation.t('Points') || 'Points' }}: <span class="value">{{ item.points }}</span></p>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Address -->
+    <div class="address-section">
+      <h4>{{ translation.t('Pickup Address') || 'Pickup Address' }}</h4>
+      <div 
+        class="address-box" 
+        [class.expanded]="showAddressDetails()"
+        (click)="toggleAddressDetails()"
+      >
+        <p class="address-text">{{ getFormattedAddress() }}</p>
+        <span class="address-toggle-icon">{{ showAddressDetails() ? '▼' : '▶' }}</span>
+        @if (showAddressDetails() && selectedAddress) {
+          <div class="address-details">
+            <div class="address-detail-item">
+              <strong>{{ translation.t('Street') || 'Street' }}:</strong>
+              <span>{{ selectedAddress.Street || selectedAddress.street || '-' }}</span>
+            </div>
+            <div class="address-detail-item">
+              <strong>{{ translation.t('Building') || 'Building' }}:</strong>
+              <span>{{ selectedAddress.Building || selectedAddress.building || '-' }}</span>
+            </div>
+            <div class="address-detail-item">
+              <strong>{{ translation.t('Floor') || 'Floor' }}:</strong>
+              <span>{{ selectedAddress.Floor || selectedAddress.floor || '-' }}</span>
+            </div>
+            <div class="address-detail-item">
+              <strong>{{ translation.t('Apartment') || 'Apartment' }}:</strong>
+              <span>{{ selectedAddress.Apartment || selectedAddress.apartment || '-' }}</span>
+            </div>
+            <div class="address-detail-item">
+              <strong>{{ translation.t('Area') || 'Area' }}:</strong>
+              <span>{{ selectedAddress.Area || selectedAddress.area || '-' }}</span>
+            </div>
+            <div class="address-detail-item">
+              <strong>{{ translation.t('City') || 'City' }}:</strong>
+              <span>{{ selectedAddress.City || selectedAddress.city || '-' }}</span>
+            </div>
+            @if (selectedAddress.Landmark || selectedAddress.landmark) {
+              <div class="address-detail-item">
+                <strong>{{ translation.t('Landmark') || 'Landmark' }}:</strong>
+                <span>{{ selectedAddress.Landmark || selectedAddress.landmark }}</span>
+              </div>
+            }
+            @if (selectedAddress.Notes || selectedAddress.notes) {
+              <div class="address-detail-item">
+                <strong>{{ translation.t('Notes') || 'Notes' }}:</strong>
+                <span>{{ selectedAddress.Notes || selectedAddress.notes }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Payment Method -->
+    @if (paymentMethod) {
+      <div class="payment-section">
+        <h4>{{ translation.t('Payment Method') || 'Payment Method' }}</h4>
+        <p class="payment-text">{{ paymentMethod }}</p>
+      </div>
+    }
+
+    <!-- Summary -->
+    <div class="summary-section">
+      @if (userRole === 'buyer') {
+        <div class="summary-row">
+          <span>{{ translation.t('Order Price') || 'Order Price' }}:</span>
+          <span>{{ totalPrice | number:'1.2-2' }} {{ translation.t('common.currency') !== 'common.currency' ? translation.t('common.currency') : 'EGP' }}</span>
+        </div>
+        <div class="summary-row">
+          <span>{{ translation.t('Delivery Fees') || 'Delivery Fees' }}:</span>
+          <span>{{ deliveryFee | number:'1.2-2' }} {{ translation.t('common.currency') !== 'common.currency' ? translation.t('common.currency') : 'EGP' }}</span>
+        </div>
+      }
+      <div class="summary-row total">
+        <span>{{ translation.t('Total') || 'Total' }}:</span>
+        <span>{{ totalAmount | number:'1.2-2' }} {{ translation.t('common.currency') !== 'common.currency' ? translation.t('common.currency') : 'EGP' }}</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="review-actions">
+      <button (click)="back.emit()" class="btn-secondary">
+        {{ translation.t('Back') || 'Back' }}
+      </button>
+      <button (click)="confirm.emit()" [disabled]="loading" class="btn-primary">
+        @if (loading) {
+          <span class="spinner"></span>
+            {{ translation.t('Creating...') || 'Creating...' }}
+        } @else {
+          {{ translation.t('Confirm Order') || 'Confirm Order' }}
+        }
+      </button>
+    </div>
+  </div>
+</div>
+

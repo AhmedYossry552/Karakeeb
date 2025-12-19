@@ -1,0 +1,158 @@
+/* Tailwind CSS v4 */
+@import "tailwindcss";
+
+/* Toastr CSS - Import before custom styles */
+@import "ngx-toastr/toastr";
+
+/* You can add global styles to this file, and also import other style files */
+
+/* Dark mode support */
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  --border: #e5e7eb;
+  --color-primary: #16a34a;
+  --color-green-600: #16a34a;
+  --color-green-50: #f0fdf4;
+  --text-gray-600: #4b5563;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+  --color-base-100: #ffffff;
+  --color-base-200: #f3f4f6;
+  --color-base-300: #e5e7eb;
+  --color-card: #ffffff;
+  --color-accent: #10b981;
+  --color-accent-content: #065f46;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --border-color: #e5e7eb;
+  --text-accent-content: #111827;
+}
+
+.dark {
+  --background: #111827;
+  --foreground: #f9fafb;
+  --border: #374151;
+  --color-primary: #22c55e;
+  --color-green-600: #22c55e;
+  --color-green-50: #1f2937;
+  --text-gray-600: #d1d5db;
+  --color-green-700: #16a34a;
+  --color-green-800: #15803d;
+  --color-base-100: #1f2937;
+  --color-base-200: #374151;
+  --color-base-300: #4b5563;
+  --color-card: #1f2937;
+  --color-accent: #22c55e;
+  --color-accent-content: #f9fafb;
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --border-color: #374151;
+  --text-accent-content: #f9fafb;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Custom Scrollbar Styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #86efac #f3f4f6;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #86efac;
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #4ade80;
+}
+
+/* Dark Mode Scrollbar */
+.dark .scrollbar-thin {
+  scrollbar-color: #22c55e #374151;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #22c55e;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #16a34a;
+}
+
+.scrollbar-thumb-green-300::-webkit-scrollbar-thumb {
+  background: #86efac;
+}
+
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+/* Toastr Notifications - Ensure they appear on top */
+#toast-container {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+.toast {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Ensure toast container is visible */
+.toast-top-right {
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 9999 !important;
+}
+
+.toast-top-left {
+  top: 12px !important;
+  left: 12px !important;
+  z-index: 9999 !important;
+}
+
+.toast-top-center {
+  top: 12px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+}
+
+.toast-bottom-right {
+  bottom: 12px !important;
+  right: 12px !important;
+  z-index: 9999 !important;
+}
+
+.toast-bottom-left {
+  bottom: 12px !important;
+  left: 12px !important;
+  z-index: 9999 !important;
+}
+
+.toast-bottom-center {
+  bottom: 12px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+}

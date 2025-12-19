@@ -1,0 +1,87 @@
+<div class="container">
+  <main class="main-content">
+    <h2 class="section-title">
+      {{ translation.t('staticCategories.recyclingCategories') !== 'staticCategories.recyclingCategories' ? translation.t('staticCategories.recyclingCategories') : 'Recycling Categories' }}
+    </h2>
+    <p class="subtitle">
+      {{ translation.t('staticCategories.recyclingCategoriesSubtitle') !== 'staticCategories.recyclingCategoriesSubtitle' ? translation.t('staticCategories.recyclingCategoriesSubtitle') : 'Having leftovers and want to earn money? Tell us what you have' }}
+    </p>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="categories-grid" [class.first-page]="currentPage() === 1" [class.other-pages]="currentPage() > 1">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="category-card loading">
+            <div class="category-image-wrapper skeleton-image"></div>
+            <div class="category-content">
+              <div class="category-name skeleton"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Categories Grid -->
+    @if (!isLoading() && categories().length > 0) {
+      <div class="categories-grid" [class.first-page]="currentPage() === 1" [class.other-pages]="currentPage() > 1">
+        @for (cat of categories(); track cat._id) {
+          <div class="category-card" (click)="onCardClick(cat)">
+            <div class="category-image-wrapper">
+              @if (cat.image) {
+                <img [src]="cat.image" [alt]="getDisplayName(cat)" class="category-image" (error)="onImageError($event, cat)" />
+              } @else {
+                <div class="category-icon-fallback">{{ getCategoryIcon(cat) }}</div>
+              }
+              <div class="category-overlay"></div>
+            </div>
+            <div class="category-content">
+              <h3 class="category-name">{{ getDisplayName(cat) }}</h3>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button 
+            class="pagination-btn" 
+            [disabled]="currentPage() === 1"
+            (click)="onPageChange(currentPage() - 1)"
+          >
+            ‹ previous
+          </button>
+          @for (page of getPageNumbers(); track page) {
+            <button 
+              class="pagination-btn" 
+              [class.active]="currentPage() === page"
+              (click)="onPageChange(page)"
+            >
+              {{ page }}
+            </button>
+          }
+          <button 
+            class="pagination-btn" 
+            [disabled]="currentPage() === totalPages()"
+            (click)="onPageChange(currentPage() + 1)"
+          >
+            Next ›
+          </button>
+        </div>
+      }
+    }
+
+    <!-- Empty State -->
+    @if (!isLoading() && categories().length === 0) {
+      <p class="empty-state">No categories available</p>
+    }
+
+    <!-- Footer Note -->
+    @if (!isLoading() && categories().length > 0) {
+      <p class="footer-note">
+        {{ translation.t('staticCategories.clickImageForDetails') !== 'staticCategories.clickImageForDetails' ? translation.t('staticCategories.clickImageForDetails') : 'For more detailed information on each category, click on the respective image' }}
+      </p>
+    }
+  </main>
+</div>
+

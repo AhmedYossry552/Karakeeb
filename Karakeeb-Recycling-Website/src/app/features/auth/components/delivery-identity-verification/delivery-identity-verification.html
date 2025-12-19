@@ -1,0 +1,33 @@
+<div class="delivery-identity-verification">
+  <form [formGroup]="identityForm" class="identity-form">
+    <!-- National ID / Passport -->
+    <app-floating-input
+      *ngIf="nationalId"
+      id="nationalId"
+      [label]="t('National ID / Passport Number') || 'National ID / Passport Number'"
+      type="text"
+      [error]="nationalId.hasError('required') ? (t('National ID or Passport number is required') || 'National ID or Passport number is required') : ''"
+      [formControl]="nationalId"
+    ></app-floating-input>
+
+    <!-- Emergency Contact -->
+    <app-floating-input
+      *ngIf="emergencyContact"
+      id="emergencyContact"
+      [label]="t('Emergency Contact Number') || 'Emergency Contact Number'"
+      type="tel"
+      [error]="emergencyContact.hasError('required') ? (t('Emergency contact is required') || 'Emergency contact is required') :
+               emergencyContact.hasError('pattern') ? (t('Please enter a valid phone number') || 'Please enter a valid phone number') : ''"
+      [formControl]="emergencyContact"
+    ></app-floating-input>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <p class="info-text">
+        <strong>{{ t('Note:') || 'Note:' }}</strong>
+        {{ t('Your identity will be verified within 24–48 hours. You\'ll receive an email once approved.') || 'Your identity will be verified within 24–48 hours. You\'ll receive an email once approved.' }}
+      </p>
+    </div>
+  </form>
+</div>
+

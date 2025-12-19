@@ -1,0 +1,158 @@
+<div class="admin-users">
+  <div class="admin-header">
+    <h1 class="admin-title">Users</h1>
+    <div class="admin-actions">
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Search users..."
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <div class="filters">
+    <button
+      (click)="filterByRole('')"
+      [class.active]="selectedRole === ''"
+      class="filter-button"
+    >
+      All
+    </button>
+    <button
+      (click)="filterByRole('admin')"
+      [class.active]="selectedRole === 'admin'"
+      class="filter-button"
+    >
+      Admin
+    </button>
+    <button
+      (click)="filterByRole('customer')"
+      [class.active]="selectedRole === 'customer'"
+      class="filter-button"
+    >
+      Customer
+    </button>
+    <button
+      (click)="filterByRole('buyer')"
+      [class.active]="selectedRole === 'buyer'"
+      class="filter-button"
+    >
+      Buyer
+    </button>
+    <button
+      (click)="filterByRole('delivery')"
+      [class.active]="selectedRole === 'delivery'"
+      class="filter-button"
+    >
+      Delivery
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading users...</p>
+    </div>
+  } @else if (users().length === 0) {
+    <div class="empty-state">
+      <p>No users found.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user._id) {
+            <tr>
+              <td>
+                @if (getUserImage(user)) {
+                  <img [src]="getUserImage(user)" [alt]="user.name" class="user-image" />
+                } @else {
+                  <div class="user-avatar">{{ user.name?.charAt(0) || '?' }}</div>
+                }
+              </td>
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phoneNumber?.padStart(11, '0') || '' }}</td>
+              <td>
+                <button (click)="onEdit(user)" class="role-button">{{ user.role }}</button>
+              </td>
+              <td>
+                <span [class]="getUserStatus(user).class">{{ getUserStatus(user).text }}</span>
+              </td>
+              <td>
+                <button (click)="onEdit(user)" class="action-button edit">Edit</button>
+                <button (click)="onDelete(user)" class="action-button delete">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="currentPage() === 1"
+          class="page-button"
+        >
+          Previous
+        </button>
+        <span class="page-info">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </span>
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages()"
+          class="page-button"
+        >
+          Next
+        </button>
+        <select
+          [value]="itemsPerPage()"
+          (change)="onItemsPerPageChange(+$any($event.target).value)"
+          class="items-per-page"
+        >
+          <option [value]="5">5 per page</option>
+          <option [value]="10">10 per page</option>
+          <option [value]="20">20 per page</option>
+          <option [value]="50">50 per page</option>
+        </select>
+      </div>
+    }
+  }
+
+  @if (showRoleModal()) {
+    <div class="modal-overlay" (click)="showRoleModal.set(false)">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3>Change User Role</h3>
+        <div class="modal-body">
+          <label>Select Role:</label>
+          <select [(ngModel)]="newRole" class="role-select">
+            <option value="admin">Admin</option>
+            <option value="customer">Customer</option>
+            <option value="buyer">Buyer</option>
+            <option value="delivery">Delivery</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button (click)="showRoleModal.set(false)" class="cancel-button">Cancel</button>
+          <button (click)="saveRole()" class="save-button">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

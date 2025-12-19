@@ -1,0 +1,33 @@
+<div class="payment-step">
+  <h3 class="step-title">{{ translation.t('Select Payment Method') || 'Select Payment Method' }}</h3>
+
+  <div class="payment-methods">
+    @for (method of paymentMethods; track method.value) {
+      <button
+        (click)="onSelectMethod(method.value)"
+        class="payment-method-card"
+        [class.selected]="selectedMethod === method.value"
+      >
+        <span class="method-icon">{{ method.icon }}</span>
+        <span class="method-label">{{ method.label }}</span>
+        @if (selectedMethod === method.value) {
+          <span class="check-icon">✓</span>
+        }
+      </button>
+    }
+  </div>
+
+  <div class="payment-actions">
+    <button (click)="onBack()" class="btn-secondary">
+      {{ translation.t('Back') || 'Back' }}
+    </button>
+    <button
+      (click)="onSelectMethod(selectedMethod!)"
+      [disabled]="!selectedMethod"
+      class="btn-primary"
+    >
+      {{ translation.t('Next') || 'Next' }}
+    </button>
+  </div>
+</div>
+

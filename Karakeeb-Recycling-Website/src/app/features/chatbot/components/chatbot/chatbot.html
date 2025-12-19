@@ -1,0 +1,316 @@
+@if (isAuthenticated) {
+<div class="eco-assist-page">
+  <div class="eco-assist-container">
+    <!-- Header -->
+    <div class="eco-assist-header">
+      <div class="header-content">
+        <div class="header-title">
+          <div class="logo-icon">🌱</div>
+          <div>
+            <h1>EcoAssist AI</h1>
+            <p class="header-subtitle">{{ translation.t('Your intelligent recycling assistant') || 'Your intelligent recycling assistant' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="eco-assist-main">
+      <!-- Results Display -->
+      @if (structuredData() && structuredData()!.length > 0) {
+        <div class="results-section">
+          <app-items-display-card
+            [items]="structuredData()!"
+            (close)="resetState()"
+          ></app-items-display-card>
+        </div>
+      }
+
+      <!-- Input Section -->
+      @if (!structuredData() || structuredData()!.length === 0) {
+        <div class="input-section">
+          <!-- Usage Display -->
+          @if (usage) {
+            <div class="usage-card">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span class="text-sm font-medium text-gray-700">
+                    {{ translation.t('Usage Today') || 'Usage Today' }}
+                  </span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <div class="flex space-x-1">
+                    @for (dot of [].constructor(usage.limit); track $index) {
+                      <div
+                        class="w-2 h-2 rounded-full"
+                        [class.bg-blue-500]="$index < usage.count"
+                        [class.bg-gray-300]="$index >= usage.count"
+                      ></div>
+                    }
+                  </div>
+                  <span class="text-sm font-bold text-gray-800">
+                    {{ usage.count }}/{{ usage.limit }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Reset Time Display -->
+          @if (usage && usage.remaining <= 0) {
+            <div class="info-card warning">
+              <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-sm text-orange-700">
+                  {{ translation.t('Resets in') || 'Resets in' }} {{ usage.hoursUntilReset }} {{ translation.t('hours') || 'hours' }}
+                </span>
+              </div>
+            </div>
+          }
+
+          <!-- Welcome Message -->
+          <div class="welcome-card">
+            <h2>{{ translation.t('How can I help you today?') || 'How can I help you today?' }}</h2>
+            <p class="welcome-text">
+              {{ translation.t('Use voice, text, or upload an image to identify recyclable materials') || 'Use voice, text, or upload an image to identify recyclable materials' }}
+            </p>
+          </div>
+
+          <!-- Voice Recording Section -->
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">🎤</div>
+              <h3>{{ translation.t('Voice Recording') || 'Voice Recording' }}</h3>
+            </div>
+
+            <!-- Recording Timer -->
+            @if (canRecord()) {
+              <div class="recording-timer">
+                @if (isRecording()) {
+                  <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <span class="text-red-500 font-medium">REC</span>
+                  </div>
+                }
+                <span class="text-2xl font-mono text-gray-700">
+                  {{ formatTime(recordingTime()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Audio Visualizer -->
+            @if (canRecord()) {
+              <div class="audio-visualizer">
+                @for (bar of [].constructor(20); track $index) {
+                  <div
+                    class="audio-bar"
+                    [class.animate-pulse]="isRecording()"
+                    [style.height.px]="isRecording() ? (Math.random() * 30 + 10) : 8"
+                    [style.animation-delay.ms]="$index * 100"
+                  ></div>
+                }
+              </div>
+            }
+
+            <!-- Audio Player -->
+            @if (audioUrl && !isRecording()) {
+              <div class="audio-player">
+                <audio
+                  controls
+                  [src]="audioUrl"
+                  class="w-full"
+                  preload="metadata"
+                ></audio>
+              </div>
+            }
+
+            <!-- Voice Buttons -->
+            <div class="button-group">
+              @if (!isRecording() && !audioBlob) {
+                <button
+                  (click)="startRecording()"
+                  [disabled]="!canRecord()"
+                  type="button"
+                  class="btn-primary"
+                  [class.btn-disabled]="!canRecord()"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                  <span>{{ translation.t('Start Recording') || 'Start Recording' }}</span>
+                </button>
+              }
+
+              @if (isRecording()) {
+                <button
+                  (click)="stopRecording()"
+                  type="button"
+                  class="btn-danger"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z" />
+                  </svg>
+                  <span>{{ translation.t('Stop Recording') || 'Stop Recording' }}</span>
+                </button>
+              }
+
+              @if (audioBlob && !isRecording()) {
+                <button
+                  (click)="cancelRecording()"
+                  [disabled]="isLoading || loading()"
+                  type="button"
+                  class="btn-secondary"
+                >
+                  {{ translation.t('Cancel') || 'Cancel' }}
+                </button>
+
+                <button
+                  (click)="handleDoneClick()"
+                  [disabled]="!canRecord() || isLoading || loading()"
+                  type="button"
+                  class="btn-primary"
+                  [class.btn-disabled]="!canRecord() || isLoading || loading()"
+                >
+                  @if (isLoading || loading()) {
+                    <div class="spinner-small"></div>
+                    <span>{{ isLoading ? (translation.t('Processing...') || 'Processing...') : (translation.t('AI Analyzing...') || 'AI Analyzing...') }}</span>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{{ translation.t('Done') || 'Done' }}</span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Text Input Section -->
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">✍️</div>
+              <h3>{{ translation.t('Text Input') || 'Text Input' }}</h3>
+            </div>
+            <div class="text-input-section">
+              <label class="input-label">
+                {{ translation.t('Type your order') || 'Type your order' }}
+              </label>
+              <textarea
+                [value]="manualText()"
+                (input)="manualText.set($any($event.target).value)"
+                rows="3"
+                class="text-input"
+                [placeholder]="translation.t('e.g. 3 KG plastic, 2 chairs, 1 laptop') || 'e.g. 3 KG plastic, 2 chairs, 1 laptop'"
+              ></textarea>
+              <button
+                type="button"
+                (click)="handleManualTextSubmit(manualText())"
+                class="btn-primary w-full"
+                [disabled]="loading() || isLoading"
+              >
+                @if (loading()) {
+                  <div class="spinner-small"></div>
+                  <span>{{ translation.t('AI Analyzing...') || 'AI Analyzing...' }}</span>
+                } @else {
+                  <span>{{ translation.t('Analyze Text') || 'Analyze Text' }}</span>
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Image Upload Section -->
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">📷</div>
+              <h3>{{ translation.t('Image Upload') || 'Image Upload' }}</h3>
+            </div>
+            <div class="image-upload-section">
+              <label class="input-label">
+                {{ translation.t('Upload an image') || 'Upload an image' }}
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                (change)="handleImageFileChange($event)"
+                class="file-input"
+              />
+              @if (imagePreviewUrl) {
+                <div class="image-preview">
+                  <img
+                    [src]="imagePreviewUrl"
+                    alt="Selected image preview"
+                    class="preview-image"
+                  />
+                </div>
+              }
+              <button
+                type="button"
+                (click)="handleImageAnalyze()"
+                class="btn-primary w-full"
+                [disabled]="loading() || isLoading || !selectedImage"
+              >
+                @if (loading()) {
+                  <div class="spinner-small"></div>
+                  <span>{{ translation.t('AI Analyzing...') || 'AI Analyzing...' }}</span>
+                } @else {
+                  <span>{{ translation.t('Analyze Image') || 'Analyze Image' }}</span>
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading States -->
+          @if (isLoading) {
+            <div class="info-card loading">
+              <div class="spinner"></div>
+              <span>{{ translation.t('Processing your voice...') || 'Processing your voice...' }}</span>
+            </div>
+          }
+
+          @if (loading() && !isLoading) {
+            <div class="info-card loading">
+              <div class="spinner"></div>
+              <span>{{ translation.t('AI is analyzing your order...') || 'AI is analyzing your order...' }}</span>
+            </div>
+          }
+
+          <!-- Error Messages -->
+          @if (isError) {
+            <div class="info-card error">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ isError }}</span>
+            </div>
+          }
+
+          @if (error() && !isError) {
+            <div class="info-card error">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ error() }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}
+
+@if (!isAuthenticated) {
+<div class="login-required">
+  <div class="login-card">
+    <h2>{{ translation.t('Authentication Required') || 'Authentication Required' }}</h2>
+    <p>{{ translation.t('Please login to use EcoAssist') || 'Please login to use EcoAssist' }}</p>
+    <a routerLink="/auth" class="btn-login">{{ translation.t('Go to Login') || 'Go to Login' }}</a>
+  </div>
+</div>
+}

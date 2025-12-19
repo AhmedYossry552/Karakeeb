@@ -1,0 +1,123 @@
+<div class="item-details-container" *ngIf="!isLoading()">
+  <!-- Error State -->
+  <div *ngIf="isError()" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <h1 class="error-title">{{ translation.t('Item Not Found') || 'Item Not Found' }}</h1>
+    <p class="error-message">
+      {{ translation.t('We couldn\'t find this item') || 'We couldn\'t find this item' }}
+    </p>
+    <button (click)="goBack()" class="back-button">
+      {{ translation.t('Go Back') || 'Go Back' }}
+    </button>
+  </div>
+
+  <!-- Item Details -->
+  <div *ngIf="!isError() && item()" class="item-details-content">
+    <div class="item-grid">
+      <!-- Image Section -->
+      <div class="item-image-section">
+        <div class="item-image-wrapper">
+          <img 
+            [src]="item()!.image" 
+            [alt]="itemName"
+            class="item-image"
+          />
+        </div>
+      </div>
+
+      <!-- Info Section -->
+      <div class="item-info-section">
+        <!-- Category and Title -->
+        <div class="item-header">
+          <span class="item-category">{{ categoryName }}</span>
+          <h1 class="item-title">{{ itemName }}</h1>
+          <p *ngIf="item()!.description" class="item-description">
+            {{ item()!.description }}
+          </p>
+        </div>
+
+        <!-- Price -->
+        <div class="item-price-section">
+          <span class="item-price">
+            {{ translation.convertNumber(totalPrice.toFixed(2)) }} 
+            {{ translation.t('EGP') || 'egp' }}
+          </span>
+        </div>
+
+        <!-- Stock Info -->
+        <div *ngIf="shouldShowStockInfo" class="stock-info">
+          <div class="stock-header">
+            <span class="stock-label">{{ translation.t('Available Stock') || 'Available Stock' }}</span>
+            <span class="stock-value" [class.out-of-stock]="isOutOfStock" [class.low-stock]="isLowStock">
+              <span *ngIf="isOutOfStock">{{ translation.t('OutOfStock') || 'OutOfStock' }}</span>
+              <span *ngIf="!isOutOfStock">
+                {{ translation.convertNumber(currentStock) }} {{ getMeasurementText(item()!.measurement_unit) }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Quantity Selector -->
+        <div class="quantity-section">
+          <label class="quantity-label">{{ translation.t('Quantity') || 'Quantity' }}</label>
+          <div class="quantity-controls">
+            <button 
+              (click)="adjustQuantity(-1)"
+              [disabled]="selectedQuantity() <= (item()!.measurement_unit === 1 ? 0.25 : 1)"
+              class="quantity-btn"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+              </svg>
+            </button>
+            <input
+              type="number"
+              [value]="inputValue()"
+              (input)="onQuantityChange($any($event.target).value)"
+              (blur)="onQuantityBlur()"
+              [min]="item()!.measurement_unit === 1 ? 0.25 : 1"
+              [step]="item()!.measurement_unit === 1 ? 0.25 : 1"
+              [max]="(user?.role === 'customer' && !fromMarketPlace) ? undefined : (shouldShowStockInfo ? currentStock : undefined)"
+              class="quantity-input"
+              [class.error]="inputError()"
+            />
+            <button 
+              (click)="adjustQuantity(1)"
+              [disabled]="shouldShowStockInfo && selectedQuantity() >= currentStock"
+              class="quantity-btn"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
+          <p *ngIf="inputError()" class="error-message">{{ inputError() }}</p>
+          <p class="measurement-hint">
+            {{ getMeasurementText(item()!.measurement_unit) }}
+          </p>
+        </div>
+
+        <!-- Add to Cart Button -->
+        <div class="action-section">
+          <button
+            (click)="toggleCart()"
+            [disabled]="user?.role === 'buyer' && isOutOfStock"
+            class="add-to-cart-btn"
+            [class.in-cart]="isInCart"
+            [class.disabled]="user?.role === 'buyer' && isOutOfStock"
+          >
+            <span *ngIf="isInCart">{{ translation.t('Remove From Cart') || 'Remove From Cart' }}</span>
+            <span *ngIf="!isInCart">{{ translation.t('Add To Cart') || 'Add To Cart' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="isLoading()" class="loading-state">
+  <div class="loading-spinner"></div>
+    <p>{{ translation.t('Loading...') || 'Loading...' }}</p>
+</div>
+

@@ -1,0 +1,67 @@
+<section class="faq-page">
+  <div class="faq-container">
+    <header class="faq-header">
+      <h1 class="faq-title">
+        {{ translation.t('Frequently Asked Questions') || 'Frequently Asked Questions' }}
+      </h1>
+      <p class="faq-subtitle">
+        {{ translation.t('Everything you need to know about our material exchange process') || 'Answers to common questions about recycling with Karakeeb.' }}
+      </p>
+    </header>
+
+    <!-- Accordion list, mirroring Next.js FAQAccordion -->
+    <div class="faq-list">
+      <div
+        class="faq-item"
+        *ngFor="let faq of faqs; let i = index"
+      >
+        <button
+          type="button"
+          class="faq-question"
+          (click)="toggleAccordion(i)"
+        >
+          <span class="faq-question-text">
+            {{ translation.t(faq.question) || faq.question }}
+          </span>
+          <span
+            class="faq-chevron"
+            [class.faq-chevron-open]="openIndex() === i"
+          >
+            ▾
+          </span>
+        </button>
+
+        <div
+          class="faq-answer"
+          *ngIf="openIndex() === i"
+        >
+          <p
+            class="faq-answer-text"
+            *ngIf="faq.answer"
+          >
+            {{ translation.t(faq.answer) || faq.answer }}
+          </p>
+
+          <div
+            class="faq-items-grid"
+            *ngIf="faq.items"
+          >
+            <div
+              class="faq-item-card"
+              *ngFor="let item of faq.items; let j = index"
+            >
+              <img
+                class="faq-item-image"
+                [src]="item.src"
+                [alt]="item.desc"
+              />
+              <p class="faq-item-desc">
+                {{ translation.t(item.desc) || item.desc }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

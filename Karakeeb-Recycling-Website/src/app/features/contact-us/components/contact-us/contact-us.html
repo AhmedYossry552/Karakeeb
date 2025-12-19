@@ -1,0 +1,56 @@
+<section class="contact-page">
+  <div class="contact-container">
+    <header class="contact-header">
+      <h1 class="contact-title">
+        {{ translation.t('Contact Us') || 'Contact Us' }}
+      </h1>
+      <p class="contact-subtitle">
+        {{ translation.t('Get in touch with the Karakeeb team.') || 'Get in touch with the Karakeeb team.' }}
+      </p>
+    </header>
+
+    <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+      <div class="form-group">
+        <label for="name">
+          {{ translation.t('Name') || 'Name' }}
+        </label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          [class.invalid]="contactForm.get('name')?.invalid && contactForm.get('name')?.touched"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">
+          {{ translation.t('Email') || 'Email' }}
+        </label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          [class.invalid]="contactForm.get('email')?.invalid && contactForm.get('email')?.touched"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="message">
+          {{ translation.t('Message') || 'Message' }}
+        </label>
+        <textarea
+          id="message"
+          rows="5"
+          formControlName="message"
+          [class.invalid]="contactForm.get('message')?.invalid && contactForm.get('message')?.touched"
+        ></textarea>
+      </div>
+
+      <button type="submit" class="contact-submit">
+          {{ translation.t('Send Message') || 'Send Message' }}
+      </button>
+    </form>
+  </div>
+</section>
+
+

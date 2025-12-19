@@ -1,0 +1,25 @@
+.home-container {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--background, #ffffff);
+  
+  // Smooth scrolling
+  scroll-behavior: smooth;
+  
+  // Section spacing
+  section {
+    margin-bottom: 0;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Dark Mode Styles
+:host-context(.dark) {
+  .home-container {
+    background: var(--background, #111827);
+  }
+}
+

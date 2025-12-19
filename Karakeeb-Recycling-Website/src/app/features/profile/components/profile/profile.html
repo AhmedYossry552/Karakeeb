@@ -1,0 +1,72 @@
+<div class="profile-container" *ngIf="user()">
+  <div class="profile-card">
+    <!-- Header Section -->
+    <app-profile-header
+      [user]="user()!"
+      [tier]="tier"
+      (returnEarnClick)="onReturnEarnClick()"
+    ></app-profile-header>
+
+    <!-- Stats Section -->
+    <app-stats-section
+      [totalCompletedOrders]="totalCompletedOrders"
+      [userPoints]="userPoints()"
+      [pointsLoading]="pointsLoading()"
+      [walletBalance]="walletBalance()"
+      [walletLoading]="walletLoading()"
+      [userRole]="user()!.role"
+    ></app-stats-section>
+
+
+    <!-- Points Activity - Only for customers -->
+    @if (user()!.role === 'customer') {
+      <app-points-activity
+        [userPoints]="userPoints()"
+        [totalPointsHistoryLength]="totalPointsHistoryLength"
+      ></app-points-activity>
+    }
+
+    <!-- Tabs Navigation -->
+    <app-tab-navigation
+      [tabs]="tabs"
+      [activeTab]="activeTab()"
+      (tabChange)="onTabChange($event)"
+    ></app-tab-navigation>
+
+    <!-- Tab Content -->
+    <app-tab-content
+      [activeTab]="activeTab()"
+      [isLoading]="isLoading()"
+      [isReviewsLoading]="reviewsLoading()"
+      [filteredOrders]="filteredOrders"
+      [user]="user()!"
+      [userReviews]="userReviews()"
+      (cancelOrder)="onCancelOrder($event)"
+      (deleteOrder)="onDeleteOrder($event)"
+      (editReview)="onEditReview($event)"
+      (deleteReview)="onDeleteReview($event)"
+    ></app-tab-content>
+
+    <!-- Redeem Points Modal -->
+    <app-redeem-points
+      [show]="showRedeemModal()"
+      (close)="onCloseRedeemModal()"
+      (success)="onRedeemSuccess()"
+    ></app-redeem-points>
+
+    <!-- Review Modal -->
+    <app-review-modal
+      [isOpen]="showReviewModal()"
+      [orderId]="selectedOrderForReview()?._id || ''"
+      [orderInfo]="selectedOrderForReview() || undefined"
+      [existingReview]="existingReview()"
+      (close)="onCloseReviewModal()"
+      (submitted)="onReviewSubmitted($event)"
+    ></app-review-modal>
+  </div>
+</div>
+
+<div *ngIf="!user()" class="profile-loading">
+  <div class="loading-spinner"></div>
+</div>
+

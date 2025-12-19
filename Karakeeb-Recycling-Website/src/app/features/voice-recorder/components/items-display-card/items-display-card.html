@@ -1,0 +1,246 @@
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" (click)="onClose()">
+  <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
+    @if (showSuccess()) {
+      <div class="absolute top-4 left-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 z-10">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Items added to cart successfully!</span>
+      </div>
+    }
+
+    <!-- Header -->
+    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+      <h3 class="text-2xl font-bold text-gray-800 flex items-center">
+        <div class="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center mr-3">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        {{ translation.t('AI Found Items') || 'AI Found Items' }}
+      </h3>
+      <button (click)="onClose()" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full" type="button">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="flex-1 flex items-center justify-center p-6">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p class="text-gray-600">{{ translation.t('Loading item details...') || 'Loading item details...' }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @else if (localItems().length === 0) {
+      <div class="flex-1 flex items-center justify-center p-6">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2" />
+            </svg>
+          </div>
+          <p class="text-gray-600 mb-4">{{ translation.t('No items found in your order') || 'No items found in your order' }}</p>
+          <button (click)="onClose()" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg" type="button">
+            {{ translation.t('Close') || 'Close' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Items List -->
+    @else {
+      <div class="flex-1 overflow-y-auto p-6 space-y-4">
+        @for (item of localItems(); track $index) {
+          <div class="border rounded-xl p-5 transition-all duration-200"
+               [class.bg-gradient-to-r]="item.found"
+               [class.from-primary/5]="item.found"
+               [class.to-secondary/5]="item.found"
+               [class.border-primary/20]="item.found"
+               [class.bg-gray-50]="!item.found"
+               [class.border-gray-200]="!item.found">
+            <div class="flex items-start justify-between mb-4 gap-4">
+              <div class="flex items-start space-x-4 flex-1">
+                <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  @if (item.found && item.image && item.image !== '/placeholder-item.jpg') {
+                    <img [src]="item.image" [alt]="getDisplayName(item.name)" class="w-full h-full object-cover rounded-lg" />
+                  } @else {
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7" />
+                    </svg>
+                  }
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-semibold text-gray-800 text-xl mb-2">
+                    {{ item.found && item.name ? getDisplayName(item.name) : item.material }}
+                    @if (!item.found) {
+                      <span class="ml-2 text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">
+                        {{ translation.t('Not in catalog') || 'Not in catalog' }}
+                      </span>
+                    }
+                    @if (item.found) {
+                      <span class="ml-2 text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">
+                        ✓ {{ translation.t('Found in catalog') || 'Found in catalog' }}
+                      </span>
+                    }
+                  </h4>
+
+                  <div class="flex items-center space-x-6 mb-2">
+                    <p class="text-sm text-gray-600">
+                      {{ translation.t('Unit') || 'Unit' }}: <span class="font-medium">{{ item.unit === 'KG' ? (translation.t('Kilograms') || 'Kilograms') : (translation.t('Pieces') || 'Pieces') }}</span>
+                    </p>
+
+                    @if (item.found) {
+                      <span class="text-sm text-green-600 font-semibold">
+                        {{ Math.floor(item.quantity * (item.points || 0)) }} {{ translation.t('pts') || 'pts' }}
+                      </span>
+                      <span class="text-sm text-blue-600 font-semibold">
+                        {{ (item.quantity * (item.price || 0)).toFixed(2) }} EGP
+                      </span>
+                    } @else {
+                      <div class="text-sm text-orange-600 italic">
+                        {{ translation.t('Price and points will be available when added to catalog') || 'Price and points will be available when added to catalog' }}
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <button (click)="removeItem($index)" class="text-red-500 hover:text-red-700 transition-colors p-2 hover:bg-red-50 rounded-full" type="button" [title]="translation.t('Remove item') || 'Remove item'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between">
+              @if (item.found) {
+                <div class="flex items-center space-x-4">
+                  <button (click)="decreaseQuantity($index)" 
+                          [disabled]="(item.unit === 'pieces' ? item.quantity <= 1 : item.quantity <= 0.25)"
+                          class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                  </button>
+
+                  <div class="bg-white border border-gray-300 rounded-lg px-3 py-2 min-w-[100px] text-center">
+                    <input type="number" [value]="item.quantity" 
+                           (input)="handleQuantityChange($index, $any($event.target).value)"
+                           (blur)="handleQuantityBlur($index)"
+                           class="w-full text-center font-semibold text-gray-800 text-lg bg-transparent border-none outline-none"
+                           [min]="item.unit === 'pieces' ? '1' : '0.25'"
+                           [step]="item.unit === 'pieces' ? '1' : '0.25'" />
+                  </div>
+
+                  <button (click)="increaseQuantity($index)" class="w-10 h-10 bg-primary hover:bg-primary/90 text-white rounded-full flex items-center justify-center transition-colors" type="button">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </button>
+                </div>
+              } @else {
+                <div class="text-gray-500 italic">
+                  {{ translation.t('Item detected but not available in catalog') || 'Item detected but not available in catalog' }}
+                </div>
+              }
+
+              <div class="text-right">
+                @if (item.found) {
+                  <div class="text-sm text-gray-500">{{ translation.t('Total') || 'Total' }}</div>
+                  <div class="font-semibold text-primary text-lg">
+                    {{ item.quantity }} {{ item.unit }}
+                  </div>
+                } @else {
+                  <div class="text-sm text-gray-400 italic">{{ translation.t('Not available') || 'Not available' }}</div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="border-t border-gray-200 p-6 bg-white">
+        @if (hasItemsNotInCatalog) {
+          <div class="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span class="text-sm text-orange-700">
+                {{ itemsNotInCatalog.length }} {{ translation.t('item(s) detected but not available in our catalog. Only items in catalog can be added to cart.') || 'item(s) detected but not available in our catalog. Only items in catalog can be added to cart.' }}
+              </span>
+            </div>
+          </div>
+        }
+
+        <div class="flex space-x-4 mb-6">
+          <button (click)="handleBrowseMore()" class="flex-1 bg-green-700 hover:bg-green-800 text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2" type="button">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>{{ translation.t('Browse More') || 'Browse More' }}</span>
+          </button>
+
+          <button (click)="handleCheckout()" 
+                  [disabled]="canCheckout"
+                  class="flex-1 bg-green-700 hover:bg-green-800 text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+            @if (isAddingToCart()) {
+              <svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{ translation.t('Adding to Cart...') || 'Adding to Cart...' }}</span>
+            } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5H17M9 19.5a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zM20.5 19.5a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0z" />
+              </svg>
+              <span>
+                {{ itemsInCatalogCount === 0 ? (translation.t('No Items to Checkout') || 'No Items to Checkout') : (translation.t('Proceed to Checkout') || 'Proceed to Checkout') }}
+              </span>
+            }
+          </button>
+        </div>
+
+        <!-- Totals -->
+        <div class="grid grid-cols-4 gap-4 text-center">
+          <div>
+            <div class="text-sm text-gray-600">{{ translation.t('Total Items') || 'Total Items' }}</div>
+            <div class="text-xl font-semibold text-gray-800">{{ localItems().length }}</div>
+            <div class="text-xs text-gray-500">
+              ({{ itemsInCatalogCount }} {{ translation.t('in catalog') || 'in catalog' }})
+            </div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">{{ translation.t('Available Quantity') || 'Available Quantity' }}</div>
+            <div class="text-xl font-semibold text-gray-800">
+              {{ totalQuantity }}
+            </div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">{{ translation.t('Total Points') || 'Total Points' }}</div>
+            <div class="text-xl font-semibold text-green-600">
+              {{ totalPoints }}
+            </div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">{{ translation.t('Total Price') || 'Total Price' }}</div>
+            <div class="text-xl font-semibold text-blue-600">
+              {{ totalPriceFormatted }} EGP
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+

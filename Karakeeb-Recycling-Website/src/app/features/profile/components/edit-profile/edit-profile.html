@@ -1,0 +1,119 @@
+<div class="edit-profile-container" *ngIf="user()">
+  <div class="edit-profile-card">
+    <h2 class="edit-profile-title">
+      {{ translation.t('Edit Profile') || 'Edit Profile' }}
+    </h2>
+
+    <!-- Avatar Section -->
+    <div class="avatar-section">
+      <div class="avatar-wrapper">
+        @if (previewUrl()) {
+          <img
+            [src]="previewUrl()"
+            [alt]="translation.t('Profile picture') || 'Profile picture'"
+            class="avatar-image"
+          />
+        } @else {
+          <div class="avatar-initials">
+            {{ getUserInitials() }}
+          </div>
+        }
+
+        <label for="image-upload" class="avatar-edit-btn">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </label>
+        <input
+          id="image-upload"
+          type="file"
+          accept="image/*"
+          (change)="onImageChange($event)"
+          class="hidden-input"
+        />
+      </div>
+
+      @if (imageError()) {
+        <p class="image-error">{{ imageError() }}</p>
+      }
+    </div>
+
+    <!-- Form Fields -->
+    <form [formGroup]="editForm" class="edit-form">
+      <div class="form-group">
+        <label class="form-label">
+          {{ translation.t('Full Name') || 'Full Name' }}
+        </label>
+        <input
+          type="text"
+          formControlName="name"
+          class="form-input"
+          [class.error]="nameControl?.invalid && nameControl?.touched"
+          maxlength="20"
+        />
+        @if (nameControl?.invalid && nameControl?.touched) {
+          <p class="error-text">
+            @if (nameControl?.hasError('required')) {
+              {{ translation.t('Name is required') || 'Name is required' }}
+            } @else if (nameControl?.hasError('maxlength')) {
+              {{ translation.t('Name must be less than 20 characters') || 'Name must be less than 20 characters' }}
+            }
+          </p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          {{ translation.t('Phone Number') || 'Phone Number' }}
+        </label>
+        <div class="phone-input-wrapper">
+          <span class="phone-prefix">+20</span>
+          <input
+            type="text"
+            formControlName="phoneNumber"
+            class="form-input phone-input"
+            [class.error]="phoneControl?.invalid && phoneControl?.touched"
+            maxlength="10"
+            [placeholder]="translation.t('10XXXXXXXXX') || '10XXXXXXXXX'"
+          />
+        </div>
+        @if (phoneControl?.invalid && phoneControl?.touched) {
+          <p class="error-text">
+            @if (phoneControl?.hasError('required')) {
+              {{ translation.t('Phone number is required') || 'Phone number is required' }}
+            } @else if (phoneControl?.hasError('pattern')) {
+              {{ translation.t('Invalid phone number format') || 'Invalid phone number format' }}
+            }
+          </p>
+        }
+      </div>
+    </form>
+
+    <!-- Buttons -->
+    <div class="form-actions">
+      <button
+        type="button"
+        (click)="onCancel()"
+        class="cancel-btn"
+      >
+        {{ translation.t('Cancel') || 'Cancel' }}
+      </button>
+
+      <button
+        type="button"
+        (click)="onSubmit()"
+        [disabled]="!isChanged || isSaving() || editForm.invalid"
+        class="save-btn"
+        [class.disabled]="!isChanged || isSaving() || editForm.invalid"
+      >
+        @if (isSaving()) {
+          <span class="spinner"></span>
+          {{ translation.t('Saving...') || 'Saving...' }}
+        } @else {
+          {{ translation.t('Save') || 'Save' }}
+        }
+      </button>
+    </div>
+  </div>
+</div>
+

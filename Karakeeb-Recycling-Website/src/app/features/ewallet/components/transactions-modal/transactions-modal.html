@@ -1,0 +1,47 @@
+@if (show) {
+  <div class="modal-overlay" (click)="close.emit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ translation.t('Transaction History') || 'Transaction History' }}</h2>
+        <button (click)="close.emit()" class="close-button">✕</button>
+      </div>
+
+      <div class="transactions-list">
+        @if (paginatedTransactions.length === 0) {
+          <div class="empty-state">
+            <p>{{ translation.t('No transactions yet') || 'No transactions yet' }}</p>
+          </div>
+        } @else {
+          @for (transaction of paginatedTransactions; track transaction._id || $index) {
+            <div class="transaction-item">
+              <div class="transaction-icon">{{ getTransactionIcon(transaction.type) }}</div>
+              <div class="transaction-details">
+                <span class="transaction-type">{{ translation.t(transaction.type) || transaction.type }}</span>
+                <span class="transaction-date">{{ transaction.date | date:'short' }}</span>
+                @if (transaction.description) {
+                    <span class="transaction-desc">{{ transaction.description }}</span>
+                }
+              </div>
+              <span class="transaction-amount" [class.positive]="transaction.type === 'cashback' || transaction.type === 'deposit'" [class.negative]="transaction.type === 'withdrawal' || transaction.type === 'purchase'">
+                {{ transaction.type === 'withdrawal' || transaction.type === 'purchase' ? '-' : '+' }}{{ transaction.amount | number:'1.2-2' }} {{ translation.t('EGP') || 'EGP' }}
+              </span>
+            </div>
+          }
+        }
+      </div>
+
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <button (click)="prevPage()" [disabled]="currentPage() === 0" class="page-button">
+            {{ translation.t('Previous') || 'Previous' }}
+          </button>
+          <span class="page-info">{{ currentPage() + 1 }} / {{ totalPages }}</span>
+          <button (click)="nextPage()" [disabled]="currentPage() === totalPages - 1" class="page-button">
+            {{ translation.t('Next') || 'Next' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+

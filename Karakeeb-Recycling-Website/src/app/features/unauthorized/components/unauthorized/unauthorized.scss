@@ -1,0 +1,40 @@
+.unauthorized-page {
+  padding: 3rem 1.5rem;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-base-100, #f9fafb);
+}
+
+.unauthorized-container {
+  text-align: center;
+}
+
+.unauthorized-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.unauthorized-message {
+  font-size: 1.05rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.unauthorized-link {
+  display: inline-block;
+  padding: 0.6rem 1.25rem;
+  border-radius: 9999px;
+  background-color: #16a34a;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.unauthorized-link:hover {
+  background-color: #15803d;
+}
+
+

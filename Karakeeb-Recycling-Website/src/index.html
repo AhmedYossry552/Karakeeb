@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>RecyclingSystemAngular</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+
+  <script>
+    (function() {
+      const originalError = console.error;
+      const originalWarn = console.warn;
+      const patterns = [
+        /Cross-Origin-Opener-Policy/i,
+        /COOP/i,
+        /postMessage/i,
+        /policy would block/i,
+        /client:335/i,
+        /client:\d+/i
+      ];
+      
+      function shouldSuppress(msg) {
+        return patterns.some(p => p.test(msg));
+      }
+      
+      console.error = function(...args) {
+        const msg = args.map(a => String(a)).join(' ');
+        if (shouldSuppress(msg)) return;
+        originalError.apply(console, args);
+      };
+      
+      console.warn = function(...args) {
+        const msg = args.map(a => String(a)).join(' ');
+        if (shouldSuppress(msg)) return;
+        originalWarn.apply(console, args);
+      };
+      
+      // Also catch unhandled errors
+      window.addEventListener('error', function(e) {
+        if (e.message && shouldSuppress(e.message)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, true);
+    })();
+  </script>
+
+  <!-- Google Sign-In Script -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Stripe.js for credit card payments -->
+  <script src="https://js.stripe.com/v3/"></script>
+
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+

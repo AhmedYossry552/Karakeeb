@@ -1,0 +1,61 @@
+@if (show) {
+  <div class="modal-overlay" (click)="onClose()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-info">
+          <div class="header-icon">📦</div>
+          <div>
+            <h3>{{ translation.t('Order Items') || 'Order Items' }}</h3>
+            <p>{{ translation.t('Items in this order') || 'Items in this order' }}</p>
+          </div>
+        </div>
+        <button (click)="onClose()" class="close-button" aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="items-list">
+          @for (item of items; track item._id || $index) {
+            <div class="item-row">
+              <img 
+                [src]="item.image" 
+                [alt]="getItemName(item)" 
+                class="item-image"
+                (error)="onImageError($event)"
+              />
+              <div class="item-details">
+                <h4>{{ getItemName(item) }}</h4>
+                <p class="item-quantity">
+                  {{ translation.t('Quantity') || 'Quantity' }}: {{ item.quantity }}
+                </p>
+                <p class="item-price">
+                  {{ getItemPrice(item) * item.quantity | number:'1.2-2' }} 
+                  {{ translation.t('EGP') || 'EGP' }}
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="order-summary">
+          <div class="summary-row">
+            <span>{{ translation.t('Total Items') || 'Total Items' }}:</span>
+            <span>{{ getTotalQuantity() }}</span>
+          </div>
+          <div class="summary-row">
+            <span>{{ translation.t('Total Price') || 'Total Price' }}:</span>
+            <span>{{ getTotalPrice() | number:'1.2-2' }} {{ translation.t('EGP') || 'EGP' }}</span>
+          </div>
+          @if (getTotalPoints() > 0) {
+            <div class="summary-row">
+                <span>{{ translation.t('Total Points') || 'Total Points' }}:</span>
+              <span>{{ getTotalPoints() }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+

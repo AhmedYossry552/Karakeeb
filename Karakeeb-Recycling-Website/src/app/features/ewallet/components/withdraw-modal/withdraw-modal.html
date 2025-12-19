@@ -1,0 +1,93 @@
+@if (show) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      @if (paymentStep() === 1) {
+        <!-- Step 1: Withdraw Amount -->
+        <div class="modal-step">
+          <h2 class="modal-title">{{ translation.t('Cash Out Rewards') || 'Cash Out Rewards' }}</h2>
+          <div class="balance-info">
+            <span class="balance-label">{{ translation.t('Available Balance') || 'Available Balance' }}</span>
+            <span class="balance-value">{{ balance | number:'1.2-2' }} {{ translation.t('EGP') || 'EGP' }}</span>
+          </div>
+          <div class="form-group">
+            <label>{{ translation.t('Withdrawal Amount') || 'Withdrawal Amount' }}</label>
+            <input
+              type="number"
+              [value]="withdrawAmount()"
+              (input)="withdrawAmount.set($any($event.target).value)"
+              [placeholder]="translation.t('EGP') || 'EGP'"
+              class="form-input"
+              [min]="minWithdraw"
+              [max]="balance"
+            />
+            @if (withdrawAmount() && getAmountValue() < minWithdraw) {
+              <p class="error-text">{{ translation.t('Minimum withdrawal is 10.00 EGP') || 'Minimum withdrawal is 10.00 EGP' }}</p>
+            }
+            @if (withdrawAmount() && getAmountValue() > balance) {
+              <p class="error-text">{{ translation.t('You cannot withdraw more than your balance') || 'You cannot withdraw more than your balance' }}</p>
+            }
+          </div>
+          <div class="modal-actions">
+            <button (click)="closeModal()" class="btn-cancel">
+              {{ translation.t('Cancel') || 'Cancel' }}
+            </button>
+            <button 
+              type="button"
+              (click)="onWithdraw($event)" 
+              [disabled]="!canWithdraw()" 
+              class="btn-continue"
+              [class.disabled]="!canWithdraw()"
+            >
+              {{ translation.t('Continue') || 'Continue' }}
+            </button>
+          </div>
+        </div>
+      } @else if (paymentStep() === 2) {
+        <!-- Step 2: Select Payment Gateway -->
+        <div class="modal-step">
+          <h2 class="modal-title">{{ translation.t('Choose Payment Method') || 'Choose Payment Method' }}</h2>
+          <div class="withdraw-info">
+            <span>{{ translation.t('Withdrawing') || 'Withdrawing' }}:</span>
+            <span class="amount">{{ withdrawAmount() }} {{ translation.t('EGP') || 'EGP' }}</span>
+          </div>
+          <div class="gateways-grid">
+            @for (gateway of gateways; track gateway.id) {
+              <button
+                (click)="selectedGateway.set(gateway.id)"
+                class="gateway-card"
+                [class.selected]="selectedGateway() === gateway.id"
+              >
+                <span class="gateway-icon">{{ gateway.icon }}</span>
+                <span class="gateway-name">{{ gateway.name }}</span>
+                @if (selectedGateway() === gateway.id) {
+                  <span class="check-icon">✓</span>
+                }
+              </button>
+            }
+          </div>
+          <div class="modal-actions">
+            <button (click)="paymentStep.set(1)" class="btn-cancel">
+                {{ translation.t('Cancel') || 'Cancel' }}
+            </button>
+            <button (click)="processPayment()" [disabled]="!selectedGateway() || isProcessing()" class="btn-process">
+              @if (isProcessing()) {
+                {{ translation.t('Processing...') || 'Processing...' }}
+              } @else {
+                {{ translation.t('Process Payment') || 'Process Payment' }}
+              }
+            </button>
+          </div>
+        </div>
+      } @else if (paymentStep() === 3) {
+        <!-- Step 3: Success -->
+        <div class="modal-step success">
+          <div class="success-icon">✓</div>
+          <h2 class="modal-title">{{ translation.t('Payment Successful!') || 'Payment Successful!' }}</h2>
+          <p class="success-message">
+            {{ translation.t('Your withdrawal has been processed successfully') || 'Your withdrawal has been processed successfully' }}
+          </p>
+        </div>
+      }
+    </div>
+  </div>
+}

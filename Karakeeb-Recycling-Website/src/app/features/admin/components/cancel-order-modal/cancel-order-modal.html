@@ -1,0 +1,51 @@
+<div *ngIf="isOpen" class="modal-overlay" (click)="handleClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Cancel Order</h2>
+      <button (click)="handleClose()" class="close-button">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-description">
+        Are you sure you want to cancel this order? Please provide a reason for cancellation.
+      </p>
+
+      <div class="form-group">
+        <label for="reason" class="form-label">Cancellation Reason *</label>
+        <textarea
+          id="reason"
+          [(ngModel)]="reason"
+          class="form-input"
+          rows="4"
+          placeholder="Enter cancellation reason (at least 5 characters)..."
+          [class.error]="error() && !isValid"
+        ></textarea>
+        <p *ngIf="error()" class="error-message">{{ error() }}</p>
+        <p class="help-text">Minimum 5 characters required</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="button"
+        (click)="handleClose()"
+        class="button button-secondary"
+      >
+        Keep Order
+      </button>
+      <button
+        type="button"
+        (click)="handleConfirm()"
+        [disabled]="!isValid"
+        class="button button-primary"
+      >
+        Cancel Order
+      </button>
+    </div>
+  </div>
+</div>
+

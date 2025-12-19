@@ -1,0 +1,97 @@
+@if (open) {
+  @if (showEmergencyConfirm()) {
+    <div class="dialog-overlay" (click)="onClose()">
+      <div class="dialog-content emergency" (click)="$event.stopPropagation()">
+        <div class="emergency-header">
+          <span class="emergency-icon">📞</span>
+          <h3>{{ translation.t('Emergency Alert') || 'Emergency Alert' }}</h3>
+        </div>
+        <p class="emergency-message">
+          {{ translation.t('Emergency Message') || 'This will contact emergency services and EcoPickup support. Only use this for real emergencies.' }}
+        </p>
+        <div class="dialog-actions">
+          <button (click)="showEmergencyConfirm.set(false)" class="btn-secondary">
+            {{ translation.t('Cancel') || 'Cancel' }}
+          </button>
+          <button (click)="onEmergencyConfirm()" class="btn-emergency">
+            {{ translation.t('Contact Emergency') || 'Contact Emergency' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="dialog-overlay" (click)="onClose()">
+      <div class="dialog-content" (click)="$event.stopPropagation()">
+        <h3 class="dialog-title">
+          {{ translation.t('Report Safety Issue') || 'Report Safety Issue' }}
+        </h3>
+        <p class="dialog-subtitle">
+          {{ translation.t('Safety Message') || 'Help us keep the community safe by reporting issues.' }}
+        </p>
+
+        <div class="dialog-body">
+          <div class="info-box">
+            <p>
+              <span class="info-label">{{ translation.t('Order') || 'Order' }}:</span> {{ orderNumber }}
+            </p>
+            @if (driverName) {
+              <p>
+                <span class="info-label">{{ translation.t('Driver') || 'Driver' }}:</span> {{ driverName }}
+              </p>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ translation.t('Type of Issue') || 'Type of Issue' }}</label>
+            <select
+              [value]="reportType()"
+              (change)="reportType.set($any($event.target).value)"
+              class="form-select"
+            >
+              <option value="">{{ translation.t('Select...') || 'Select...' }}</option>
+              @for (issue of issues; track issue.id) {
+                <option [value]="issue.id">{{ issue.label }}</option>
+              }
+            </select>
+            @if (selectedIssue) {
+              <p class="issue-description">{{ selectedIssue.description }}</p>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ translation.t('Description') || 'Description' }}</label>
+            <textarea
+              [value]="description()"
+              (input)="description.set($any($event.target).value)"
+              class="form-textarea"
+              rows="4"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <div class="action-row">
+            <button (click)="onClose()" class="btn-secondary">
+                {{ translation.t('Cancel') || 'Cancel' }}
+            </button>
+            <button (click)="onEmergency()" class="btn-emergency">
+              {{ translation.t('Emergency') || 'Emergency' }}
+            </button>
+          </div>
+          <button
+            (click)="onReport()"
+            [disabled]="!canSubmit()"
+            class="btn-primary"
+          >
+            @if (isLoading()) {
+                {{ translation.t('Submitting...') || 'Submitting...' }}
+            } @else {
+              {{ translation.t('Submit Report') || 'Submit Report' }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}
+

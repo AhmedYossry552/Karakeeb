@@ -1,0 +1,77 @@
+<div class="receipt-container" *ngIf="!loading()">
+  <div class="receipt-card" *ngIf="order()">
+    <div class="receipt-header">
+      <h1 class="receipt-title">{{ translation.t('Receipt') || 'Receipt' }}</h1>
+      <p class="receipt-order-id">Order #{{ order()!._id.slice(-8).toUpperCase() }}</p>
+    </div>
+
+    <div class="receipt-body">
+      <div class="receipt-section">
+        <h3 class="section-title">{{ translation.t('Order Details') || 'Order Details' }}</h3>
+        <div class="detail-row">
+          <span class="detail-label">{{ translation.t('Date') || 'Date' }}:</span>
+          <span class="detail-value">{{ getFormattedDate() }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ translation.t('Address') || 'Address' }}:</span>
+          <span class="detail-value">{{ getFormattedAddress() }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ translation.t('Status') || 'Status' }}:</span>
+          <span class="detail-value status-badge" [class]="'status-' + order()!.status">
+            {{ order()!.status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="receipt-section">
+        <h3 class="section-title">{{ translation.t('Items') || 'Items' }}</h3>
+        <div class="items-list">
+          @for (item of order()!.items; track item._id || $index) {
+            <div class="item-row">
+              <div class="item-info">
+                <span class="item-name">{{ getItemName(item) }}</span>
+                <span class="item-quantity">x{{ item.quantity }}</span>
+              </div>
+              <span class="item-price">{{ (getItemPrice(item) * item.quantity) | number:'1.2-2' }} {{ translation.t('common.currency') !== 'common.currency' ? translation.t('common.currency') : 'EGP' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="receipt-section">
+        <h3 class="section-title">{{ translation.t('Summary') || 'Summary' }}</h3>
+        <div class="summary-row">
+          <span>{{ translation.t('Subtotal') || 'Subtotal' }}:</span>
+          <span>{{ getTotalPrice() - (order()!.deliveryFee || 0) | number:'1.2-2' }} EGP</span>
+        </div>
+        @if (order()!.deliveryFee && order()!.deliveryFee > 0) {
+          <div class="summary-row">
+            <span>{{ translation.t('Delivery Fee') || 'Delivery Fee' }}:</span>
+            <span>{{ order()!.deliveryFee | number:'1.2-2' }} EGP</span>
+          </div>
+        }
+        <div class="summary-row total">
+          <span>{{ translation.t('Total') || 'Total' }}:</span>
+          <span>{{ getTotalPrice() | number:'1.2-2' }} EGP</span>
+        </div>
+        @if (getTotalPoints() > 0) {
+          <div class="summary-row points">
+            <span>{{ translation.t('Points Earned') || 'Points Earned' }}:</span>
+            <span>{{ getTotalPoints() }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="receipt-footer">
+      <button (click)="window.print()" class="print-button">
+            {{ translation.t('Print Receipt') || 'Print Receipt' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading()">
+  <div class="spinner"></div>
+</div>

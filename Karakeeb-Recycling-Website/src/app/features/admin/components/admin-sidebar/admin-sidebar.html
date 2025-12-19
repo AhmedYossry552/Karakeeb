@@ -1,0 +1,90 @@
+<aside 
+  class="admin-sidebar"
+  [class.collapsed]="collapsed()"
+  [style.background]="'var(--background)'">
+  
+  <!-- Logo -->
+  <div 
+    class="admin-sidebar-logo"
+    (click)="toggleSidebar()"
+    [style.color]="'var(--color-green-600)'">
+    <span class="admin-logo-text">
+      {{ collapsed() ? 'K' : 'KaraKeeb' }}
+    </span>
+    <span class="admin-sidebar-toggle">
+      <fa-icon [icon]="collapsed() ? faChevronRight : faChevronLeft"></fa-icon>
+    </span>
+  </div>
+
+  <!-- Language Toggle - Only show when expanded -->
+  @if (!collapsed()) {
+    <div class="admin-sidebar-language">
+      <div class="language-toggle">
+        <span [class.active]="locale() === 'en'">EN</span>
+        <button 
+          type="button"
+          (click)="toggleLanguage()"
+          class="language-switch"
+          [class.active]="locale() === 'ar'">
+          <span class="language-switch-slider"></span>
+        </button>
+        <span [class.active]="locale() === 'ar'">AR</span>
+      </div>
+    </div>
+  }
+
+  <!-- Menu -->
+  <nav class="admin-sidebar-nav">
+    <ul class="admin-sidebar-menu">
+      @for (item of menuItems; track item.href) {
+        <li>
+          <a
+            [routerLink]="item.href"
+            routerLinkActive="active-link"
+            class="admin-sidebar-link">
+            <span class="admin-sidebar-icon">
+              <fa-icon [icon]="item.icon"></fa-icon>
+            </span>
+            @if (!collapsed()) {
+              <span class="admin-sidebar-label">{{ t(item.key) }}</span>
+            }
+          </a>
+        </li>
+      }
+
+      <!-- Footer buttons -->
+      <div class="admin-sidebar-footer">
+        <!-- Dark Mode -->
+        <li>
+          <button
+            type="button"
+            (click)="toggleTheme()"
+            class="admin-sidebar-link">
+            <span class="admin-sidebar-icon">
+              <fa-icon [icon]="isDarkMode ? faSun : faMoon"></fa-icon>
+            </span>
+            @if (!collapsed()) {
+              <span class="admin-sidebar-label">{{ t('dark_mode') }}</span>
+            }
+          </button>
+        </li>
+
+        <!-- Logout -->
+        <li>
+          <button
+            type="button"
+            (click)="logout()"
+            class="admin-sidebar-link">
+            <span class="admin-sidebar-icon">
+              <fa-icon [icon]="faSignOutAlt"></fa-icon>
+            </span>
+            @if (!collapsed()) {
+              <span class="admin-sidebar-label">{{ t('logout') }}</span>
+            }
+          </button>
+        </li>
+      </div>
+    </ul>
+  </nav>
+</aside>
+

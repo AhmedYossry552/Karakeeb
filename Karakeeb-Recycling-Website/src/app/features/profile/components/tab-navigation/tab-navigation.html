@@ -1,0 +1,13 @@
+<div class="tab-navigation">
+  @for (tab of tabs; track tab) {
+    <button
+      type="button"
+      [class.active]="activeTab === tab"
+      (click)="onTabClick(tab)"
+      class="tab-button"
+    >
+      {{ getTabLabel(tab) }}
+    </button>
+  }
+</div>
+

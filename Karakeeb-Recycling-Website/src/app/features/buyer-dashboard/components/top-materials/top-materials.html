@@ -1,0 +1,49 @@
+<section class="top-materials-section">
+  <div class="section-header">
+    <h2 class="section-title">
+      {{ translation.t('charts.topRecycledMaterials') || 'Top Recycled Materials' }}
+    </h2>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="skeleton-card"></div>
+      }
+    </div>
+  } @else if (materials().length > 0) {
+    <div class="materials-grid">
+      @for (material of materials(); track $index) {
+        <a
+          routerLink="/marketplace/{{ getMaterialName(material) }}"
+          (click)="markFromMarketplace()"
+          class="material-card"
+        >
+          <div class="material-image-container">
+            @if (material.image) {
+              <img [src]="material.image" [alt]="getMaterialName(material)" class="material-image" />
+            } @else {
+              <div class="material-placeholder">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2a3 3 0 015.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            }
+          </div>
+          <h3 class="material-name">{{ getMaterialName(material) }}</h3>
+          <div class="material-stats">
+            <span class="material-quantity">
+              {{ material.totalRecycled }} {{ getUnitText(material.unit) }}
+            </span>
+            <span class="material-sold">{{ translation.t('common.sold') || 'sold' }}</span>
+          </div>
+        </a>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <p>{{ translation.t('common.noMaterialsAvailable') || 'No materials available yet' }}</p>
+    </div>
+  }
+</section>
+

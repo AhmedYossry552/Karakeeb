@@ -1,0 +1,533 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Header -->
+    <div class="auth-header">
+      <h2>{{ isLoginMode ? (translation.t('auth.login.signIn') !== 'auth.login.signIn' ? translation.t('auth.login.signIn') : 'Sign In') : (translation.t('auth.login.signUp') !== 'auth.login.signUp' ? translation.t('auth.login.signUp') : 'Sign Up') }}</h2>
+      <button (click)="onClose()" class="close-btn" aria-label="Close">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Toggle between Login and Register (hidden when in forgot password mode) -->
+    <div class="auth-tabs" *ngIf="!isForgotMode">
+      <button 
+        [class.active]="isLoginMode" 
+        (click)="setLoginMode(true)"
+        class="tab-btn"
+      >
+        {{ translation.t('auth.login.signIn') !== 'auth.login.signIn' ? translation.t('auth.login.signIn') : 'Sign In' }}
+      </button>
+      <button 
+        [class.active]="!isLoginMode" 
+        (click)="setLoginMode(false)"
+        class="tab-btn"
+      >
+        {{ translation.t('auth.login.signUp') !== 'auth.login.signUp' ? translation.t('auth.login.signUp') : 'Sign Up' }}
+      </button>
+    </div>
+
+    <!-- Forms -->
+    <div class="auth-body">
+      <!-- Simple Login Form (original style) -->
+      <form *ngIf="isLoginMode && !isForgotMode" [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
+        <div class="form-group">
+          <label for="login-email">{{ translation.t('auth.login.email') !== 'auth.login.email' ? translation.t('auth.login.email') : 'Email' }}</label>
+          <input
+            id="login-email"
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email"
+            class="form-input"
+            [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          />
+          <span *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-text">
+            {{ translation.t('auth.login.emailError') !== 'auth.login.emailError' ? translation.t('auth.login.emailError') : 'Please enter a valid email' }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">{{ translation.t('auth.login.password') !== 'auth.login.password' ? translation.t('auth.login.password') : 'Password' }}</label>
+          <div class="password-input-wrapper">
+            <input
+              id="login-password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              class="form-input"
+              [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            />
+            <button type="button" (click)="showPassword = !showPassword" class="password-toggle">
+              <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.736m0 0L21 21" />
+              </svg>
+            </button>
+          </div>
+          <span *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-text">
+            {{ translation.t('auth.login.passwordError') !== 'auth.login.passwordError' ? translation.t('auth.login.passwordError') : 'Password must be at least 6 characters' }}
+          </span>
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="loginForm.invalid || isLoading"
+          class="submit-btn"
+        >
+          <span *ngIf="isLoading" class="spinner"></span>
+          {{ isLoading ? (translation.t('auth.login.signingIn') !== 'auth.login.signingIn' ? translation.t('auth.login.signingIn') : 'Signing in...') : (translation.t('auth.login.signIn') !== 'auth.login.signIn' ? translation.t('auth.login.signIn') : 'Sign In') }}
+        </button>
+
+        <div *ngIf="loginError" class="error-message">
+          {{ loginError }}
+        </div>
+
+        <!-- Forgot Password Link -->
+        <div class="text-center mt-4">
+          <button
+            type="button"
+            (click)="isForgotMode = true; forgotStage = 'email'"
+            class="forgot-link"
+          >
+            {{ translation.t('auth.login.forgotPassword') !== 'auth.login.forgotPassword' ? translation.t('auth.login.forgotPassword') : 'Forgot your password?' }}
+          </button>
+        </div>
+
+        <!-- Divider with "Or continue with" -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">
+              {{ translation.t('auth.login.continueWith') !== 'auth.login.continueWith' ? translation.t('auth.login.continueWith') : 'Or continue with' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Google Sign In Button -->
+        <div class="google-button-wrapper">
+          <div id="google-signin-button-login" class="flex justify-center"></div>
+          <div *ngIf="googleLoading" class="google-loading">
+            <span class="spinner-small"></span>
+            <span>{{ translation.t('auth.login.signingIn') !== 'auth.login.signingIn' ? translation.t('auth.login.signingIn') : 'Signing in...' }}</span>
+          </div>
+        </div>
+      </form>
+
+      <!-- OTP Verification Step -->
+      <div *ngIf="showOtpStep && !isForgotMode" class="auth-form otp-step">
+        <div class="otp-header">
+          <button (click)="goBackToRegister()" class="back-btn" type="button">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h3 class="otp-title">{{ translation.t('auth.otp.verifyEmail') !== 'auth.otp.verifyEmail' ? translation.t('auth.otp.verifyEmail') : 'Verify Your Email' }}</h3>
+          <p class="otp-subtitle">
+            {{ translation.t('We sent a verification code to') || 'We sent a verification code to' }}<br>
+            <strong>{{ otpEmail }}</strong>
+          </p>
+        </div>
+
+        <form [formGroup]="otpForm" (ngSubmit)="verifyOtpAndRegister()" class="otp-form">
+          <div class="form-group">
+            <label for="otp-code">{{ translation.t('Enter OTP Code') || 'Enter OTP Code' }}</label>
+            <input
+              id="otp-code"
+              type="text"
+              formControlName="otpCode"
+              placeholder="000000"
+              class="form-input otp-input"
+              maxlength="8"
+              [class.error]="otpForm.get('otpCode')?.invalid && otpForm.get('otpCode')?.touched"
+            />
+            <span *ngIf="otpForm.get('otpCode')?.invalid && otpForm.get('otpCode')?.touched" class="error-text">
+              {{ translation.t('Please enter a valid OTP code') || 'Please enter a valid OTP code' }}
+            </span>
+          </div>
+
+          <button 
+            type="submit" 
+            [disabled]="otpForm.invalid || isLoading"
+            class="submit-btn"
+          >
+            <span *ngIf="isLoading" class="spinner"></span>
+            {{ isLoading ? (translation.t('Verifying...') || 'Verifying...') : (translation.t('Verify & Continue') || 'Verify & Continue') }}
+          </button>
+
+          <div *ngIf="otpError" class="error-message">
+            {{ otpError }}
+          </div>
+
+          <div class="otp-resend">
+            <p class="resend-text">
+              {{ translation.t('Didn\'t receive the code?') || "Didn't receive the code?" }}
+            </p>
+            <button 
+              type="button"
+              (click)="resendOtp()"
+              [disabled]="otpResendDisabled || isLoading"
+              class="resend-btn"
+            >
+              {{ otpResendDisabled 
+                  ? (translation.t('Resend in') || 'Resend in') + ' ' + otpResendTimer + 's'
+                : (translation.t('Resend Code') || 'Resend Code')
+              }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Simple Sign Up Form (original style) -->
+      <form *ngIf="!isLoginMode && !isForgotMode && !showOtpStep" [formGroup]="registerForm" (ngSubmit)="onRegister()" class="auth-form">
+        <div class="form-group">
+          <label for="register-name">{{ translation.t('Full Name') || 'Full Name' }}</label>
+          <input
+            id="register-name"
+            type="text"
+            formControlName="name"
+            placeholder="Enter your full name"
+            class="form-input"
+            [class.error]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched"
+          />
+          <span *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="error-text">
+            {{ translation.t('Full name is required') || 'Full name is required' }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="register-email">{{ translation.t('Email') || 'Email' }}</label>
+          <input
+            id="register-email"
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email"
+            class="form-input"
+            [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+          />
+          <span *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-text">
+            {{ translation.t('Please enter a valid email') || 'Please enter a valid email' }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="register-phone">{{ translation.t('Phone Number') || 'Phone Number' }}</label>
+          <input
+            id="register-phone"
+            type="tel"
+            formControlName="phoneNumber"
+            placeholder="Enter your phone number"
+            class="form-input"
+            [class.error]="registerForm.get('phoneNumber')?.invalid && registerForm.get('phoneNumber')?.touched"
+          />
+          <span *ngIf="registerForm.get('phoneNumber')?.invalid && registerForm.get('phoneNumber')?.touched" class="error-text">
+            {{ translation.t('Phone number is required') || 'Phone number is required' }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="register-role">{{ translation.t('Choose Your Role') || 'Choose Your Role' }}</label>
+          <select
+            id="register-role"
+            formControlName="role"
+            class="form-input"
+          >
+            <option value="customer">{{ translation.t('Customer') || 'Customer' }}</option>
+            <option value="buyer">{{ translation.t('Buyer') || 'Buyer' }}</option>
+            <option value="delivery">{{ translation.t('Delivery') || 'Delivery' }}</option>
+          </select>
+        </div>
+
+        <!-- Delivery-specific fields (shown only when delivery is selected) -->
+        <div *ngIf="registerForm.get('role')?.value === 'delivery'" class="delivery-fields">
+          <h3 class="section-title">Vehicle & License Information</h3>
+          
+          <div class="form-group">
+            <label for="licenseNumber">Driver's License Number <span class="required">*</span></label>
+            <input
+              id="licenseNumber"
+              type="text"
+              formControlName="licenseNumber"
+              placeholder="Enter your license number"
+              class="form-input"
+              [class.error]="registerForm.get('licenseNumber')?.invalid && registerForm.get('licenseNumber')?.touched"
+            />
+            <span *ngIf="registerForm.get('licenseNumber')?.invalid && registerForm.get('licenseNumber')?.touched" class="error-text">
+              License number is required
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="vehicleType">Vehicle Type <span class="required">*</span></label>
+            <select
+              id="vehicleType"
+              formControlName="vehicleType"
+              class="form-input"
+              [class.error]="registerForm.get('vehicleType')?.invalid && registerForm.get('vehicleType')?.touched"
+            >
+              <option value="">Select vehicle type</option>
+              <option value="motorcycle">Motorcycle</option>
+              <option value="car">Car</option>
+              <option value="van">Van</option>
+              <option value="smallTruck">Small Truck</option>
+              <option value="largeTruck">Large Truck</option>
+            </select>
+            <span *ngIf="registerForm.get('vehicleType')?.invalid && registerForm.get('vehicleType')?.touched" class="error-text">
+              Vehicle type is required
+            </span>
+          </div>
+
+          <h3 class="section-title">Identity Verification</h3>
+
+          <div class="form-group">
+            <label for="nationalId">National ID / Passport Number</label>
+            <input
+              id="nationalId"
+              type="text"
+              formControlName="nationalId"
+              placeholder="Enter your national ID or passport number"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="emergencyContact">Emergency Contact</label>
+            <input
+              id="emergencyContact"
+              type="tel"
+              formControlName="emergencyContact"
+              placeholder="Enter emergency contact number"
+              class="form-input"
+            />
+          </div>
+
+          <h3 class="section-title">Required Documents</h3>
+
+          <div class="form-group">
+            <label for="deliveryImage">Photo of Delivery Person <span class="required">*</span></label>
+            <input
+              id="deliveryImage"
+              type="file"
+              accept="image/*"
+              (change)="onDeliveryImageChange($event)"
+              class="form-input file-input"
+            />
+            <span *ngIf="!deliveryImageFile" class="error-text">Photo is required</span>
+          </div>
+
+          <div class="form-group">
+            <label for="vehicleImage">Photo of Vehicle <span class="required">*</span></label>
+            <input
+              id="vehicleImage"
+              type="file"
+              accept="image/*"
+              (change)="onVehicleImageChange($event)"
+              class="form-input file-input"
+            />
+            <span *ngIf="!vehicleImageFile" class="error-text">Vehicle image is required</span>
+          </div>
+
+          <div class="form-group">
+            <label for="criminalRecord">Criminal Record Certificate <span class="required">*</span></label>
+            <input
+              id="criminalRecord"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              (change)="onCriminalRecordChange($event)"
+              class="form-input file-input"
+            />
+            <span *ngIf="!criminalRecordFile" class="error-text">Criminal record certificate is required</span>
+          </div>
+        </div>
+
+        <!-- Password fields - hidden for Google users -->
+        <div class="form-group" *ngIf="!authContext.googleUser()">
+          <label for="register-password">{{ translation.t('Password') || 'Password' }}</label>
+          <div class="password-input-wrapper">
+            <input
+              id="register-password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              class="form-input"
+              [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+            />
+            <button type="button" (click)="showPassword = !showPassword" class="password-toggle">
+              <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.736m0 0L21 21" />
+              </svg>
+            </button>
+          </div>
+          <span *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="error-text">
+                {{ translation.t('Password must be at least 8 characters') || 'Password must be at least 8 characters' }}
+          </span>
+        </div>
+
+        <div class="form-group" *ngIf="!authContext.googleUser()">
+          <label for="register-confirm-password">{{ translation.t('Confirm Password') || 'Confirm Password' }}</label>
+          <input
+            id="register-confirm-password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            placeholder="Confirm your password"
+            class="form-input"
+            [class.error]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched"
+          />
+          <span *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched" class="error-text">
+            {{ registerForm.get('confirmPassword')?.hasError('mismatch') ? 'Passwords do not match' : 'Please confirm your password' }}
+          </span>
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="registerForm.invalid || isLoading"
+          class="submit-btn"
+        >
+          <span *ngIf="isLoading" class="spinner"></span>
+          {{ isLoading ? (translation.t('Creating account...') || 'Creating account...') : (translation.t('Sign Up') || 'Sign Up') }}
+        </button>
+
+        <div *ngIf="registerError" class="error-message">
+          {{ registerError }}
+        </div>
+
+        <!-- Divider with "Or continue with" -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">
+              {{ translation.t('Or continue with') || 'Or continue with' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Google Sign Up Button -->
+        <div class="google-button-wrapper">
+          <div id="google-signin-button-register" class="flex justify-center"></div>
+          <div *ngIf="googleLoading" class="google-loading">
+            <span class="spinner-small"></span>
+            <span>{{ translation.t('Creating account...') || 'Creating account...' }}</span>
+          </div>
+        </div>
+      </form>
+
+      <!-- Forgot Password Flow -->
+      <div *ngIf="isForgotMode" class="auth-form">
+        <!-- Step 1: Enter email -->
+        <div *ngIf="forgotStage === 'email'">
+          <h3 class="forgot-title">
+            {{ translation.t('Send Reset Code') || 'Send Reset Code' }}
+          </h3>
+          <p class="forgot-subtitle">
+            {{ translation.t('Enter your email to receive a reset code.') || 'Enter your email to receive a reset code.' }}
+          </p>
+
+          <form [formGroup]="forgotEmailForm" (ngSubmit)="onSendResetCode()">
+            <div class="form-group">
+              <label for="forgot-email">{{ translation.t('Email') || 'Email' }}</label>
+              <input
+                id="forgot-email"
+                type="email"
+                formControlName="email"
+                class="form-input"
+                [class.error]="forgotEmailForm.get('email')?.invalid && forgotEmailForm.get('email')?.touched"
+                placeholder="you@example.com"
+              />
+              <span *ngIf="forgotEmailForm.get('email')?.invalid && forgotEmailForm.get('email')?.touched" class="error-text">
+                {{ translation.t('Please enter a valid email') || 'Please enter a valid email' }}
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="forgotEmailForm.invalid || forgotLoading"
+              class="submit-btn"
+            >
+              <span *ngIf="forgotLoading" class="spinner"></span>
+              {{ forgotLoading ? (translation.t('Sending...') || 'Sending...') : (translation.t('Send Reset Code') || 'Send Reset Code') }}
+            </button>
+          </form>
+
+          <button type="button" class="forgot-back" (click)="backToLogin()">
+            {{ translation.t('Back to previous') || 'Back to previous' }}
+          </button>
+        </div>
+
+        <!-- Step 2: Enter OTP + new password -->
+        <div *ngIf="forgotStage === 'reset'">
+          <h3 class="forgot-title">
+            {{ translation.t('Reset Password') || 'Reset Password' }}
+          </h3>
+
+          <form [formGroup]="resetForm" (ngSubmit)="onResetPassword()">
+            <div class="form-group">
+                  <label for="reset-email">{{ translation.t('Email') || 'Email' }}</label>
+              <input
+                id="reset-email"
+                type="email"
+                formControlName="email"
+                class="form-input"
+                [readonly]="true"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="reset-otp">OTP Code</label>
+              <input
+                id="reset-otp"
+                type="text"
+                formControlName="otpCode"
+                class="form-input"
+                maxlength="8"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="reset-password">{{ translation.t('auth.login.password') !== 'auth.login.password' ? translation.t('auth.login.password') : 'Password' }}</label>
+              <input
+                id="reset-password"
+                type="password"
+                formControlName="password"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="reset-confirm-password">{{ translation.t('auth.register.confirmPassword') !== 'auth.register.confirmPassword' ? translation.t('auth.register.confirmPassword') : 'Confirm Password' }}</label>
+              <input
+                id="reset-confirm-password"
+                type="password"
+                formControlName="confirmPassword"
+                class="form-input"
+              />
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="resetForm.invalid || forgotLoading"
+              class="submit-btn"
+            >
+              <span *ngIf="forgotLoading" class="spinner"></span>
+              {{ forgotLoading ? (translation.t('auth.login.reset') !== 'auth.login.reset' ? translation.t('auth.login.reset') : 'Reset Password') : (translation.t('auth.login.reset') !== 'auth.login.reset' ? translation.t('auth.login.reset') : 'Reset Password') }}
+            </button>
+          </form>
+
+          <button type="button" class="forgot-back" (click)="backToLogin()">
+            {{ translation.t('auth.login.back') !== 'auth.login.back' ? translation.t('auth.login.back') : 'Back to previous' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

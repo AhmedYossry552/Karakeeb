@@ -1,0 +1,91 @@
+<div class="admin-categories">
+  <div class="admin-header">
+    <h1 class="admin-title">Categories</h1>
+    <div class="admin-actions">
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Search categories..."
+        class="search-input"
+      />
+      <button (click)="onAdd()" class="add-button">Add New Category</button>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading categories...</p>
+    </div>
+  } @else if (categories().length === 0) {
+    <div class="empty-state">
+      <p>No categories found.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Category Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of categories(); track item._id) {
+            <tr>
+              <td>
+                <img
+                  [src]="item.image"
+                  [alt]="getDisplayName(item)"
+                  class="category-image"
+                  (click)="onImageClick(item)"
+                />
+              </td>
+              <td>{{ getDisplayName(item) }}</td>
+              <td>{{ getDisplayDescription(item) }}</td>
+              <td class="actions-cell">
+                <button (click)="onEdit(item)" class="action-button edit">Edit</button>
+                <button (click)="onDelete(item)" class="action-button delete">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="currentPage() === 1"
+          class="page-button"
+        >
+          Previous
+        </button>
+        <span class="page-info">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </span>
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages()"
+          class="page-button"
+        >
+          Next
+        </button>
+        <select
+          [value]="itemsPerPage()"
+          (change)="onItemsPerPageChange(+$any($event.target).value)"
+          class="items-per-page"
+        >
+          <option [value]="5">5 per page</option>
+          <option [value]="10">10 per page</option>
+          <option [value]="20">20 per page</option>
+          <option [value]="50">50 per page</option>
+        </select>
+      </div>
+    }
+  }
+</div>

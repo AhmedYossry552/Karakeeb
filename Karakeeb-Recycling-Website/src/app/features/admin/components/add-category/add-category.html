@@ -1,0 +1,130 @@
+<div class="add-category">
+  <div class="form-container">
+    <div class="form-header">
+      <h1>Add New Category</h1>
+      <p>Fill in the details below to create a new category</p>
+    </div>
+
+    <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="name">Category Name (English) *</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="Enter category name in English"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="nameAr">Category Name (Arabic) *</label>
+          <input
+            id="nameAr"
+            type="text"
+            formControlName="nameAr"
+            placeholder="أدخل اسم الفئة بالعربية"
+            class="form-input"
+            dir="rtl"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="description">Description (English) *</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            placeholder="Enter category description in English"
+            rows="3"
+            class="form-textarea"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="descriptionAr">Description (Arabic) *</label>
+          <textarea
+            id="descriptionAr"
+            formControlName="descriptionAr"
+            placeholder="أدخل وصف الفئة بالعربية"
+            rows="3"
+            class="form-textarea"
+            dir="rtl"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Category Image *</label>
+        <div class="file-upload-area" [class.has-file]="imageFile">
+          <div class="upload-content">
+            <svg class="upload-icon" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path
+                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div class="upload-text">
+              <label for="file-upload" class="upload-label">
+                Upload a file
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                class="file-input"
+              />
+              <span>or drag and drop</span>
+            </div>
+            <p class="file-types">PNG, JPG, GIF up to 5MB</p>
+          </div>
+        </div>
+
+        @if (imageFile) {
+          <div class="file-info">
+            <p class="file-name">
+              <span class="label">Selected:</span> {{ imageFile.name }}
+            </p>
+            <button type="button" (click)="removeImage()" class="remove-button">
+              Remove
+            </button>
+          </div>
+        }
+
+        @if (previewUrl()) {
+          <div class="preview-container">
+            <img [src]="previewUrl()!" alt="Preview" class="preview-image" />
+          </div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="button" (click)="onCancel()" class="cancel-button" [disabled]="isSubmitting()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="submit-button"
+          [disabled]="isSubmitting() || categoryForm.invalid || !imageFile"
+        >
+          @if (isSubmitting()) {
+            <span class="loading">
+              <svg class="spinner" viewBox="0 0 24 24">
+                <circle class="spinner-circle" cx="12" cy="12" r="10" />
+              </svg>
+              Processing...
+            </span>
+          } @else {
+            Add Category
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

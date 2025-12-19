@@ -1,0 +1,311 @@
+<div class="admin-transactions">
+  <div class="admin-header">
+    <h1 class="admin-title">Transactions</h1>
+    <div class="admin-actions">
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Search transactions..."
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card summary-in">
+      <h3>Total In (Buyers)</h3>
+      <p class="summary-value">{{ totalIn() | number:'1.2-2' }} EGP</p>
+    </div>
+    <div class="summary-card summary-out">
+      <h3>Total Out (Rewards + Remaining Points)</h3>
+      <p class="summary-value">{{ totalOut() | number:'1.2-2' }} EGP</p>
+    </div>
+    <div class="summary-card summary-out">
+      <h3>Rewards (Cashback)</h3>
+      <p class="summary-value">{{ rewardsCost() | number:'1.2-2' }} EGP</p>
+    </div>
+    <div class="summary-card summary-out">
+      <h3>Remaining Points Value</h3>
+      <p class="summary-value">{{ remainingPointsValue() | number:'1.2-2' }} EGP</p>
+    </div>
+    <div class="summary-card summary-profit">
+      <h3>Net Profit (In - Out)</h3>
+      <p class="summary-value">{{ profit() | number:'1.2-2' }} EGP</p>
+    </div>
+  </div>
+
+  <div class="filters-panel">
+    <div class="filter-group">
+      <label>Status:</label>
+      <select [(ngModel)]="selectedStatus" (change)="filterByStatus(selectedStatus)" class="filter-select">
+        <option value="">All Status</option>
+        <option value="succeeded">Succeeded</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+        <option value="refunded">Refunded</option>
+        <option value="disputed">Disputed</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Currency:</label>
+      <select [(ngModel)]="selectedCurrency" (change)="applyFilters()" class="filter-select">
+        <option value="">All Currencies</option>
+        <option value="usd">USD</option>
+        <option value="eur">EUR</option>
+        <option value="egp">EGP</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>From Date:</label>
+      <input type="date" [(ngModel)]="startDate" (change)="applyFilters()" class="filter-input" />
+    </div>
+    <div class="filter-group">
+      <label>To Date:</label>
+      <input type="date" [(ngModel)]="endDate" (change)="applyFilters()" class="filter-input" />
+    </div>
+    <button (click)="clearFilters()" class="clear-button">Clear Filters</button>
+  </div>
+
+  <!-- Stripe Payments Table -->
+  <h2 class="section-title">Buyer Payments (Stripe)</h2>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading transactions...</p>
+    </div>
+  } @else if (payments().length === 0) {
+    <div class="empty-state">
+      <p>No transactions found.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Transaction ID</th>
+            <th>Customer Email</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payment of payments(); track payment.id) {
+            <tr>
+              <td class="font-mono text-sm">{{ payment.id.slice(-8) }}</td>
+              <td>
+                <div>
+                  <div class="font-medium">{{ payment.billing_details?.email || 'N/A' }}</div>
+                  @if (payment.billing_details?.name) {
+                    <div class="text-xs text-gray-500">{{ payment.billing_details.name }}</div>
+                  }
+                </div>
+              </td>
+              <td>
+                <div>
+                  <div class="font-semibold">{{ formatAmount(payment.amount, payment.currency) }}</div>
+                  @if ((payment.amount_refunded || 0) > 0) {
+                    <div class="text-xs text-red-600">-{{ formatAmount(payment.amount_refunded || 0, payment.currency) }} refunded</div>
+                  }
+                </div>
+              </td>
+              <td>
+                <span [class]="getStatusClass(getPaymentStatus(payment))">
+                  {{ getPaymentStatus(payment) }}
+                </span>
+              </td>
+              <td>{{ formatDate(payment.created) }}</td>
+              <td class="actions-cell">
+                <button (click)="onRefund(payment)" class="action-button refund">Refund</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="currentPage() === 1"
+          class="page-button"
+        >
+          Previous
+        </button>
+        <span class="page-info">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </span>
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages()"
+          class="page-button"
+        >
+          Next
+        </button>
+        <select
+          [value]="itemsPerPage()"
+          (change)="onItemsPerPageChange(+$any($event.target).value)"
+          class="items-per-page"
+        >
+          <option [value]="5">5 per page</option>
+          <option [value]="10">10 per page</option>
+          <option [value]="20">20 per page</option>
+          <option [value]="50">50 per page</option>
+        </select>
+      </div>
+    }
+  }
+
+  <!-- Cashback Transactions Table -->
+  <h2 class="section-title">Customer Points → Wallet (Cashback)</h2>
+
+  <div class="table-container" *ngIf="cashbackTransactions().length > 0; else noCashback">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Transaction ID</th>
+          <th>Customer</th>
+          <th>Email</th>
+          <th>Amount</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tx of cashbackTransactions(); track tx.transactionId) {
+          <tr>
+            <td class="font-mono text-sm">{{ tx.transactionId }}</td>
+            <td>{{ tx.userName }}</td>
+            <td>{{ tx.userEmail }}</td>
+            <td>{{ tx.amount | number:'1.2-2' }} EGP</td>
+            <td>{{ tx.date | date:'medium' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (cashbackTotalPages() > 1) {
+      <div class="pagination">
+        <button
+          (click)="onCashbackPageChange(cashbackPage() - 1)"
+          [disabled]="cashbackPage() === 1"
+          class="page-button"
+        >
+          Previous
+        </button>
+        <span class="page-info">
+          Page {{ cashbackPage() }} of {{ cashbackTotalPages() }}
+        </span>
+        <button
+          (click)="onCashbackPageChange(cashbackPage() + 1)"
+          [disabled]="cashbackPage() === cashbackTotalPages()"
+          class="page-button"
+        >
+          Next
+        </button>
+      </div>
+    }
+  </div>
+
+  <ng-template #noCashback>
+    <div class="empty-state">
+      <p>No cashback transactions found.</p>
+    </div>
+  </ng-template>
+
+  <!-- Buyer Cash Orders Table -->
+  <h2 class="section-title">Buyer Cash Orders</h2>
+
+  @if (buyerCashOrdersLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading buyer cash orders...</p>
+    </div>
+  } @else {
+    <div class="table-container" *ngIf="buyerCashOrders().length > 0; else noBuyerCashOrders">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Buyer</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Payment Method</th>
+            <th>Total Amount</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of buyerCashOrders(); track order.orderId ?? order._id) {
+            <tr>
+              <td class="font-mono text-sm">{{ order.orderId || order._id }}</td>
+              <td>{{ order.userName || order.user?.name || order.user?.userName }}</td>
+              <td>{{ order.userEmail || order.user?.email }}</td>
+              <td>{{ order.status }}</td>
+              <td>{{ order.paymentMethod }}</td>
+              <td>{{ order.totalAmount | number:'1.2-2' }} EGP</td>
+              <td>{{ order.createdAt | date:'medium' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (buyerCashOrdersTotalPages() > 1) {
+        <div class="pagination">
+          <button
+            (click)="onBuyerCashOrdersPageChange(buyerCashOrdersPage() - 1)"
+            [disabled]="buyerCashOrdersPage() === 1"
+            class="page-button"
+          >
+            Previous
+          </button>
+          <span class="page-info">
+            Page {{ buyerCashOrdersPage() }} of {{ buyerCashOrdersTotalPages() }}
+          </span>
+          <button
+            (click)="onBuyerCashOrdersPageChange(buyerCashOrdersPage() + 1)"
+            [disabled]="buyerCashOrdersPage() === buyerCashOrdersTotalPages()"
+            class="page-button"
+          >
+            Next
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <ng-template #noBuyerCashOrders>
+    <div class="empty-state">
+      <p>No buyer cash orders found.</p>
+    </div>
+  </ng-template>
+
+  @if (showRefundModal()) {
+    <div class="modal-overlay" (click)="showRefundModal.set(false)">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Process Refund</h3>
+          <button (click)="showRefundModal.set(false)" class="modal-close-button" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Refund Amount (cents):</label>
+            <input type="number" [(ngModel)]="refundAmount" class="form-input" />
+            <small>Max: {{ selectedPayment?.amount || 0 }} cents</small>
+          </div>
+          <div class="form-group">
+            <label>Reason:</label>
+            <textarea [(ngModel)]="refundReason" class="form-textarea" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button (click)="showRefundModal.set(false)" class="cancel-button">Cancel</button>
+          <button (click)="processRefund()" class="save-button">Process Refund</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

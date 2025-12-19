@@ -1,0 +1,12 @@
+@if (getTier()) {
+  <div class="membership-tier" [ngClass]="getTier()!.color">
+    <div class="tier-content">
+      <p class="tier-name">{{ getTierName() }}</p>
+      <span class="tier-badge">{{ getTier()!.badge }}</span>
+    </div>
+    <a [routerLink]="['/profile/rewarding']" class="info-button" title="View Rewards Program">
+      ℹ️
+    </a>
+  </div>
+}
+

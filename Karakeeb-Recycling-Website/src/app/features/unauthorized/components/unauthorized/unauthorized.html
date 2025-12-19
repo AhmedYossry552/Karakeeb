@@ -1,0 +1,15 @@
+<section class="unauthorized-page">
+  <div class="unauthorized-container">
+    <h1 class="unauthorized-title">
+      {{ translation.t('Unauthorized') || 'Unauthorized' }}
+    </h1>
+    <p class="unauthorized-message">
+      {{ translation.t('You do not have permission to view this page.') || 'You do not have permission to view this page.' }}
+    </p>
+    <a routerLink="/" class="unauthorized-link">
+      {{ translation.t('Go back home') || 'Go back home' }}
+    </a>
+  </div>
+</section>
+
+

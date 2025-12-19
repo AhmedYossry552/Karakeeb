@@ -1,0 +1,42 @@
+<div class="confirmation-container" *ngIf="!loading">
+  <div class="confirmation-card" *ngIf="order">
+    <div class="success-icon">✓</div>
+    <h1 class="confirmation-title">
+      {{ translation.t('Order Confirmed!') || 'Order Confirmed!' }}
+    </h1>
+    <p class="confirmation-message">
+      {{ translation.t('Your pickup request has been confirmed. We will contact you soon.') || 'Your pickup request has been confirmed. We will contact you soon.' }}
+    </p>
+
+    <div class="order-details">
+      <div class="detail-row">
+        <span class="detail-label">{{ translation.t('Order ID') || 'Order ID' }}:</span>
+        <span class="detail-value">{{ order._id.slice(-8).toUpperCase() }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">{{ translation.t('Pickup Address') || 'Pickup Address' }}:</span>
+        <span class="detail-value">{{ getFormattedAddress() }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">{{ translation.t('Status') || 'Status' }}:</span>
+        <span class="detail-value status-badge" [class]="'status-' + order.status">
+          {{ order.status }}
+        </span>
+      </div>
+    </div>
+
+    <div class="confirmation-actions">
+      <a [routerLink]="['/pickup/tracking', order._id]" class="btn-primary">
+          {{ translation.t('Track Order') || 'Track Order' }}
+      </a>
+      <a [routerLink]="['/buyer-orders']" class="btn-secondary">
+        {{ translation.t('View All Orders') || 'View All Orders' }}
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner"></div>
+</div>
+

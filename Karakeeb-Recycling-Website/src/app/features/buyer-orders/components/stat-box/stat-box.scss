@@ -1,0 +1,47 @@
+.stat-box {
+  background-color: rgb(220, 252, 231);
+  color: rgb(30, 64, 175);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  text-align: center;
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+  }
+
+  .loading-skeleton {
+    .skeleton-line {
+      background-color: rgb(187, 247, 208);
+      border-radius: 0.25rem;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-value {
+      height: 2rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .skeleton-label {
+      height: 1rem;
+      width: 75%;
+      margin: 0 auto;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+

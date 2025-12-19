@@ -1,0 +1,81 @@
+<div class="success-container">
+  <div class="success-card">
+    <!-- Header Section -->
+    <div class="success-header">
+      <div class="success-icon-wrapper">
+        <svg class="success-icon" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h1 class="success-title">{{ translation.t('Payment Successful!') || 'Payment Successful!' }}</h1>
+      <p class="success-subtitle">
+        {{ translation.t('Thank you for choosing sustainable recycling') || 'Thank you for choosing sustainable recycling' }}
+      </p>
+    </div>
+
+    <!-- Content Section -->
+    <div class="success-content">
+      <!-- Payment Amount -->
+      @if (paidAmount) {
+        <div class="amount-display">
+          <span class="amount-label">{{ translation.t('Amount Paid') || 'Amount Paid' }}:</span>
+          <span class="amount-value">{{ paidAmount }} EGP</span>
+        </div>
+      }
+
+      <!-- Environmental Impact Section -->
+      <div class="impact-section">
+        <h2 class="impact-title">🌍 {{ translation.t('Your Environmental Impact') || 'Your Environmental Impact' }}</h2>
+        <p class="impact-subtitle">
+          {{ translation.t('Every payment helps create a cleaner, greener planet') || 'Every payment helps create a cleaner, greener planet' }}
+        </p>
+
+        <div class="impact-grid">
+          <div class="impact-item">
+            <div class="impact-icon">🌱</div>
+            <div class="impact-label">{{ translation.t('Supports') || 'Supports' }}</div>
+            <div class="impact-desc">{{ translation.t('Eco-friendly initiatives') || 'Eco-friendly initiatives' }}</div>
+          </div>
+          <div class="impact-item">
+            <div class="impact-icon">♻️</div>
+            <div class="impact-label">{{ translation.t('Enables') || 'Enables' }}</div>
+            <div class="impact-desc">{{ translation.t('Waste recycling') || 'Waste recycling' }}</div>
+          </div>
+          <div class="impact-item">
+            <div class="impact-icon">🌿</div>
+            <div class="impact-label">{{ translation.t('Reduces') || 'Reduces' }}</div>
+            <div class="impact-desc">{{ translation.t('Carbon footprint') || 'Carbon footprint' }}</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <a [routerLink]="['/buyer-orders']" class="btn-primary">
+            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+                <span>{{ translation.t('View Your Orders') || 'View Your Orders' }}</span>
+          </a>
+          
+          @if (orderId) {
+            <a [routerLink]="['/pickup/tracking', orderId]" class="btn-secondary">
+              <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>{{ translation.t('Track Your Order') || 'Track Your Order' }}</span>
+            </a>
+          }
+        </div>
+      </div>
+
+      <!-- Additional Information -->
+      <div class="info-message">
+        <svg class="info-icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        <span>{{ translation.t('You\'ll receive a confirmation email shortly') || 'You\'ll receive a confirmation email shortly' }}</span>
+      </div>
+    </div>
+  </div>
+</div>

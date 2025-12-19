@@ -1,0 +1,147 @@
+<div class="cart-page">
+  <div class="cart-container">
+    <div class="cart-header">
+      <div class="header-left">
+        <svg class="header-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <h1>{{ isBuyer ? (translation.t('Confirm Items') || 'Confirm Items') : (translation.t('My Collection') || 'My Collection') }}</h1>
+      </div>
+    </div>
+
+    <div *ngIf="cartItems.length === 0" class="cart-empty">
+      <svg class="empty-cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+        <h2>{{ translation.t('Your cart is empty') || 'Your cart is empty' }}</h2>
+      <p>{{ translation.t('Add items to your cart to get started') || 'Add items to your cart to get started' }}</p>
+      <a [routerLink]="isBuyer ? '/marketplace' : '/category'" class="browse-btn">
+        {{ translation.t('Browse Marketplace') || 'Browse Marketplace' }}
+      </a>
+    </div>
+
+    <div *ngIf="cartItems.length > 0" class="cart-content-wrapper">
+      <!-- Summary Cards (like Next.js) -->
+      <div class="summary-cards" [class.customer-layout]="isCustomer">
+        <div class="summary-card">
+          <div class="summary-card-label">{{ translation.t('Total Items') || 'Total Items' }}</div>
+          <div class="summary-card-value total-items">{{ translation.convertNumber(totalItems) }}</div>
+        </div>
+        <div *ngIf="isCustomer" class="summary-card">
+          <div class="summary-card-label">{{ translation.t('Earned Points') || 'Earned Points' }}</div>
+          <div class="summary-card-value total-points">{{ translation.convertNumber(totalPoints) }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">
+            {{ isCustomer ? (translation.t('Earned Money') || 'Earned Money') : (translation.t('Total Price') || 'Total Price') }}
+          </div>
+          <div class="summary-card-value total-price">
+            {{ translation.convertNumber(totalPrice.toFixed(2)) }} {{ translation.t('itemsModal.currency') !== 'itemsModal.currency' ? translation.t('itemsModal.currency') : 'EGP' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Items List -->
+      <div class="cart-items-list">
+        <div *ngFor="let item of cartItems" class="cart-item-card">
+          <div class="cart-item-image-wrapper">
+            <img [src]="item.image" [alt]="getItemName(item)" class="cart-item-image" />
+          </div>
+          <div class="cart-item-info">
+            <div class="cart-item-header">
+              <div class="cart-item-title-section">
+                <h3 class="cart-item-name">{{ getItemName(item) }}</h3>
+                <p class="cart-item-category">
+                  {{ translation.t('Category') || 'Category' }}: 
+                  <span class="category-name">
+                    {{ typeof item.categoryName === 'string' ? item.categoryName : (locale === 'ar' ? item.categoryName.ar : item.categoryName.en) }}
+                  </span>
+                </p>
+                <div class="cart-item-measurement">
+                  <svg class="measurement-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                  </svg>
+                  {{ item.measurement_unit === 1 ? (translation.t('By Kilo') || 'By Kilo') : (translation.t('By Piece') || 'By Piece') }}
+                </div>
+              </div>
+              <button (click)="removeFromCart(item)" class="remove-btn" [title]="translation.t('Remove Item') || 'Remove Item'">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="cart-item-price-section">
+              <div class="price-row">
+                <span class="price-label">{{ translation.t('Price') || 'Price' }}:</span>
+                <span class="price-value">{{ translation.convertNumber(getItemPrice(item).toFixed(2)) }} {{ translation.t('itemsModal.currency') !== 'itemsModal.currency' ? translation.t('itemsModal.currency') : 'EGP' }}</span>
+              </div>
+              <div class="total-row">
+                {{ translation.convertNumber(item.quantity) }} × {{ translation.convertNumber(getItemPrice(item).toFixed(2)) }} =
+                <span class="total-value">{{ translation.convertNumber((item.quantity * getItemPrice(item)).toFixed(2)) }} {{ translation.t('itemsModal.currency') !== 'itemsModal.currency' ? translation.t('itemsModal.currency') : 'EGP' }}</span>
+              </div>
+            </div>
+
+            <div class="cart-item-controls">
+              <div class="quantity-controls-wrapper">
+                <button 
+                  (click)="updateQuantity(item, -1)" 
+                  class="quantity-btn"
+                  [disabled]="item.quantity <= (item.measurement_unit === 1 ? 0.25 : 1)"
+                >
+                  -
+                </button>
+                <input
+                  type="text"
+                  [value]="translation.convertNumber(item.quantity.toString())"
+                  readonly
+                  class="quantity-input"
+                />
+                <button 
+                  (click)="updateQuantity(item, 1)" 
+                  class="quantity-btn"
+                >
+                  +
+                </button>
+                <span class="quantity-unit">
+                  {{ item.measurement_unit === 1 ? (translation.t('kg') || 'kg') : (translation.t('items') || 'items') }}
+                </span>
+              </div>
+              <div class="quantity-hint">
+                {{ item.measurement_unit === 1 ? (translation.t('Minimum increment: 0.25 kg') || 'Minimum increment: 0.25 kg') : (translation.t('Whole numbers only') || 'Whole numbers only') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkout Section -->
+      <div class="checkout-section">
+        <div class="checkout-actions">
+          <button (click)="clearCart()" class="clear-btn">
+            {{ isCustomer ? (translation.t('Clear Collection') || 'Clear Collection') : (translation.t('Clear All') || 'Clear All') }}
+          </button>
+          <div class="checkout-right">
+            <button 
+              (click)="proceedToCheckout()" 
+              class="checkout-btn"
+              [disabled]="totalPrice < 100"
+            >
+              <svg class="checkout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+                  {{ translation.t('Schedule Pickup') || 'Schedule Pickup' }}
+            </button>
+            <p *ngIf="totalPrice < 100" class="min-amount-hint">
+              {{ translation.t('Minimum amount is 100 EGP') || 'Minimum amount is 100 EGP' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Voice Processing Component on Cart Page -->
+<app-floating-recorder-button></app-floating-recorder-button>
+

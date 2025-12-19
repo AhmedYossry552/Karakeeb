@@ -1,0 +1,288 @@
+<div class="admin-delivery-approve">
+  <div class="admin-header">
+    <h1 class="admin-title">Delivery Approvals</h1>
+  </div>
+
+  <div class="delivery-stats">
+    <div class="stat-card pending">
+      <div class="stat-label">Pending</div>
+      <div class="stat-value">{{ getStatusCount('pending') }}</div>
+    </div>
+    <div class="stat-card approved">
+      <div class="stat-label">Approved</div>
+      <div class="stat-value">{{ getStatusCount('approved') }}</div>
+    </div>
+    <div class="stat-card declined">
+      <div class="stat-label">Declined</div>
+      <div class="stat-value">{{ getStatusCount('declined') }}</div>
+    </div>
+    <div class="stat-card revoked">
+      <div class="stat-label">Revoked</div>
+      <div class="stat-value">{{ getStatusCount('revoked') }}</div>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading delivery applications...</p>
+    </div>
+  } @else if (deliveries().length === 0) {
+    <div class="empty-state">
+      <p>No delivery applications found.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Rating</th>
+            <th>Action</th>
+            <th>Documents</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of deliveries(); track item.userId) {
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>{{ item.email }}</td>
+              <td>{{ item.phoneNumber }}</td>
+              <td>
+                <span [class]="getStatusClass(item.currentStatus || 'pending')">
+                  {{ item.currentStatus || 'pending' }}
+                </span>
+              </td>
+              <td>
+                @if (item.currentStatus === 'approved' || (item.totalReviews || 0) > 0) {
+                  <button class="rating-link">View Ratings</button>
+                } @else {
+                  <span class="text-gray-400 text-xs">N/A</span>
+                }
+              </td>
+              <td>
+                <select
+                  (change)="handleActionChange(item, $any($event.target).value)"
+                  class="action-select"
+                >
+                  <option value="">Select Action</option>
+                  @if (item.currentStatus !== 'approved') {
+                    <option value="approve">Approve</option>
+                  }
+                  @if (item.currentStatus !== 'declined' && item.currentStatus !== 'revoked') {
+                    <option value="decline">Decline</option>
+                  }
+                  @if (item.currentStatus === 'approved') {
+                    <option value="revoke">Revoke</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <button (click)="viewAttachments(item)" class="attachments-link">View Documents</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (showActionModal()) {
+    <div class="modal-overlay" (click)="showActionModal.set(false)">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3>
+          {{ actionType() === 'revoke' ? 'Revoke Access' : 'Decline Application' }}
+        </h3>
+        <div class="modal-body">
+          <p>
+            Are you sure you want to {{ actionType() }} 
+            <strong>{{ selectedUser?.name }}</strong>?
+          </p>
+          <div class="form-group">
+            <label>Reason {{ actionType() === 'revoke' ? '(Required)' : '(Optional)' }}:</label>
+            <textarea
+              [(ngModel)]="actionReason"
+              class="form-textarea"
+              rows="3"
+              placeholder="Enter reason..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button (click)="showActionModal.set(false)" class="cancel-button">Cancel</button>
+          <button
+            (click)="confirmAction()"
+            [disabled]="actionLoading() || (actionType() === 'revoke' && !actionReason().trim())"
+            class="save-button"
+            [class.danger]="actionType() !== 'approve'"
+          >
+            {{ actionLoading() ? 'Processing...' : (actionType() === 'revoke' ? 'Revoke' : 'Decline') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showAttachmentsModal()) {
+    <div class="modal-overlay" (click)="showAttachmentsModal.set(false)">
+      <div class="modal-content attachments-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ translation.t('deliveryAttachments.title') || 'Delivery Documents' }}</h3>
+          <button (click)="showAttachmentsModal.set(false)" class="close-button">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-subtitle">{{ translation.t('deliveryAttachments.subtitle') || 'Verification documents and personal information of the delivery partner.' }}</p>
+          
+          <!-- Verification Images Section -->
+          <div class="attachments-section">
+            <h4 class="section-title">
+              {{ translation.t('deliveryAttachments.sections.verificationImages.title') || 'Verification Images' }}
+            </h4>
+            <p class="section-description">
+              {{ translation.t('deliveryAttachments.sections.verificationImages.description') || 'Uploaded documents and photos for verification' }}
+            </p>
+            <div class="attachments-grid">
+              @if (selectedAttachments?.deliveryImage) {
+                <div class="attachment-item">
+                  <div class="attachment-image-wrapper">
+                    <img [src]="selectedAttachments.deliveryImage" alt="Delivery Person Photo" (error)="$event.target.style.display='none'" />
+                  </div>
+                  <div class="attachment-info">
+                    <p class="attachment-title">
+                      {{ translation.t('deliveryAttachments.images.deliveryPhoto.title') || 'Delivery Person Photo' }}
+                    </p>
+                    <p class="attachment-description">
+                      {{ translation.t('deliveryAttachments.images.deliveryPhoto.description') || 'Photo of the delivery partner for identification' }}
+                    </p>
+                  </div>
+                </div>
+              } @else {
+                <div class="attachment-item empty">
+                  <div class="attachment-image-wrapper">
+                    <div class="no-image-placeholder">
+                      <span>{{ translation.t('deliveryAttachments.noImage') || 'No image uploaded' }}</span>
+                    </div>
+                  </div>
+                  <div class="attachment-info">
+                    <p class="attachment-title">
+                      {{ translation.t('deliveryAttachments.images.deliveryPhoto.title') || 'Delivery Person Photo' }}
+                    </p>
+                  </div>
+                </div>
+              }
+              
+              @if (selectedAttachments?.vehicleImage) {
+                <div class="attachment-item">
+                  <div class="attachment-image-wrapper">
+                    <img [src]="selectedAttachments.vehicleImage" alt="Vehicle Image" (error)="$event.target.style.display='none'" />
+                  </div>
+                  <div class="attachment-info">
+                    <p class="attachment-title">
+                      {{ translation.t('deliveryAttachments.images.vehicleImage.title') || 'Vehicle Image' }}
+                    </p>
+                    <p class="attachment-description">
+                      {{ translation.t('deliveryAttachments.images.vehicleImage.description') || 'Photo of the vehicle used for deliveries' }}
+                    </p>
+                  </div>
+                </div>
+              } @else {
+                <div class="attachment-item empty">
+                  <div class="attachment-image-wrapper">
+                    <div class="no-image-placeholder">
+                      <span>{{ translation.t('deliveryAttachments.noImage') || 'No image uploaded' }}</span>
+                    </div>
+                  </div>
+                  <div class="attachment-info">
+                    <p class="attachment-title">
+                      {{ translation.t('deliveryAttachments.images.vehicleImage.title') || 'Vehicle Image' }}
+                    </p>
+                  </div>
+                </div>
+              }
+              
+              @if (selectedAttachments?.criminalRecord) {
+                <div class="attachment-item">
+                  <div class="attachment-image-wrapper">
+                    <img [src]="selectedAttachments.criminalRecord" alt="Criminal Record" (error)="$event.target.style.display='none'" />
+                  </div>
+                  <div class="attachment-info">
+                    <p class="attachment-title">
+                      {{ translation.t('deliveryAttachments.images.criminalRecord.title') || 'Criminal Record' }}
+                    </p>
+                    <p class="attachment-description">
+                      {{ translation.t('deliveryAttachments.images.criminalRecord.description') || 'Official criminal record document' }}
+                    </p>
+                  </div>
+                </div>
+              } @else {
+                <div class="attachment-item empty">
+                  <div class="attachment-image-wrapper">
+                    <div class="no-image-placeholder">
+                      <span>{{ translation.t('deliveryAttachments.noImage') || 'No image uploaded' }}</span>
+                    </div>
+                  </div>
+                  <div class="attachment-info">
+                    <p class="attachment-title">
+                      {{ translation.t('deliveryAttachments.images.criminalRecord.title') || 'Criminal Record' }}
+                    </p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Personal Information Section -->
+          <div class="attachments-section">
+            <h4 class="section-title">
+              {{ translation.t('deliveryAttachments.sections.personalInfo.title') || 'Personal Information' }}
+            </h4>
+            <p class="section-description">
+              {{ translation.t('deliveryAttachments.sections.personalInfo.description') || 'Details provided by the delivery partner' }}
+            </p>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  {{ translation.t('deliveryAttachments.info.licenseNumber') || 'License Number' }}
+                </div>
+                <div class="info-value">
+                  {{ selectedAttachments?.licenseNumber || (translation.t('deliveryAttachments.notProvided') || 'Not provided') }}
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  {{ translation.t('deliveryAttachments.info.nationalId') || 'National ID' }}
+                </div>
+                <div class="info-value">
+                  {{ selectedAttachments?.nationalId || (translation.t('deliveryAttachments.notProvided') || 'Not provided') }}
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  {{ translation.t('deliveryAttachments.info.vehicleType') || 'Vehicle Type' }}
+                </div>
+                <div class="info-value">
+                  {{ selectedAttachments?.vehicleType || (translation.t('deliveryAttachments.notProvided') || 'Not provided') }}
+                </div>
+              </div>
+              
+              @if (selectedAttachments?.emergencyContact) {
+                <div class="info-item">
+                  <div class="info-label">Emergency Contact</div>
+                  <div class="info-value">{{ selectedAttachments.emergencyContact }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button (click)="showAttachmentsModal.set(false)" class="cancel-button">Close</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

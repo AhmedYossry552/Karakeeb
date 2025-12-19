@@ -1,0 +1,139 @@
+@if (signupForm) {
+<form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form space-y-6">
+  <!-- Full Name -->
+  <app-floating-input
+    id="name"
+    [label]="t('auth.register.fullName')"
+    type="text"
+    [maxLength]="30"
+    [error]="name?.hasError('required') ? t('auth.errors.required.fullName') : ''"
+    formControlName="name"
+  ></app-floating-input>
+
+  <!-- Email -->
+  <app-floating-input
+    id="email"
+    [label]="t('auth.login.email')"
+    type="email"
+    [maxLength]="30"
+    [error]="email?.hasError('required') ? t('auth.errors.required.email') :
+             email?.hasError('email') ? t('auth.errors.invalid.email') : ''"
+    formControlName="email"
+  ></app-floating-input>
+
+  <!-- Phone Number -->
+  <app-floating-input
+    id="phoneNumber"
+    [label]="t('auth.register.phoneNumber')"
+    type="tel"
+    [maxLength]="11"
+    [error]="phoneNumber?.hasError('required') ? t('auth.errors.required.phoneNumber') :
+             phoneNumber?.hasError('pattern') ? t('auth.errors.invalid.phoneNumber') : ''"
+    formControlName="phoneNumber"
+  ></app-floating-input>
+
+  <!-- Password -->
+  <div class="relative">
+    <app-floating-input
+      id="password"
+      [label]="t('auth.login.password')"
+      [type]="showPassword() ? 'text' : 'password'"
+      [maxLength]="20"
+      [error]="password?.hasError('required') ? t('auth.errors.required.password') :
+               password?.hasError('pattern') ? t('auth.errors.password.pattern') : ''"
+      formControlName="password"
+    ></app-floating-input>
+    <button
+      type="button"
+      (click)="togglePassword()"
+      class="absolute top-4 end-2 z-10 cursor-pointer"
+      style="color: var(--color-primary)"
+    >
+      <svg *ngIf="!showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      <svg *ngIf="showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.736m0 0L21 21" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Confirm Password -->
+  <div class="relative">
+    <app-floating-input
+      id="confirmPassword"
+      [label]="t('auth.register.confirmPassword')"
+      [type]="showConfirmPassword() ? 'text' : 'password'"
+      [maxLength]="20"
+      [error]="confirmPassword?.hasError('required') ? t('auth.errors.required.confirmPassword') :
+               confirmPassword?.hasError('mismatch') ? t('auth.errors.password.mismatch') : ''"
+      formControlName="confirmPassword"
+    ></app-floating-input>
+    <button
+      type="button"
+      (click)="toggleConfirmPassword()"
+      class="absolute top-4 end-2 z-10 cursor-pointer"
+      style="color: var(--color-primary)"
+    >
+      <svg *ngIf="!showConfirmPassword()" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      <svg *ngIf="showConfirmPassword()" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.736m0 0L21 21" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Address -->
+  <app-floating-input
+    id="address"
+    [label]="t('auth.register.address')"
+    type="text"
+    [error]="address?.hasError('required') ? t('auth.errors.required.address') : ''"
+    formControlName="address"
+  ></app-floating-input>
+
+  <!-- Submit Button -->
+  <button
+    type="submit"
+    [disabled]="isLoading() || signupForm.invalid"
+    class="submit-btn"
+  >
+    <span *ngIf="isLoading()" class="spinner"></span>
+    {{ isLoading() ? (t('auth.login.signingUp') || 'Signing up...') : (t('auth.login.createAccount') || 'Create Account') }}
+  </button>
+
+  <!-- Divider -->
+  <div class="divider">
+    <span>{{ t('auth.login.or') || 'OR' }}</span>
+  </div>
+
+  <!-- Google Sign Up Button -->
+  <div class="google-button-wrapper">
+    <div id="google-signin-button-signup"></div>
+    <div *ngIf="googleLoading()" class="google-loading">
+      <span class="spinner-small"></span>
+      <span>{{ t('auth.register.creatingAccount') || 'Creating account...' }}</span>
+    </div>
+  </div>
+
+  <!-- Switch to Login -->
+  <div class="text-center mt-4">
+    <button
+      type="button"
+      (click)="navigateToLogin()"
+      class="text-sm text-[var(--color-primary)] hover:underline"
+    >
+      {{ t('auth.login.already') || 'Already have an account? Sign in' }}
+    </button>
+  </div>
+</form>
+} @else {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading form...</p>
+  </div>
+}
+

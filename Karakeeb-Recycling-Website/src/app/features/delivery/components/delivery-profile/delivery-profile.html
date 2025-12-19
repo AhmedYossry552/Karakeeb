@@ -1,0 +1,307 @@
+<!-- Loading State -->
+<div *ngIf="loading() || !data() || !user()" class="profile-loading">
+  <div class="loading-spinner">
+    <div class="spinner-ring"></div>
+    <div class="spinner-ring"></div>
+    <div class="spinner-ring"></div>
+  </div>
+  <p class="loading-text">{{ translation.t('common.loading') !== 'common.loading' ? translation.t('common.loading') : 'Loading...' }}</p>
+</div>
+
+<!-- Main Profile Page -->
+<div *ngIf="!loading() && data() && user()" class="delivery-profile-page">
+  <!-- Animated Hero Header (Same as Dashboard) -->
+  <div class="dashboard-hero">
+    <div class="hero-background-animated"></div>
+    <div class="hero-content-wrapper">
+      <div class="hero-main-content">
+        <!-- Left: Icon + Title -->
+        <div class="hero-title-section">
+          <div class="hero-icon-box">
+            <div class="icon-glow"></div>
+            <fa-icon [icon]="faTruck" class="hero-icon"></fa-icon>
+          </div>
+          <div class="hero-text">
+            <h1 class="hero-title">{{ translation.t('My Profile') || 'My Profile' }}</h1>
+            <p class="hero-subtitle">{{ translation.t('View your delivery profile and reviews') || 'View your delivery profile and reviews' }}</p>
+          </div>
+        </div>
+
+        <!-- Right: Language + Avatar -->
+        <div class="hero-actions">
+          <!-- Language Toggle - Desktop -->
+          <div class="language-toggle-desktop">
+            <span class="lang-label" [ngClass]="{'active': getCurrentLanguage() === 'en'}">EN</span>
+            <button
+              (click)="toggleLanguage()"
+              class="lang-switch"
+              [class.active]="getCurrentLanguage() === 'ar'"
+              title="Toggle Language"
+            >
+              <div class="lang-switch-thumb"></div>
+            </button>
+            <span class="lang-label" [ngClass]="{'active': getCurrentLanguage() === 'ar'}">AR</span>
+          </div>
+
+          <!-- User Avatar Dropdown -->
+          <div #dropdownRef class="user-avatar-dropdown">
+            <button (click)="togglePopup()" class="avatar-button">
+              <div class="avatar-container">
+                <img
+                  *ngIf="getUserImage() && !imageError()"
+                  [src]="getUserImage()"
+                  alt="User Avatar"
+                  class="avatar-img"
+                  (error)="onProfileImageError($event)"
+                />
+                <div
+                  *ngIf="!getUserImage() || imageError()"
+                  class="avatar-initials"
+                >
+                  {{ getInitials(user()?.name || 'U') }}
+                </div>
+                <div class="avatar-status"></div>
+              </div>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div *ngIf="showPopup()" class="dropdown-menu">
+              <!-- User Info Section -->
+              <div class="dropdown-header">
+                <div class="dropdown-avatar-wrapper">
+                  <img
+                    *ngIf="getUserImage() && !imageError()"
+                    [src]="getUserImage()"
+                    alt="User"
+                    class="dropdown-avatar-img"
+                    (error)="onProfileImageError($event)"
+                  />
+                  <div
+                    *ngIf="!getUserImage() || imageError()"
+                    class="dropdown-avatar-initials"
+                  >
+                    {{ getInitials(user()?.name || 'U') }}
+                  </div>
+                </div>
+                <div class="dropdown-user-info">
+                  <p class="dropdown-name">{{ user()?.name || 'User' }}</p>
+                  <p class="dropdown-email">{{ user()?.email || 'user@example.com' }}</p>
+                  <span *ngIf="user()?.role" class="dropdown-role-badge">
+                    {{ user()?.role || 'Delivery' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Menu Items -->
+              <div class="dropdown-items">
+                <button (click)="goBack()" class="dropdown-item">
+                  <fa-icon [icon]="faTruck" class="dropdown-item-icon"></fa-icon>
+                  <span class="dropdown-item-text">{{ translation.t('Dashboard') || 'Dashboard' }}</span>
+                </button>
+
+                <button (click)="goToSettings()" class="dropdown-item">
+                  <fa-icon [icon]="faCog" class="dropdown-item-icon"></fa-icon>
+                  <span class="dropdown-item-text">{{ translation.t('Settings') || 'Settings' }}</span>
+                </button>
+
+                <div class="dropdown-divider"></div>
+
+                <button (click)="goToSignOut()" class="dropdown-item danger">
+                  <fa-icon [icon]="faSignOutAlt" class="dropdown-item-icon"></fa-icon>
+                  <span class="dropdown-item-text">{{ translation.t('Sign Out') || 'Sign Out' }}</span>
+                </button>
+
+                <!-- Language Toggle - Mobile Only -->
+                <div class="dropdown-divider mobile-only"></div>
+                <div class="dropdown-language mobile-only">
+                  <span class="lang-label" [ngClass]="{'active': getCurrentLanguage() === 'en'}">EN</span>
+                  <button
+                    (click)="toggleLanguage()"
+                    class="lang-switch"
+                    [class.active]="getCurrentLanguage() === 'ar'"
+                  >
+                    <div class="lang-switch-thumb"></div>
+                  </button>
+                  <span class="lang-label" [ngClass]="{'active': getCurrentLanguage() === 'ar'}">AR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <div class="profile-container">
+    <!-- Profile Header Card -->
+    <div class="profile-header-card">
+      <div class="header-content">
+        <!-- Avatar Section -->
+        <div class="avatar-section">
+          <div class="avatar-wrapper">
+            <div class="avatar-ring"></div>
+            <img
+              *ngIf="getImageUrl()"
+              [src]="getImageUrl()"
+              [alt]="data()?.courier?.name || user()?.name || 'Courier'"
+              class="avatar-image"
+              (error)="onProfileImageError($event)"
+              (load)="onImageLoad()"
+            />
+            <div
+              *ngIf="!getImageUrl()"
+              class="avatar-placeholder"
+            >
+              {{ getInitials(data()?.courier?.name || user()?.name || 'C') }}
+            </div>
+            <div class="avatar-badge">
+              <fa-icon [icon]="faAward" class="badge-icon"></fa-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="info-section">
+          <div class="name-row">
+            <h1 class="courier-name">{{ data()?.courier?.name || user()?.name }}</h1>
+            <div class="verified-badge">
+              <fa-icon [icon]="faShield" class="shield-icon"></fa-icon>
+              <span>{{ translation.t('profile.delivery.verified_courier') !== 'profile.delivery.verified_courier' ? translation.t('profile.delivery.verified_courier') : 'Verified Courier' }}</span>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-item rating-stat">
+              <div class="stat-icon rating-icon">
+                <fa-icon [icon]="faStar" class="icon"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ convertNumber(data()?.courier?.averageRating?.toFixed(1) || '0') }}</div>
+                <div class="stat-label">{{ convertNumber(data()?.courier?.totalReviews || 0) }} {{ translation.t('profile.delivery.reviews') !== 'profile.delivery.reviews' ? translation.t('profile.delivery.reviews') : 'Reviews' }}</div>
+              </div>
+            </div>
+
+            <div class="stat-item deliveries-stat">
+              <div class="stat-icon deliveries-icon">
+                <fa-icon [icon]="faTruck" class="icon"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ convertNumber(data()?.courier?.totalDeliveries || data()?.courier?.totalReviews || 0) }}</div>
+                <div class="stat-label">{{ translation.t('profile.delivery.deliveries') !== 'profile.delivery.deliveries' ? translation.t('profile.delivery.deliveries') : 'Deliveries' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="action-section">
+          <button (click)="handleEditClick()" class="edit-button">
+            <fa-icon [icon]="faEdit" class="button-icon"></fa-icon>
+            <span>{{ translation.t('profile.delivery.edit_profile') !== 'profile.delivery.edit_profile' ? translation.t('profile.delivery.edit_profile') : 'Edit Profile' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="reviews-section">
+      <div class="reviews-header">
+        <div class="reviews-title-group">
+          <h2 class="reviews-title">{{ translation.t('profile.delivery.customer_reviews') !== 'profile.delivery.customer_reviews' ? translation.t('profile.delivery.customer_reviews') : 'Customer Reviews' }}</h2>
+          <div class="reviews-count-badge">
+            <span class="count-number">{{ convertNumber(data()?.pagination?.totalReviews || 0) }}</span>
+            <span class="count-label">{{ translation.t('profile.delivery.total_reviews') !== 'profile.delivery.total_reviews' ? translation.t('profile.delivery.total_reviews') : 'Total Reviews' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reviews List -->
+      <div class="reviews-list" *ngIf="data()?.reviews && data()!.reviews.length > 0">
+        <div
+          *ngFor="let review of data()?.reviews"
+          class="review-card"
+        >
+          <div class="review-content">
+            <p class="review-text">{{ review.comment || (translation.t('profile.delivery.no_comment') !== 'profile.delivery.no_comment' ? translation.t('profile.delivery.no_comment') : 'No comment') }}</p>
+          </div>
+          <div class="review-rating">
+            <div class="stars-container">
+              <fa-icon
+                *ngFor="let i of getStarArray()"
+                [icon]="faStar"
+                [ngClass]="{
+                  'star-filled': i < review.stars,
+                  'star-empty': i >= review.stars
+                }"
+                class="star-icon"
+              ></fa-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!data()?.reviews || data()!.reviews.length === 0" class="empty-reviews">
+        <div class="empty-icon-wrapper">
+          <fa-icon [icon]="faStar" class="empty-icon"></fa-icon>
+        </div>
+        <h3 class="empty-title">{{ translation.t('profile.delivery.no_reviews_yet') !== 'profile.delivery.no_reviews_yet' ? translation.t('profile.delivery.no_reviews_yet') : 'No reviews yet' }}</h3>
+        <p class="empty-description">{{ translation.t('profile.delivery.reviews_will_appear') !== 'profile.delivery.reviews_will_appear' ? translation.t('profile.delivery.reviews_will_appear') : 'Reviews will appear here once customers rate your deliveries' }}</p>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="data()?.pagination && data()!.pagination.totalPages > 1" class="pagination-section">
+        <div class="pagination-container">
+          <div class="pagination-controls">
+            <button
+              (click)="handleBigPrevious()"
+              [disabled]="!canJumpBackward()"
+              class="pagination-btn pagination-btn-jump"
+              title="Jump backward"
+            >
+              &laquo;
+            </button>
+            <button
+              (click)="onPageChange(currentPage() - 1)"
+              [disabled]="!data()?.pagination?.hasPrev"
+              class="pagination-btn pagination-btn-prev"
+            >
+              {{ translation.t('previous') || 'Previous' }}
+            </button>
+
+            <div class="pagination-pages">
+              <button
+                *ngFor="let page of getVisiblePages()"
+                (click)="onPageChange(page)"
+                [class.active]="page === currentPage()"
+                class="pagination-btn pagination-btn-page"
+              >
+                {{ convertNumber(page) }}
+              </button>
+            </div>
+
+            <button
+              (click)="onPageChange(currentPage() + 1)"
+              [disabled]="!data()?.pagination?.hasNext"
+              class="pagination-btn pagination-btn-next"
+            >
+              {{ translation.t('next') || 'Next' }}
+            </button>
+            <button
+              (click)="handleBigNext()"
+              [disabled]="!canJumpForward()"
+              class="pagination-btn pagination-btn-jump"
+              title="Jump forward"
+            >
+              &raquo;
+            </button>
+          </div>
+          <div class="pagination-info">
+            <span>{{ translation.t('common.page') !== 'common.page' ? translation.t('common.page') : 'Page' }} {{ convertNumber(currentPage()) }} {{ translation.t('common.of') !== 'common.of' ? translation.t('common.of') : 'of' }} {{ convertNumber(data()!.pagination.totalPages) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

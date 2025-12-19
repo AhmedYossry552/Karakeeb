@@ -1,0 +1,104 @@
+<div class="buyer-orders-container" *ngIf="user()">
+  <div class="orders-card">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <app-stat-box
+        [label]="translation.t('Total Recycles') || 'Total Recycles'"
+        [value]="stats().totalRecycles"
+      ></app-stat-box>
+      <app-stat-box
+        [label]="translation.t('Points') || 'Points'"
+        [value]="stats().points"
+        [loading]="pointsLoading()"
+      ></app-stat-box>
+      <app-membership-tier [totalRecycles]="stats().totalRecycles"></app-membership-tier>
+    </div>
+
+    <!-- Points Activity -->
+    <app-points-activity [userPoints]="userPoints()"></app-points-activity>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <button
+        *ngFor="let tab of visibleTabs()"
+        [class.active]="activeTab() === tab"
+        (click)="setActiveTab(tab)"
+        class="tab-button"
+      >
+        {{ translation.t(tab) || tab }}
+      </button>
+    </div>
+
+    <!-- Orders or Payments -->
+    <div class="content-area">
+      @if (activeTab() === 'payments') {
+        @if (paymentsLoading()) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+          </div>
+        } @else if (payments().length === 0) {
+          <p class="empty-state">{{ translation.t('No Payments Found') || 'No Payments Found' }}</p>
+        } @else {
+          <div class="payments-grid">
+            @for (payment of payments(); track payment._id || $index) {
+              <div class="payment-card">
+                <div class="payment-header">
+                  <span class="payment-date">
+                    {{ translation.t('Date') || 'Date' }}:
+                    {{ payment.created ? (payment.created * 1000 | date:'short') : 'Unknown Date' }}
+                  </span>
+                  <div class="payment-amount">
+                    {{ (payment.amount / 100).toFixed(2) }} {{ translation.t('EGP') || 'EGP' }}
+                  </div>
+                </div>
+                <div class="payment-status">
+                  {{ translation.t('Status') || 'Status' }}:
+                  <span class="status-text">{{ payment.status }}</span>
+                </div>
+                @if (payment.receipt_url) {
+                  <a
+                    [href]="payment.receipt_url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="receipt-link"
+                  >
+                    {{ translation.t('View Receipt') || 'View Receipt' }}
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      } @else if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+        </div>
+      } @else if (filteredOrders().length === 0) {
+        <p class="empty-state">
+            {{ translation.t('No Orders in This Tab Yet.') || 'No Orders in This Tab Yet.' }}
+        </p>
+      } @else {
+        <div class="orders-grid">
+          @for (order of filteredOrders(); track order._id) {
+            <app-order-card
+              [order]="order"
+              [user]="user()!"
+              (viewDetails)="openItemsModal($event)"
+              (cancelOrder)="onCancelOrder($event)"
+              (deleteOrder)="onDeleteOrder($event)"
+            ></app-order-card>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Items Modal -->
+    <app-items-modal
+      [show]="isItemsModalOpen()"
+      (close)="closeItemsModal()"
+      [items]="selectedOrderItems()"
+      [userRole]="user()?.role"
+    ></app-items-modal>
+  </div>
+</div>
+

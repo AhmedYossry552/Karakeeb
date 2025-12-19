@@ -1,0 +1,270 @@
+.dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.dialog-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 420px;
+  width: 90%;
+  max-height: 85vh;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+
+  &.has-delivery-proof {
+    max-width: 500px;
+  }
+}
+
+.dialog-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dialog-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.dialog-message {
+  margin: 0;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.dialog-footer {
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  min-width: 120px;
+  height: auto;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-cancel {
+  background-color: #f3f4f6;
+  color: #374151;
+  
+  &:hover {
+    background-color: #e5e7eb;
+  }
+  
+  &:focus {
+    outline: 2px solid #9ca3af;
+    outline-offset: 2px;
+  }
+}
+
+.btn-confirm {
+  background-color: #10b981;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  
+  &:hover {
+    background-color: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+  }
+  
+  &:focus {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.delivery-proof-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.delivery-proof-title {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.delivery-proof-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.delivery-proof-image-container {
+  margin-bottom: 16px;
+}
+
+.delivery-proof-image-wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  max-height: 300px;
+}
+
+.delivery-proof-image {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  display: block;
+}
+
+.delivery-proof-notes-container {
+  margin-top: 16px;
+}
+
+.delivery-proof-notes {
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.delivery-proof-empty {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px dashed #d1d5db;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .dialog-container {
+    background: #1f2937;
+  }
+  
+  .dialog-title {
+    color: #f9fafb;
+  }
+  
+  .dialog-message {
+    color: #d1d5db;
+  }
+  
+  .dialog-header,
+  .dialog-footer {
+    border-color: #374151;
+  }
+  
+  .btn-cancel {
+    background-color: #374151;
+    color: #f9fafb;
+    
+    &:hover {
+      background-color: #4b5563;
+    }
+  }
+
+  .delivery-proof-section {
+    border-color: #374151;
+  }
+
+  .delivery-proof-title {
+    color: #f9fafb;
+  }
+
+  .delivery-proof-label {
+    color: #d1d5db;
+  }
+
+  .delivery-proof-image-wrapper {
+    border-color: #374151;
+    background: #111827;
+  }
+
+  .delivery-proof-notes {
+    background: #111827;
+    border-color: #374151;
+    color: #d1d5db;
+  }
+
+  .delivery-proof-empty {
+    background: #111827;
+    border-color: #374151;
+    color: #9ca3af;
+  }
+}
+

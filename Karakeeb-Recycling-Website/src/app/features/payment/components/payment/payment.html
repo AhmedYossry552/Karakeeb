@@ -1,0 +1,92 @@
+<div class="payment-container" *ngIf="checkoutData">
+  <div class="payment-card">
+    <h1 class="payment-title">
+      {{ translation.t('Complete Your Payment') || 'Complete Your Payment' }}
+    </h1>
+
+    <div class="payment-content">
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <h2 class="summary-title">{{ translation.t('Order Summary') || 'Order Summary' }}</h2>
+        <div class="summary-items">
+          @for (item of cartItems; track item._id || $index) {
+            <div class="summary-item">
+              <span>{{ item.name | json }}</span>
+              <span>{{ item.quantity }} x {{ item.price | number:'1.2-2' }} EGP</span>
+            </div>
+          }
+        </div>
+        <div class="summary-totals">
+          <div class="total-row">
+            <span>{{ translation.t('Subtotal') || 'Subtotal' }}:</span>
+            <span>{{ subtotal | number:'1.2-2' }} EGP</span>
+          </div>
+          <div class="total-row">
+            <span>{{ translation.t('Delivery Fee') || 'Delivery Fee' }}:</span>
+            <span>{{ deliveryFee() | number:'1.2-2' }} EGP</span>
+          </div>
+          <div class="total-row final">
+            <span>{{ translation.t('Total') || 'Total' }}:</span>
+            <span>{{ totalAmount() | number:'1.2-2' }} EGP</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Form -->
+      <form [formGroup]="paymentForm" (ngSubmit)="processPayment()" class="payment-form">
+        <h2 class="form-title">{{ translation.t('Card Details') || 'Card Details' }}</h2>
+
+        @if (errorMessage()) {
+          <div class="error-message">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-group">
+          <label for="cardholderName">{{ translation.t('Cardholder Name') || 'Cardholder Name' }}</label>
+          <input
+            id="cardholderName"
+            type="text"
+            formControlName="cardholderName"
+            [placeholder]="translation.t('Cardholder Name') || 'John Doe'"
+            class="form-input"
+          />
+          @if (paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched) {
+            <p class="error-text">{{ translation.t('Required') || 'Required' }}</p>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>{{ translation.t('Card Details') || 'Card Details' }}</label>
+          <div id="card-element" class="form-input"></div>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="paymentForm.invalid || loading()"
+          class="pay-button"
+        >
+          @if (loading()) {
+            <span class="spinner"></span>
+            {{ translation.t('payment.processing') !== 'payment.processing' ? translation.t('payment.processing') : 'Processing...' }}
+          } @else {
+            {{ translation.t('Pay Now') || 'Pay Now' }} {{ totalAmount() | number:'1.2-2' }} EGP
+          }
+        </button>
+      </form>
+
+      <!-- Trust Indicators -->
+      <div class="trust-indicators">
+        <div class="trust-item">
+          <span class="trust-icon">🔒</span>
+          <span>{{ translation.t('Secure Payment') || 'Secure Payment' }}</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">✓</span>
+          <span>{{ translation.t('256-bit SSL Encrypted') || '256-bit SSL Encrypted' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

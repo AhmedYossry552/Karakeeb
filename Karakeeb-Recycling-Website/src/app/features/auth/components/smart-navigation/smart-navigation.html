@@ -1,0 +1,44 @@
+<div class="smart-navigation">
+  <button
+    *ngIf="showPrevButton"
+    type="button"
+    (click)="prevStep?.()"
+    class="nav-button prev-button"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    {{ t('auth.register.previous') || 'Previous' }}
+  </button>
+
+  <div [class.ml-auto]="showPrevButton" [class.w-full]="!showPrevButton">
+    <button
+      *ngIf="!isLastStep"
+      type="button"
+      (click)="nextStep?.()"
+      [disabled]="disableNext"
+      class="nav-button next-button"
+    >
+      {{ t('auth.register.next') || 'Next' }}
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+    <button
+      *ngIf="isLastStep"
+      type="submit"
+      (click)="onSubmit?.()"
+      [disabled]="disableNext || authContext.loading()"
+      class="nav-button submit-button"
+    >
+      <span *ngIf="authContext.loading()" class="spinner-small"></span>
+      <span *ngIf="!authContext.loading()">
+        {{ t('auth.login.createAccount') || 'Create Account' }}
+      </span>
+      <span *ngIf="authContext.loading()">
+        {{ t('auth.login.signingUp') || 'Signing Up...' }}
+      </span>
+    </button>
+  </div>
+</div>
+

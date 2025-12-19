@@ -1,0 +1,329 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-content">
+      <!-- Left: Logo + Search -->
+      <div class="navbar-left">
+        <a routerLink="/" class="navbar-logo-link">
+          <div class="navbar-logo">
+            {{ translation.t('navbar.title') || 'Karakeeb' }}
+          </div>
+        </a>
+        <!-- Search will be added here when search component is created -->
+      </div>
+
+      <!-- Center: Navigation Links (Desktop) -->
+      <div class="navbar-center">
+        <a 
+          routerLink="/" 
+          routerLinkActive="active"
+          class="nav-link"
+        >
+          <fa-icon [icon]="faHome" class="nav-icon"></fa-icon>
+          <span>{{ translation.t('navbar.home') || 'Home' }}</span>
+        </a>
+        <a 
+          [routerLink]="isBuyer ? '/marketplace' : '/category'" 
+          routerLinkActive="active"
+          class="nav-link"
+        >
+          <fa-icon *ngIf="isBuyer" [icon]="faStore" class="nav-icon"></fa-icon>
+          <fa-icon *ngIf="!isBuyer" [icon]="faThLarge" class="nav-icon"></fa-icon>
+          <span>{{ isBuyer ? (translation.t('navbar.marketplace') || 'Marketplace') : (translation.t('navbar.categories') || 'Categories') }}</span>
+        </a>
+        <a 
+          (click)="openEcoAssist($event)"
+          routerLinkActive="active"
+          class="nav-link"
+          [class.disabled]="!user"
+        >
+          <fa-icon [icon]="faMicrochip" class="nav-icon"></fa-icon>
+          <span>{{ translation.t('navbar.ecoAssist') || 'Eco-Assist' }}</span>
+        </a>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="navbar-right">
+        <!-- Dark Mode Toggle - Only show when not logged in -->
+        <div *ngIf="!user" class="theme-toggle-desktop">
+          <button 
+            (click)="toggleTheme()"
+            class="theme-toggle nav-link"
+            [attr.aria-label]="isDarkMode ? (translation.t('navbar.lightMode') || 'Light Mode') : (translation.t('navbar.darkMode') || 'Dark Mode')"
+            [title]="isDarkMode ? (translation.t('navbar.lightMode') || 'Light Mode') : (translation.t('navbar.darkMode') || 'Dark Mode')"
+          >
+            <fa-icon *ngIf="isDarkMode" [icon]="faMoon" class="nav-icon"></fa-icon>
+            <fa-icon *ngIf="!isDarkMode" [icon]="faSun" class="nav-icon"></fa-icon>
+          </button>
+        </div>
+
+        <!-- Notifications (Only for logged-in users, not admin/delivery) -->
+        <app-notification-bell *ngIf="user && user.role !== 'admin' && user.role !== 'delivery'"></app-notification-bell>
+
+        <!-- Cart Icon (Always visible) -->
+        <div class="cart-container">
+          <button 
+            (click)="toggleCart()"
+            class="cart-button"
+            [title]="isBuyer ? (translation.t('navbar.myCart') || 'Cart') : (translation.t('navbar.myCollection') || 'My Collection')"
+          >
+            <fa-icon [icon]="faRecycle" class="cart-icon"></fa-icon>
+            <span *ngIf="cartTotalItems() > 0" class="cart-badge">{{ cartTotalItems() > 99 ? '99+' : cartTotalItems() }}</span>
+          </button>
+
+          <!-- Cart Dropdown -->
+          <div *ngIf="isCartOpen()" class="cart-dropdown">
+            <div class="cart-dropdown-header">
+              <h3>{{ isBuyer ? (translation.t('navbar.myCart') || 'Cart') : (translation.t('navbar.myCollection') || 'My Collection') }}</h3>
+              <span *ngIf="cartItems.length > 0" class="cart-count">{{ translation.t('navbar.totalItems') !== 'navbar.totalItems' ? translation.t('navbar.totalItems') : 'Total Items' }} {{ cartTotalItems() }}</span>
+            </div>
+            
+            <div *ngIf="cartItems.length === 0" class="cart-empty">
+              <p>{{ translation.t('navbar.yourCollectionEmpty') || 'Your collection is empty' }}</p>
+              <p class="cart-empty-hint">{{ translation.t('Add items to your cart to get started') }}</p>
+            </div>
+
+            <div *ngIf="cartItems.length > 0" class="cart-items">
+              <div *ngFor="let item of cartItems" class="cart-item">
+                <img [src]="item.image" [alt]="typeof item.name === 'string' ? item.name : (item.name.en || item.name.ar)" class="cart-item-image" />
+                <div class="cart-item-details">
+                  <h4 class="cart-item-name">{{ typeof item.name === 'string' ? item.name : (locale === 'ar' ? item.name.ar : item.name.en) }}</h4>
+                  <div class="cart-item-controls">
+                    <button (click)="updateQuantity(item, -1)" class="cart-item-btn">
+                      <fa-icon [icon]="faMinus" class="w-3 h-3"></fa-icon>
+                    </button>
+                    <span class="cart-item-quantity">{{ item.quantity }}</span>
+                    <button (click)="updateQuantity(item, 1)" class="cart-item-btn">
+                      <fa-icon [icon]="faPlus" class="w-3 h-3"></fa-icon>
+                    </button>
+                  </div>
+                </div>
+                <button (click)="removeFromCart(item)" class="cart-item-remove" title="Remove">
+                  <fa-icon [icon]="faTrash" class="w-4 h-4"></fa-icon>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="cartItems.length > 0" class="cart-dropdown-footer">
+              <button (click)="goToCart()" class="cart-view-full">
+                {{ translation.t('navbar.viewFullCollection') || 'View Full Collection' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Language Toggle - Only show on desktop when not logged in -->
+        <div *ngIf="!user" class="language-toggle-desktop">
+          <div class="language-toggle">
+            <span [class.active]="locale === 'en'" class="lang-label">EN</span>
+            <button 
+              (click)="toggleLanguage()"
+              class="lang-switch"
+              [class.active]="locale === 'ar'"
+              [title]="translation.t('navbar.language') || 'Language'"
+            >
+              <span class="lang-switch-slider"></span>
+            </button>
+            <span [class.active]="locale === 'ar'" class="lang-label">AR</span>
+          </div>
+        </div>
+
+        <!-- User Profile (when logged in) -->
+        <div *ngIf="user" class="profile-container">
+          <button 
+            (click)="toggleProfile()"
+            class="profile-button nav-link"
+          >
+            <div *ngIf="user.imgUrl" class="profile-avatar">
+              <img [src]="user.imgUrl" [alt]="user.name || 'User'" />
+            </div>
+            <div *ngIf="!user.imgUrl" class="profile-avatar-initials">
+              {{ getUserInitials(user) }}
+            </div>
+            <fa-icon [icon]="faChevronDown" class="profile-chevron"></fa-icon>
+          </button>
+
+          <!-- Profile Dropdown -->
+          <div *ngIf="isProfileOpen()" class="profile-dropdown">
+            <div class="profile-header">
+              <div class="profile-info">
+                <div *ngIf="user.imgUrl" class="profile-avatar-large">
+                  <img [src]="user.imgUrl" [alt]="user.name || 'User'" />
+                </div>
+                <div *ngIf="!user.imgUrl" class="profile-avatar-initials-large">
+                  {{ getUserInitials(user) }}
+                </div>
+                <div class="profile-details">
+                  <p class="profile-name">{{ user.name || 'User' }}</p>
+                  <p class="profile-email">{{ user.email || 'user@example.com' }}</p>
+                  <span *ngIf="user.role" class="profile-role">{{ user.role }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-menu">
+              <a routerLink="/profile" (click)="isProfileOpen.set(false)" class="profile-menu-item">
+                <fa-icon [icon]="faUserCircle" class="w-4 h-4"></fa-icon>
+                {{ translation.t('navbar.profile') || 'My Profile' }}
+              </a>
+              <a routerLink="/profile/edit" (click)="isProfileOpen.set(false)" class="profile-menu-item">
+                <fa-icon [icon]="faCog" class="w-4 h-4"></fa-icon>
+                {{ translation.t('navbar.settings') || 'Settings' }}
+              </a>
+
+              <div class="profile-menu-divider"></div>
+
+              <!-- Dark Mode Toggle in Profile -->
+              <div class="profile-menu-item theme-toggle-item">
+                <div class="flex items-center gap-3">
+                  <fa-icon *ngIf="isDarkMode" [icon]="faSun" class="w-4 h-4"></fa-icon>
+                  <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="w-4 h-4"></fa-icon>
+                  <span>{{ isDarkMode ? (translation.t('navbar.lightMode') || 'Light Mode') : (translation.t('navbar.darkMode') || 'Dark Mode') }}</span>
+                </div>
+                <button (click)="toggleTheme()" class="theme-toggle-small">
+                  <span class="theme-toggle-slider" [class.active]="isDarkMode"></span>
+                </button>
+              </div>
+
+              <!-- Language Toggle in Profile -->
+              <div class="profile-menu-item language-toggle-item">
+                <div class="flex items-center gap-3">
+                  <fa-icon [icon]="faGlobe" class="w-4 h-4"></fa-icon>
+                      <span>{{ translation.t('Language') }}</span>
+                </div>
+                <div class="language-toggle-small">
+                  <span [class.active]="locale === 'en'">EN</span>
+                  <button (click)="toggleLanguage()" class="lang-switch-small" [class.active]="locale === 'ar'">
+                    <span></span>
+                  </button>
+                  <span [class.active]="locale === 'ar'">AR</span>
+                </div>
+              </div>
+
+              <div class="profile-menu-divider"></div>
+
+              <a *ngIf="!isBuyer" routerLink="/profile/ewallet" (click)="isProfileOpen.set(false)" class="profile-menu-item">
+                <fa-icon [icon]="faWallet" class="w-4 h-4"></fa-icon>
+                {{ translation.t('E-Wallet') }}
+              </a>
+
+              <div class="profile-menu-divider"></div>
+
+              <button (click)="logout()" class="profile-menu-item logout-item">
+                <fa-icon [icon]="faSignOutAlt" class="w-4 h-4"></fa-icon>
+                {{ translation.t('navbar.signOut') || 'Sign Out' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auth Buttons (when not logged in) -->
+        <div *ngIf="!user" class="auth-buttons-desktop">
+          <a routerLink="/auth" class="nav-link">
+            <fa-icon [icon]="faUser" class="nav-icon"></fa-icon>
+            <span class="auth-button-text">{{ translation.t('navbar.login') || 'Login' }}</span>
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button 
+          (click)="toggleMenu()"
+          class="mobile-menu-button nav-link"
+          aria-label="Toggle menu"
+        >
+          <fa-icon *ngIf="!isMenuOpen()" [icon]="faBars" class="nav-icon"></fa-icon>
+          <fa-icon *ngIf="isMenuOpen()" [icon]="faTimes" class="nav-icon"></fa-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div *ngIf="isMenuOpen()" class="mobile-menu">
+      <div class="mobile-menu-content">
+        <!-- Mobile: Search placeholder (can be added later) -->
+        
+        <!-- Divider -->
+        <div class="mobile-menu-divider"></div>
+
+        <!-- Dark Mode Toggle for Mobile - Only show when not logged in -->
+        <div *ngIf="!user" class="mobile-theme-toggle">
+          <div class="mobile-theme-toggle-content">
+            <div class="mobile-theme-toggle-label">
+              <fa-icon *ngIf="isDarkMode" [icon]="faSun" class="mobile-theme-icon"></fa-icon>
+              <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="mobile-theme-icon"></fa-icon>
+              <span>{{ isDarkMode ? translation.t('Light Mode') : translation.t('Dark Mode') }}</span>
+            </div>
+            <button 
+              (click)="toggleTheme()"
+              class="theme-toggle-small"
+            >
+              <span class="theme-toggle-slider" [class.active]="isDarkMode"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Language Toggle for Mobile - Only show when not logged in -->
+        <div *ngIf="!user" class="mobile-language-toggle-wrapper">
+          <div class="mobile-language-toggle-content">
+            <div class="mobile-language-toggle-label">
+              <fa-icon [icon]="faGlobe" class="mobile-language-icon"></fa-icon>
+              <span>{{ translation.t('Language') }}</span>
+            </div>
+            <div class="language-toggle">
+              <span [class.active]="locale === 'en'" class="lang-label">EN</span>
+              <button 
+                (click)="toggleLanguage()"
+                class="lang-switch"
+                [class.active]="locale === 'ar'"
+                [title]="translation.t('Language')"
+              >
+                <span class="lang-switch-slider"></span>
+              </button>
+              <span [class.active]="locale === 'ar'" class="lang-label">AR</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <a routerLink="/" (click)="isMenuOpen.set(false)" class="mobile-nav-link">
+          <fa-icon [icon]="faHome" class="nav-icon"></fa-icon>
+          <span>{{ translation.t('Home') }}</span>
+        </a>
+        <a 
+          [routerLink]="isBuyer ? '/marketplace' : '/category'" 
+          (click)="isMenuOpen.set(false)"
+          class="mobile-nav-link"
+        >
+          <fa-icon *ngIf="isBuyer" [icon]="faStore" class="nav-icon"></fa-icon>
+          <fa-icon *ngIf="!isBuyer" [icon]="faThLarge" class="nav-icon"></fa-icon>
+          <span>{{ isBuyer ? translation.t('Marketplace') : translation.t('Categories') }}</span>
+        </a>
+        <a routerLink="/ideas" (click)="isMenuOpen.set(false)" class="mobile-nav-link">
+          <fa-icon [icon]="faMicrochip" class="nav-icon"></fa-icon>
+          <span>{{ translation.t('Eco Assist') }}</span>
+        </a>
+        <a *ngIf="user" routerLink="/profile" (click)="isMenuOpen.set(false)" class="mobile-nav-link">
+          <fa-icon [icon]="faUser" class="nav-icon"></fa-icon>
+          <span>{{ translation.t('Profile') }}</span>
+        </a>
+      
+      <!-- Mobile Auth -->
+      <div *ngIf="!user" class="mobile-auth">
+        <a routerLink="/auth" (click)="isMenuOpen.set(false)" class="mobile-login-btn">
+          {{ translation.t('Login') }}
+        </a>
+        <a routerLink="/auth" (click)="isMenuOpen.set(false)" class="mobile-start-btn">
+          {{ translation.t('Start Recycling') }}
+        </a>
+      </div>
+      
+      <!-- Mobile Logout -->
+      <div *ngIf="user" class="mobile-logout">
+        <button (click)="logout(); isMenuOpen.set(false)" class="mobile-logout-btn">
+          {{ translation.t('Logout') }}
+        </button>
+      </div>
+      </div>
+    </div>
+  </div>
+</nav>
+

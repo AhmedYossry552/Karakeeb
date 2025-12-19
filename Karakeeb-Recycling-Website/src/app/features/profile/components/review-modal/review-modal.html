@@ -1,0 +1,148 @@
+@if (isOpen) {
+  <div class="review-modal-overlay" (click)="handleClose()">
+    <div class="review-modal" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="review-modal-header">
+        <div>
+          <h2 class="review-modal-title">
+            {{ existingReview ? (translation.t('Edit Your Review') || 'Edit Your Review') : (translation.t('Rate Your Experience') || 'Rate Your Experience') }}
+          </h2>
+          <p class="review-modal-subtitle">
+            {{ existingReview ? (translation.t('Update your feedback for this delivery') || 'Update your feedback for this delivery') : (translation.t('Help us improve by sharing your feedback') || 'Help us improve by sharing your feedback') }}
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="handleClose()"
+          [disabled]="loading()"
+          class="review-modal-close-btn"
+        >
+          <fa-icon [icon]="faX"></fa-icon>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="review-modal-content">
+        <!-- Order Information -->
+        @if (orderInfo) {
+          <div class="review-order-info">
+            <div class="review-order-grid">
+              <div class="review-order-item">
+                <fa-icon [icon]="faBox" class="review-order-icon"></fa-icon>
+                <span>#{{ getOrderNumber() }}</span>
+              </div>
+
+              @if (getItemCount() > 0) {
+                <div class="review-order-item">
+                  <fa-icon [icon]="faBox" class="review-order-icon"></fa-icon>
+                  <span>{{ getItemCount() }} {{ translation.t('items') || 'items' }}</span>
+                </div>
+              }
+
+              @if (getCourierName()) {
+                <div class="review-order-item">
+                  <fa-icon [icon]="faUser" class="review-order-icon"></fa-icon>
+                  <span>{{ getCourierName() }}</span>
+                </div>
+              }
+
+              @if (getOrderDate()) {
+                <div class="review-order-item">
+                  <fa-icon [icon]="faCalendar" class="review-order-icon"></fa-icon>
+                  <span>{{ getOrderDate() }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Rating Stars -->
+        <div class="review-rating-section">
+          <p class="review-rating-question">
+            {{ translation.t('How was your delivery?') || 'How was your delivery?' }}
+          </p>
+          <div class="review-stars-container">
+            @for (star of [1, 2, 3, 4, 5]; track star) {
+              <button
+                type="button"
+                (click)="setRating(star)"
+                class="review-star-btn"
+              >
+                <fa-icon
+                  [icon]="faStar"
+                  [class.filled]="star <= rating()"
+                  [class.empty]="star > rating()"
+                ></fa-icon>
+              </button>
+            }
+          </div>
+          @if (rating() > 0) {
+            <div class="review-rating-feedback">
+              <span class="review-rating-badge">{{ getRatingLabel() }}</span>
+              <p class="review-rating-text">
+                {{ translation.t('You rated this delivery') || 'You rated this delivery' }} {{ rating() }} {{ translation.t('out of 5 stars') || 'out of 5 stars' }}
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Comments -->
+        <div class="review-comments-section">
+          <label class="review-comments-label">
+            {{ translation.t('Additional Comments (Optional)') || 'Additional Comments (Optional)' }}
+          </label>
+          <textarea
+            class="review-comments-textarea"
+            rows="3"
+            [value]="comments()"
+            (input)="onCommentsChange($any($event.target).value)"
+            [placeholder]="translation.t('Tell us about your experience with the delivery service...') || 'Tell us about your experience with the delivery service...'"
+            maxlength="1000"
+          ></textarea>
+          <div class="review-comments-footer">
+            <span class="review-comments-hint">
+              {{ translation.t('Share details about punctuality, professionalism, or overall service') || 'Share details about punctuality, professionalism, or overall service' }}
+            </span>
+            <span class="review-comments-count">{{ comments().length }}/1000</span>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        @if (submissionAttempted() && rating() === 0) {
+          <div class="review-error-message">
+            <p>{{ translation.t('Please select a rating before submitting your review.') || 'Please select a rating before submitting your review.' }}</p>
+          </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="review-actions">
+          <button
+            type="button"
+            (click)="handleClose()"
+            [disabled]="loading()"
+            class="review-btn review-btn-cancel"
+          >
+            {{ translation.t('Cancel') || 'Cancel' }}
+          </button>
+
+          <button
+            type="button"
+            (click)="handleSubmit()"
+            [disabled]="loading() || rating() === 0"
+            class="review-btn review-btn-submit"
+            [class.disabled]="rating() === 0"
+          >
+            @if (loading()) {
+              <span class="review-btn-spinner"></span>
+                {{ translation.t('Submitting...') || 'Submitting...' }}
+            } @else {
+              <fa-icon [icon]="faPaperPlane"></fa-icon>
+              {{ existingReview ? (translation.t('Update Review') || 'Update Review') : (translation.t('Submit Review') || 'Submit Review') }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+

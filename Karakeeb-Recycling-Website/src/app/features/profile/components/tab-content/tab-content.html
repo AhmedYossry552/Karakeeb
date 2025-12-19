@@ -1,0 +1,139 @@
+@if (activeTab === 'payments') {
+  <app-payment-history></app-payment-history>
+} @else if (activeTab === 'reviews') {
+  <app-reviews-tab
+    [userReviews]="userReviews"
+    [isLoading]="isReviewsLoading"
+    (editReview)="editReview.emit($event)"
+    (deleteReview)="deleteReview.emit($event)"
+  ></app-reviews-tab>
+} @else if (isLoading) {
+  <div class="orders-loading">
+    <div class="loading-spinner"></div>
+  </div>
+} @else if (filteredOrders.length === 0) {
+    <p class="text-center text-gray-500">{{ translation.t('No orders in this tab yet.') || 'No orders in this tab yet.' }}</p>
+} @else {
+  <div class="orders-grid">
+    @for (order of filteredOrders; track order._id) {
+      <div class="order-card" [class.clickable]="canTrack(order)" (click)="onCardClick(order)">
+        <!-- Header with Order Info -->
+        <div class="order-header">
+          <div class="order-info">
+            <p class="order-number">Order #{{ order._id.slice(-8).toUpperCase() }}</p>
+            <p class="order-date">
+                  {{ translation.t('Date') || 'Date' }}: {{ formatDate(order.createdAt) }}
+            </p>
+          </div>
+
+          <!-- Status Badge -->
+          <div class="status-badge-wrapper">
+            <span class="order-status" [class]="'status-' + getStatusColor(order.status)">
+              @if (getStatusIcon(order.status) === 'truck') {
+                <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+              } @else if (getStatusIcon(order.status) === 'clock') {
+                <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              } @else if (getStatusIcon(order.status) === 'check') {
+                <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              } @else if (getStatusIcon(order.status) === 'x') {
+                <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              }
+              {{ getStatusLabel(order.status) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Address -->
+        <div class="order-address-section">
+          <fa-icon [icon]="faMapPin" class="address-icon"></fa-icon>
+          <div class="address-content">
+            <p class="address-label">{{ translation.t('Pickup Address') || 'Pickup Address' }}</p>
+            <p class="address-text">{{ formatAddress(order.address) }}</p>
+          </div>
+        </div>
+
+        <!-- Order Actions -->
+        <div class="order-actions" (click)="$event.stopPropagation()">
+          <div class="actions-left">
+            <!-- View Details -->
+            <button
+              class="action-btn view-details-btn"
+              (click)="onViewDetails($event, order)"
+            >
+              {{ translation.t('View Details') || 'View Details' }}
+            </button>
+
+            <!-- Receipt Link -->
+            @if (showReceipt(order)) {
+              <a
+                [routerLink]="['/payment/receipt', order._id]"
+                class="action-btn receipt-btn"
+              >
+                <fa-icon [icon]="faReceipt" class="action-icon"></fa-icon>
+                {{ translation.t('Receipt') || 'Receipt' }}
+              </a>
+            }
+
+            <!-- Tracking Link -->
+            @if (canTrack(order)) {
+              <a
+                [routerLink]="['/pickup/tracking', order._id]"
+                class="action-btn track-btn"
+              >
+                {{ translation.t('Track') || 'Track' }}
+              </a>
+            }
+
+            <!-- Rate Order Button -->
+            @if (canRate(order)) {
+              <button
+                class="action-btn rate-btn"
+                (click)="onRateOrder(order)"
+              >
+                <fa-icon [icon]="faStar" class="action-icon"></fa-icon>
+                {{ hasExistingReview(order._id) ? (translation.t('Edit Rate') || 'Edit Rate') : (translation.t('Rate') || 'Rate') }}
+              </button>
+            }
+          </div>
+
+          <!-- Cancel Button -->
+          @if (canCancel(order)) {
+            <button
+              class="action-btn cancel-btn"
+              (click)="onCancelClick(order._id)"
+            >
+              {{ translation.t('Cancel Order') || 'Cancel Order' }}
+            </button>
+          }
+
+          <!-- Delete Button (for buyers) -->
+          @if (canDelete(order)) {
+            <button
+              class="action-btn delete-btn"
+              (click)="onDeleteClick($event, order._id)"
+            >
+              {{ translation.t('Delete') || 'Delete' }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Items Modal -->
+  <app-items-modal
+    [show]="showItemsModal()"
+    [items]="selectedOrderItems"
+    [userRole]="user?.role"
+    (close)="onCloseItemsModal()"
+  ></app-items-modal>
+}
+

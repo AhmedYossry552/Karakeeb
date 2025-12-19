@@ -1,0 +1,340 @@
+<div class="admin-pickups">
+  <div class="admin-header">
+    <h1 class="admin-title">{{ activeTab() === 'customer' ? 'Customer Orders' : 'Buyer Orders' }}</h1>
+    <div class="admin-actions">
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Search orders..."
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button
+      (click)="changeTab('customer')"
+      [class.active]="activeTab() === 'customer'"
+      class="tab-button"
+    >
+      Customer Orders
+      @if (activeTab() === 'customer') {
+        <span class="tab-badge">{{ totalItems() }}</span>
+      }
+    </button>
+    <button
+      (click)="changeTab('buyer')"
+      [class.active]="activeTab() === 'buyer'"
+      class="tab-button"
+    >
+      Buyer Orders
+      @if (activeTab() === 'buyer') {
+        <span class="tab-badge">{{ totalItems() }}</span>
+      }
+    </button>
+  </div>
+
+  <div class="filters">
+    <button
+      (click)="filterByStatus('')"
+      [class.active]="selectedStatus === ''"
+      class="filter-button"
+    >
+      All
+    </button>
+    <button
+      (click)="filterByStatus('pending')"
+      [class.active]="selectedStatus === 'pending'"
+      class="filter-button"
+    >
+      Pending
+    </button>
+    <button
+      (click)="filterByStatus('assigntocourier')"
+      [class.active]="selectedStatus === 'assigntocourier'"
+      class="filter-button"
+    >
+      Assigned
+    </button>
+    <button
+      (click)="filterByStatus('collected')"
+      [class.active]="selectedStatus === 'collected'"
+      class="filter-button"
+    >
+      Collected
+    </button>
+    <button
+      (click)="filterByStatus('completed')"
+      [class.active]="selectedStatus === 'completed'"
+      class="filter-button"
+    >
+      Completed
+    </button>
+    <button
+      (click)="filterByStatus('cancelled')"
+      [class.active]="selectedStatus === 'cancelled'"
+      class="filter-button"
+    >
+      Cancelled
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading orders...</p>
+    </div>
+  } @else if (orders().length === 0) {
+    <div class="empty-state">
+      <p>No orders found.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Order ID</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order._id) {
+            <tr>
+              <td>
+                <button 
+                  (click)="handleViewUserDetails(order)" 
+                  class="user-cell-button"
+                  [title]="'Click to view user details'"
+                >
+                  <div>
+                    <div class="user-name">{{ order.userName || order.user?.userName || order.user?.name || 'Unknown' }}</div>
+                    <div class="user-role">{{ order.userRole || order.user?.role || 'Unknown' }}</div>
+                  </div>
+                </button>
+              </td>
+              <td>
+                <button 
+                  (click)="handleViewOrderDetails(order)" 
+                  class="order-id-link"
+                  [title]="'Click to view order details'"
+                >
+                  {{ order._id }}
+                </button>
+              </td>
+              <td>
+                <div class="status-cell">
+                  <select
+                    [value]="order.status"
+                    (change)="updateStatus(order, $any($event.target).value)"
+                    [class]="getStatusClass(order.status)"
+                    [disabled]="isOrderAssignedToCourier(order) && order.status?.toLowerCase() !== 'collected'"
+                    class="status-select"
+                    [title]="isOrderAssignedToCourier(order) && order.status?.toLowerCase() !== 'collected' ? 'Cannot change status of order assigned to courier' : ''"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="assigntocourier">Assigned to Courier</option>
+                    <option value="collected">Collected</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  @if (order.status?.toLowerCase() === 'collected' && hasDeliveryProof(order)) {
+                    <span class="proof-indicator" title="Delivery proof available">
+                      📸
+                    </span>
+                  }
+                </div>
+              </td>
+              <td>{{ formatDate(order.createdAt) }}</td>
+              <td>
+                <div class="actions-cell">
+                  @if (order.status?.toLowerCase() === 'collected') {
+                    <button 
+                      (click)="handleViewDeliveryProof(order)" 
+                      class="action-button proof-button"
+                      title="View delivery proof"
+                    >
+                      📸 View Proof
+                    </button>
+                  }
+                  <button (click)="onDelete(order)" class="action-button delete">Delete</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <app-cancel-order-modal
+      [isOpen]="isCancelModalOpen()"
+      (onConfirm)="handleCancelConfirm($event)"
+      (onClose)="handleCancelClose()"
+    ></app-cancel-order-modal>
+
+    <!-- Courier Selection Modal -->
+    <app-courier-selection-modal
+      [isOpen]="isCourierModalOpen()"
+      [couriers]="couriers()"
+      [loadingCourierId]="loadingCourierId"
+      (onSelectCourier)="handleCourierSelect($event)"
+      (onClose)="handleCourierClose()"
+    ></app-courier-selection-modal>
+
+    <!-- Order Details Modal -->
+    <app-order-details-modal
+      [isOpen]="isOrderDetailsModalOpen()"
+      [order]="selectedOrderForDetails"
+      (onClose)="handleCloseOrderDetails()"
+    ></app-order-details-modal>
+
+    <!-- User Details Modal -->
+    <app-user-details-modal
+      [isOpen]="isUserDetailsModalOpen()"
+      [user]="selectedUser"
+      (onClose)="handleCloseUserDetails()"
+    ></app-user-details-modal>
+
+    <!-- Complete Order Confirmation Dialog -->
+    <app-confirmation-dialog
+      [isOpen]="isCompleteConfirmationOpen()"
+      title="Complete Order"
+      message="Mark this order as completed? This will finalize the order."
+      confirmText="Complete Order"
+      cancelText="Cancel"
+      [deliveryProof]="getDeliveryProof(selectedOrderForComplete)"
+      (confirmed)="handleCompleteConfirm()"
+      (cancelled)="handleCompleteCancel()"
+    ></app-confirmation-dialog>
+
+    <!-- Delete Order Confirmation Dialog -->
+    <app-confirmation-dialog
+      [isOpen]="isDeleteConfirmationOpen()"
+      title="Delete Order"
+      [message]="getDeleteMessage()"
+      confirmText="Delete"
+      cancelText="Cancel"
+      (confirmed)="handleDeleteConfirm()"
+      (cancelled)="handleDeleteCancel()"
+    ></app-confirmation-dialog>
+
+    <!-- Delivery Proof Modal -->
+    @if (isDeliveryProofModalOpen()) {
+      <div class="delivery-proof-modal-overlay" (click)="handleCloseDeliveryProof()">
+        <div class="delivery-proof-modal" (click)="$event.stopPropagation()">
+          <div class="delivery-proof-modal-header">
+            <h2 class="delivery-proof-modal-title">
+              {{ translation.t('Delivery Proof') || 'Delivery Proof' }}
+            </h2>
+            <button 
+              (click)="handleCloseDeliveryProof()" 
+              class="delivery-proof-modal-close"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div class="delivery-proof-modal-body">
+            @if (selectedOrderForProof) {
+              @if (getDeliveryProof(selectedOrderForProof)) {
+                @let proof = getDeliveryProof(selectedOrderForProof);
+                
+                <!-- Order Info -->
+                <div class="delivery-proof-order-info">
+                  <div class="delivery-proof-order-item">
+                    <span class="delivery-proof-label">Order ID:</span>
+                    <span class="delivery-proof-value">{{ selectedOrderForProof._id }}</span>
+                  </div>
+                  @if (selectedOrderForProof.userName || selectedOrderForProof.user?.userName) {
+                    <div class="delivery-proof-order-item">
+                      <span class="delivery-proof-label">Customer:</span>
+                      <span class="delivery-proof-value">
+                        {{ selectedOrderForProof.userName || selectedOrderForProof.user?.userName || 'Unknown' }}
+                      </span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Uploaded Image -->
+                @if (proof.photoUrl) {
+                  <div class="delivery-proof-image-section">
+                    <h3 class="delivery-proof-section-title">
+                      {{ translation.t('Uploaded Image') || 'Uploaded Image' }}
+                    </h3>
+                    <div class="delivery-proof-image-container">
+                      <img 
+                        [src]="proof.photoUrl" 
+                        alt="Delivery proof photo" 
+                        class="delivery-proof-image"
+                        (error)="$event.target.style.display='none'"
+                      />
+                    </div>
+                  </div>
+                }
+
+                <!-- Weight/Notes -->
+                @if (proof.notes) {
+                  <div class="delivery-proof-notes-section">
+                    <h3 class="delivery-proof-section-title">
+                      {{ translation.t('Weight / Notes') || 'Weight / Notes' }}
+                    </h3>
+                    <div class="delivery-proof-notes-content">
+                      {{ proof.notes }}
+                    </div>
+                  </div>
+                }
+
+                @if (!proof.photoUrl && !proof.notes) {
+                  <div class="delivery-proof-empty">
+                    <p>{{ translation.t('No delivery proof available') || 'No delivery proof available' }}</p>
+                  </div>
+                }
+              } @else {
+                <div class="delivery-proof-empty">
+                  <p>{{ translation.t('No delivery proof available') || 'No delivery proof available' }}</p>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="currentPage() === 1"
+          class="page-button"
+        >
+          Previous
+        </button>
+        <span class="page-info">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </span>
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages()"
+          class="page-button"
+        >
+          Next
+        </button>
+        <select
+          [value]="itemsPerPage()"
+          (change)="onItemsPerPageChange(+$any($event.target).value)"
+          class="items-per-page"
+        >
+          <option [value]="5">5 per page</option>
+          <option [value]="10">10 per page</option>
+          <option [value]="20">20 per page</option>
+          <option [value]="50">50 per page</option>
+        </select>
+      </div>
+    }
+  }
+</div>

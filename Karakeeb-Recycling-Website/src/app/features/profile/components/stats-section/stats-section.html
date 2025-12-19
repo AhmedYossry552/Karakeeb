@@ -1,0 +1,33 @@
+<div class="stats-section" [class]="gridClass">
+  <app-stat-box
+    [label]="recyclesLabel"
+    [value]="totalCompletedOrders"
+  ></app-stat-box>
+
+  @if (isNotBuyer) {
+    <app-stat-box
+          [label]="translation.t('Points Collected') || 'Points Collected'"
+      [value]="totalPoints"
+      [loading]="pointsLoading"
+    ></app-stat-box>
+  }
+
+  @if (isCustomer) {
+    <app-stat-box
+      [label]="translation.t('Wallet Balance') || 'Wallet Balance'"
+      [value]="walletBalance"
+      [loading]="walletLoading"
+      [formatCurrency]="true"
+    ></app-stat-box>
+  }
+
+  @if (isCustomer) {
+    <div class="membership-tier">
+      <!-- Membership tier component will be added later -->
+      <div class="tier-placeholder">
+        {{ translation.t('Eco Beginner') || 'Eco Beginner' }}
+      </div>
+    </div>
+  }
+</div>
+

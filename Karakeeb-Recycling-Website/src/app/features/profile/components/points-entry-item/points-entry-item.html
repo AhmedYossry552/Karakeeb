@@ -1,0 +1,22 @@
+<div class="points-entry-item">
+  <div class="entry-main">
+    <div class="entry-header">
+      <span [class]="'entry-tag ' + tagColorClass">
+        <fa-icon [icon]="icon" class="tag-icon"></fa-icon>
+        {{ tagLabel }}
+      </span>
+    </div>
+    <p class="entry-reason">{{ entry.reason }}</p>
+    <p class="entry-date">
+      <fa-icon [icon]="faCalendar" class="date-icon"></fa-icon>
+      {{ formattedDate }}
+    </p>
+  </div>
+  <div class="entry-points">
+    <div [class]="'points-value ' + (isPositive ? 'positive' : 'negative')">
+      {{ isPositive ? '+' : '-' }}{{ absolutePoints }}
+    </div>
+    <span class="points-label">{{ translation.t('Points') || 'Points' }}</span>
+  </div>
+</div>
+

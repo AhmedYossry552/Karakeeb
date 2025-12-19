@@ -1,0 +1,55 @@
+@if (hasNoActivity) {
+  <div class="no-activity">
+    <fa-icon [icon]="faCalendar" class="no-activity-icon"></fa-icon>
+    <p>{{ translation.t('No Activity Yet') || 'No Activity Yet' }}</p>
+  </div>
+} @else {
+  <div class="points-activity">
+    <button
+      (click)="toggleAccordion()"
+      class="activity-header"
+      [attr.aria-expanded]="isOpen()"
+      type="button"
+    >
+      <div class="header-content">
+        <div class="icon-wrapper">
+          <fa-icon [icon]="faCalendar" class="icon"></fa-icon>
+        </div>
+        <h3>{{ translation.t('Recent Points Activity') || 'Recent Points Activity' }}</h3>
+      </div>
+      <fa-icon
+        [icon]="faChevronDown"
+        [class.open]="isOpen()"
+        class="chevron"
+      ></fa-icon>
+    </button>
+
+    @if (isOpen()) {
+      <div class="activity-content">
+        @for (entry of recentEntries; track entry._id || $index) {
+          <app-points-entry-item [entry]="entry"></app-points-entry-item>
+        }
+
+        @if (showFullHistoryButton) {
+          <button
+            (click)="openModal()"
+            class="view-full-history-btn"
+            type="button"
+          >
+            <fa-icon [icon]="faEye" class="eye-icon"></fa-icon>
+              {{ translation.t('View Full History') || 'View Full History' }}
+            @if (totalPointsHistoryLength) {
+              <span class="count-badge">{{ totalPointsHistoryLength }}</span>
+            }
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <app-points-history-modal
+    [isOpen]="isModalOpen()"
+    (close)="closeModal()"
+  ></app-points-history-modal>
+}
+

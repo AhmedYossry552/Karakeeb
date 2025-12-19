@@ -1,0 +1,44 @@
+@if (loading) {
+  <div class="payments-loading">
+    <div class="loading-header">
+      <svg class="credit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+      <div class="loading-title"></div>
+    </div>
+    <div class="payments-grid">
+      @for (item of [1,2,3,4]; track $index) {
+        <div class="payment-skeleton">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-amount"></div>
+        </div>
+      }
+    </div>
+  </div>
+} @else if (payments.length === 0) {
+  <div class="payments-empty">
+    <svg class="credit-icon-large" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+    </svg>
+    <p>No payments found.</p>
+    <p class="empty-subtitle">Your payment history will appear here.</p>
+  </div>
+} @else {
+  <div class="payments-content">
+    <div class="payments-header">
+      <h3 class="payments-title">
+        <svg class="credit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+        Payment History ({{ payments.length }})
+      </h3>
+    </div>
+    <div class="payments-grid">
+      @for (payment of payments; track payment._id || $index) {
+        <app-payment-card [payment]="payment"></app-payment-card>
+      }
+    </div>
+  </div>
+}
+

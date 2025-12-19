@@ -1,0 +1,12 @@
+<div class="stat-box">
+  @if (loading) {
+    <div class="loading-skeleton">
+      <div class="skeleton-line skeleton-value"></div>
+      <div class="skeleton-line skeleton-label"></div>
+    </div>
+  } @else {
+    <p class="stat-value">{{ value }}</p>
+    <p class="stat-label">{{ label }}</p>
+  }
+</div>
+

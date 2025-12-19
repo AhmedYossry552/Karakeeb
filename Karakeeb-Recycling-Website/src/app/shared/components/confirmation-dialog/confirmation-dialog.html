@@ -1,0 +1,52 @@
+<div *ngIf="isOpen" class="dialog-backdrop" (click)="onBackdropClick($event)">
+  <div class="dialog-container" (click)="$event.stopPropagation()" [class.has-delivery-proof]="deliveryProof">
+    <div class="dialog-header">
+      <h3 class="dialog-title">{{ title }}</h3>
+    </div>
+    <div class="dialog-body">
+      <p class="dialog-message">{{ message }}</p>
+      
+      <!-- Delivery Proof Section -->
+      <div *ngIf="deliveryProof" class="delivery-proof-section">
+        <h4 class="delivery-proof-title">Delivery Proof</h4>
+        
+        <!-- Uploaded Image -->
+        <div *ngIf="deliveryProof.photoUrl" class="delivery-proof-image-container">
+          <label class="delivery-proof-label">Uploaded Image:</label>
+          <div class="delivery-proof-image-wrapper">
+            <img 
+              [src]="deliveryProof.photoUrl" 
+              alt="Delivery proof photo" 
+              class="delivery-proof-image"
+              (error)="$event.target.style.display='none'"
+            />
+          </div>
+        </div>
+        
+        <!-- Weight/Notes -->
+        <div *ngIf="deliveryProof.notes" class="delivery-proof-notes-container">
+          <label class="delivery-proof-label">
+            {{ deliveryProof.photoUrl ? 'Weight/Notes:' : 'Weight/Notes:' }}
+          </label>
+          <div class="delivery-proof-notes">
+            {{ deliveryProof.notes }}
+          </div>
+        </div>
+        
+        <!-- No proof message -->
+        <div *ngIf="!deliveryProof.photoUrl && !deliveryProof.notes" class="delivery-proof-empty">
+          <p>No delivery proof available</p>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button type="button" class="btn-cancel" (click)="onCancel()">
+        {{ cancelText }}
+      </button>
+      <button type="button" class="btn-confirm" (click)="onConfirm()">
+        {{ confirmText }}
+      </button>
+    </div>
+  </div>
+</div>
+

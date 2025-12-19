@@ -1,0 +1,90 @@
+.points-entry-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  border: 1px solid #f3f4f6;
+  transition: box-shadow 0.2s;
+  margin-bottom: 0.5rem;
+
+  &:hover {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+}
+
+.entry-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-header {
+  margin-bottom: 0.25rem;
+}
+
+.entry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+
+  .tag-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+}
+
+.entry-reason {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  margin: 0.25rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+
+  .date-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+}
+
+.entry-points {
+  text-align: right;
+  margin-left: 1rem;
+}
+
+.points-value {
+  font-weight: 600;
+  font-size: 1rem;
+
+  &.positive {
+    color: #16a34a;
+  }
+
+  &.negative {
+    color: #dc2626;
+  }
+}
+
+.points-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  display: block;
+  margin-top: 0.125rem;
+}
+

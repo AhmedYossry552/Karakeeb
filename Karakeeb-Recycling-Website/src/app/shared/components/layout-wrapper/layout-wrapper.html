@@ -1,0 +1,20 @@
+<div class="layout-wrapper">
+  <app-navbar *ngIf="!shouldHideLayout"></app-navbar>
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+  <app-footer *ngIf="!shouldHideLayout"></app-footer>
+  
+  <!-- Global Confirmation Dialog -->
+  <app-confirmation-dialog
+    *ngIf="confirmationOptions"
+    [isOpen]="isConfirmationOpen"
+    [title]="confirmationOptions.title || 'Confirm Action'"
+    [message]="confirmationOptions.message"
+    [confirmText]="confirmationOptions.confirmText || 'Confirm'"
+    [cancelText]="confirmationOptions.cancelText || 'Cancel'"
+    (confirmed)="onConfirmationConfirmed()"
+    (cancelled)="onConfirmationCancelled()"
+  ></app-confirmation-dialog>
+</div>
+

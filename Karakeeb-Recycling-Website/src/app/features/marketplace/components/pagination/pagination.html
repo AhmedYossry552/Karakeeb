@@ -1,0 +1,40 @@
+<nav class="pagination" *ngIf="pagination.totalPages > 1">
+  <button
+    (click)="previousPage()"
+    [disabled]="!pagination.hasPreviousPage"
+    class="pagination-btn"
+    [class.disabled]="!pagination.hasPreviousPage"
+    aria-label="Previous page"
+  >
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="pagination-icon">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+  </button>
+
+  <div class="pagination-pages">
+    <button
+      *ngFor="let page of pages"
+      (click)="page === -1 ? null : goToPage(page)"
+      [class.active]="page === pagination.currentPage"
+      [class.ellipsis]="page === -1"
+      class="pagination-page"
+      [disabled]="page === -1 || page === pagination.currentPage"
+    >
+      <span *ngIf="page !== -1">{{ translation.convertNumber(page) }}</span>
+      <span *ngIf="page === -1">...</span>
+    </button>
+  </div>
+
+  <button
+    (click)="nextPage()"
+    [disabled]="!pagination.hasNextPage"
+    class="pagination-btn"
+    [class.disabled]="!pagination.hasNextPage"
+    aria-label="Next page"
+  >
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="pagination-icon">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+  </button>
+</nav>
+

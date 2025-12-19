@@ -1,0 +1,72 @@
+@if (open) {
+  <div class="dialog-overlay" (click)="onClose()">
+    <div class="dialog-content" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <div class="header-left">
+          <div class="icon-wrapper">
+            <span class="icon">⚠️</span>
+          </div>
+          <h2>{{ translation.t('Cancel Order') || 'Cancel Order' }}</h2>
+        </div>
+        <button (click)="onClose()" class="close-button">✕</button>
+      </div>
+
+      <p class="dialog-message">
+        {{ translation.t('Cancel Confirm') || 'Are you sure you want to cancel this order? Please let us know why you\'re canceling.' }}
+      </p>
+
+      <div class="dialog-body">
+        <label class="form-label">
+          {{ translation.t('Cancel Reason') || 'Reason for cancellation' }}:
+        </label>
+        <div class="reasons-list">
+          @for (reason of reasons; track reason) {
+            <label class="reason-item">
+              <input
+                type="radio"
+                name="cancelReason"
+                [value]="reason"
+                [checked]="selectedReason() === reason"
+                (change)="selectedReason.set(reason)"
+              />
+              <span>{{ reason }}</span>
+            </label>
+          }
+        </div>
+
+        @if (selectedReason() === 'Other') {
+          <div class="custom-reason">
+            <label class="form-label">
+              {{ translation.t('Custom Reason') || 'Please specify' }}:
+            </label>
+            <textarea
+              [value]="customReason()"
+              (input)="customReason.set($any($event.target).value)"
+              [placeholder]="translation.t('Custom Reason Placeholder') || 'Tell us more about why you\'re canceling...'"
+              rows="3"
+              class="custom-textarea"
+            ></textarea>
+          </div>
+        }
+      </div>
+
+      <div class="dialog-actions">
+        <button (click)="onClose()" [disabled]="isLoading()" class="btn-secondary">
+          {{ translation.t('Keep Order') || 'Keep Order' }}
+        </button>
+        <button
+          (click)="onConfirm()"
+          [disabled]="!canConfirm()"
+          class="btn-primary"
+        >
+          @if (isLoading()) {
+            {{ translation.t('Canceling') || 'Canceling...' }}
+          } @else {
+            {{ translation.t('Cancel Order') || 'Cancel Order' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+

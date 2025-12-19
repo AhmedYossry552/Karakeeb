@@ -1,0 +1,76 @@
+<section class="marketplace-section">
+  <div class="marketplace-header">
+    <h2 class="marketplace-title">
+      {{ translation.t('indexPage.marketplace.title') || 'Marketplace' }}
+    </h2>
+    <p class="marketplace-subtitle">
+      {{ translation.t('indexPage.marketplace.subtitle') || 'Buy and sell recycled materials' }}
+    </p>
+  </div>
+
+  <div class="marketplace-cards">
+    <div class="marketplace-card" *ngFor="let card of marketplaceCards">
+      <div class="card-overlay" [ngClass]="card.bgGradient"></div>
+      
+      <div class="card-content">
+        <div class="card-icon" [ngClass]="card.gradientFrom + ' ' + card.gradientTo">
+          <svg *ngIf="card.icon === 'shopping'" class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M8 11v6a4 4 0 008 0v-6M8 11h8" />
+          </svg>
+          <svg *ngIf="card.icon === 'craft'" class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
+          <svg *ngIf="card.icon === 'materials'" class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        </div>
+        
+        <h3 class="card-title">
+          {{ translation.t(card.titleKey) || card.type }}
+        </h3>
+        
+        <p class="card-description">
+          {{ translation.t(card.descriptionKey) || card.type + ' description' }}
+        </p>
+        
+        <div class="card-features">
+          <div class="feature-item">
+            <div class="feature-dot" [ngClass]="card.dotColor"></div>
+            {{ translation.t(card.feature1Key) || card.type + ' feature 1' }}
+          </div>
+          <div class="feature-item">
+            <div class="feature-dot" [ngClass]="card.dotColor"></div>
+            {{ translation.t(card.feature2Key) || card.type + ' feature 2' }}
+          </div>
+          <div class="feature-item">
+            <div class="feature-dot" [ngClass]="card.dotColor"></div>
+            {{ translation.t(card.feature3Key) || card.type + ' feature 3' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="marketplace-cta">
+    <div class="cta-content">
+      <div class="cta-text">
+        <h3 class="cta-title">
+          {{ translation.t('indexPage.marketplace.cta.title') || 'Ready to Get Started?' }}
+        </h3>
+        <p class="cta-description">
+          {{ translation.t('indexPage.marketplace.cta.description') || 'Explore our marketplace and start trading today' }}
+        </p>
+      </div>
+      
+      <a routerLink="/marketplace" class="cta-button">
+        <span class="cta-button-text">
+          {{ translation.t('indexPage.marketplace.cta.button') || 'Visit Marketplace' }}
+          <svg class="w-5 h-5 arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+        <div class="cta-button-overlay"></div>
+      </a>
+    </div>
+  </div>
+</section>

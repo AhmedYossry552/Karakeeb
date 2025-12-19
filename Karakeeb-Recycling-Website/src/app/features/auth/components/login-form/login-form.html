@@ -1,0 +1,87 @@
+<form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form space-y-6">
+  <!-- Email -->
+  <app-floating-input
+    id="login-email"
+    [label]="t('Email') || 'Email'"
+    type="email"
+    formControlName="email"
+    [error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched ? (t('Please enter a valid email') || 'Please enter a valid email') : ''"
+  ></app-floating-input>
+
+  <!-- Password -->
+  <div class="relative">
+    <app-floating-input
+      id="login-password"
+      [label]="t('Password') || 'Password'"
+      [type]="showPassword() ? 'text' : 'password'"
+      formControlName="password"
+      [error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched ? (t('Password is required') || 'Password is required') : ''"
+    ></app-floating-input>
+    <button
+      type="button"
+      (click)="togglePassword()"
+      class="absolute top-4 end-2 z-10 cursor-pointer"
+      style="color: var(--color-primary)"
+    >
+      <svg *ngIf="!showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      <svg *ngIf="showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.736m0 0L21 21" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="loginError()" class="error-message">
+    {{ loginError() }}
+  </div>
+
+  <!-- Submit Button -->
+  <button
+    type="submit"
+    [disabled]="isLoading() || loginForm.invalid"
+    class="submit-btn"
+  >
+    <span *ngIf="isLoading()" class="spinner"></span>
+    {{ isLoading() ? (t('Signing in...') || 'Signing in...') : (t('Sign In') || 'Sign In') }}
+  </button>
+
+  <!-- Forgot Password Link -->
+  <div class="text-center">
+    <button
+      type="button"
+      (click)="navigateToForgot()"
+      class="forgot-link"
+    >
+      {{ t('Forgot your password?') || 'Forgot your password?' }}
+    </button>
+  </div>
+
+  <!-- Divider -->
+  <div class="divider">
+    <span>{{ t('OR') || 'OR' }}</span>
+  </div>
+
+  <!-- Google Sign In Button -->
+  <div class="google-button-wrapper">
+    <div id="google-signin-button-login"></div>
+    <div *ngIf="googleLoading()" class="google-loading">
+      <span class="spinner-small"></span>
+      <span>{{ t('Signing in...') || 'Signing in...' }}</span>
+    </div>
+  </div>
+
+  <!-- Switch to Sign Up -->
+  <div class="text-center mt-4">
+    <button
+      type="button"
+      (click)="navigateToSignUp()"
+      class="text-sm text-[var(--color-primary)] hover:underline"
+    >
+        {{ t('Don\'t have an account? Sign up') || 'Don\'t have an account? Sign up' }}
+    </button>
+  </div>
+</form>
+

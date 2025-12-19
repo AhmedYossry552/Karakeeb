@@ -1,0 +1,90 @@
+.pickup-container {
+  min-height: 100vh;
+  background-color: rgb(240, 253, 244);
+  padding: 2rem 1rem;
+
+  .pickup-card {
+    max-width: 64rem;
+    margin: 0 auto;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+
+  .pickup-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: rgb(22, 163, 74);
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3rem;
+    gap: 0.5rem;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+
+    .step-number {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgb(229, 231, 235);
+      color: rgb(107, 114, 128);
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .step-label {
+      font-size: 0.875rem;
+      color: rgb(107, 114, 128);
+    }
+
+    &.active {
+      .step-number {
+        background-color: rgb(22, 163, 74);
+        color: white;
+      }
+
+      .step-label {
+        color: rgb(22, 163, 74);
+        font-weight: 600;
+      }
+    }
+
+    &.completed {
+      .step-number {
+        background-color: rgb(34, 197, 94);
+        color: white;
+      }
+    }
+  }
+
+  .step-line {
+    width: 4rem;
+    height: 2px;
+    background-color: rgb(229, 231, 235);
+    transition: background-color 0.3s;
+
+    &.completed {
+      background-color: rgb(34, 197, 94);
+    }
+  }
+
+  .step-content {
+    min-height: 400px;
+  }
+}
+

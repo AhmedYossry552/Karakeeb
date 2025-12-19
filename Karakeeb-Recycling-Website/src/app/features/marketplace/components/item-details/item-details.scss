@@ -1,0 +1,367 @@
+.item-details-container {
+  min-height: 100vh;
+  background-color: rgb(249, 250, 251);
+  padding: 3rem 1rem;
+
+  :host-context(.dark) & {
+    background-color: rgb(17, 24, 39);
+  }
+}
+
+.error-state {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 3.75rem;
+  margin-bottom: 1rem;
+}
+
+.error-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(17, 24, 39);
+  margin-bottom: 0.5rem;
+
+  :host-context(.dark) & {
+    color: white;
+  }
+}
+
+.error-message {
+  color: rgb(75, 85, 99);
+  margin-bottom: 1rem;
+
+  :host-context(.dark) & {
+    color: rgb(156, 163, 175);
+  }
+}
+
+.back-button {
+  background: rgb(34, 197, 94);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgb(22, 163, 74);
+  }
+}
+
+.loading-state {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgb(229, 231, 235);
+  border-top-color: rgb(34, 197, 94);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.item-details-content {
+  max-width: 1280px;
+  margin: 0 auto;
+
+  @media (min-width: 1920px) {
+    max-width: 1536px;
+  }
+
+  @media (min-width: 2560px) {
+    max-width: 1920px;
+  }
+
+  @media (min-width: 3072px) {
+    max-width: 2560px;
+  }
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.item-image-section {
+  space-y: 1rem;
+}
+
+.item-image-wrapper {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  border-radius: 0.75rem;
+  background: rgb(249, 250, 251);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  :host-context(.dark) & {
+    background: rgb(55, 65, 81);
+  }
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.item-info-section {
+  space-y: 1.5rem;
+}
+
+.item-header {
+  margin-bottom: 1.5rem;
+}
+
+.item-category {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgb(243, 244, 246);
+  color: rgb(17, 24, 39);
+  margin-bottom: 0.75rem;
+
+  :host-context(.dark) & {
+    background: rgb(55, 65, 81);
+    color: white;
+  }
+}
+
+.item-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: rgb(17, 24, 39);
+  margin: 0 0 0.5rem 0;
+
+  :host-context(.dark) & {
+    color: white;
+  }
+}
+
+.item-description {
+  color: rgb(75, 85, 99);
+  margin-top: 0.5rem;
+
+  :host-context(.dark) & {
+    color: rgb(156, 163, 175);
+  }
+}
+
+.item-price-section {
+  margin-bottom: 1.5rem;
+}
+
+.item-price {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: rgb(17, 24, 39);
+
+  :host-context(.dark) & {
+    color: white;
+  }
+}
+
+.stock-info {
+  padding-top: 1rem;
+  border-top: 1px solid rgb(229, 231, 235);
+  margin-bottom: 1.5rem;
+
+  :host-context(.dark) & {
+    border-top-color: rgb(55, 65, 81);
+  }
+}
+
+.stock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.stock-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(75, 85, 99);
+
+  :host-context(.dark) & {
+    color: rgb(156, 163, 175);
+  }
+}
+
+.stock-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(22, 163, 74);
+
+  &.out-of-stock {
+    color: rgb(220, 38, 38);
+  }
+
+  &.low-stock {
+    color: rgb(217, 119, 6);
+  }
+}
+
+.quantity-section {
+  margin-bottom: 1.5rem;
+}
+
+.quantity-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(17, 24, 39);
+  margin-bottom: 0.5rem;
+
+  :host-context(.dark) & {
+    color: white;
+  }
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 0.375rem;
+  background: white;
+  color: rgb(75, 85, 99);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  :host-context(.dark) & {
+    background: rgb(55, 65, 81);
+    border-color: rgb(75, 85, 99);
+    color: rgb(209, 213, 219);
+  }
+
+  &:hover:not(:disabled) {
+    background: rgb(243, 244, 246);
+    border-color: rgb(209, 213, 219);
+
+    :host-context(.dark) & {
+      background: rgb(75, 85, 99);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+.quantity-input {
+  flex: 1;
+  max-width: 8rem;
+  padding: 0.625rem;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 0.375rem;
+  background: white;
+  color: rgb(17, 24, 39);
+  font-size: 1rem;
+  text-align: center;
+
+  :host-context(.dark) & {
+    background: rgb(55, 65, 81);
+    border-color: rgb(75, 85, 99);
+    color: white;
+  }
+
+  &:focus {
+    outline: none;
+    ring: 1px;
+    ring-color: rgb(34, 197, 94);
+    border-color: rgb(34, 197, 94);
+  }
+
+  &.error {
+    border-color: rgb(220, 38, 38);
+  }
+}
+
+.error-message {
+  font-size: 0.75rem;
+  color: rgb(220, 38, 38);
+  margin-top: 0.25rem;
+}
+
+.measurement-hint {
+  font-size: 0.75rem;
+  color: rgb(107, 114, 128);
+  margin-top: 0.25rem;
+
+  :host-context(.dark) & {
+    color: rgb(156, 163, 175);
+  }
+}
+
+.action-section {
+  margin-top: 1.5rem;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: rgb(34, 197, 94);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(.disabled) {
+    background: rgb(22, 163, 74);
+  }
+
+  &.in-cart {
+    background: rgb(220, 38, 38);
+
+    &:hover {
+      background: rgb(185, 28, 28);
+    }
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+

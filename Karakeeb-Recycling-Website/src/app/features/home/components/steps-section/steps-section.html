@@ -1,0 +1,48 @@
+<section class="steps-section">
+  <h2 class="steps-title">
+    {{ translation.t('indexPage.steps.howItWorks') || 'How It Works' }}
+  </h2>
+
+  <div class="steps-container">
+    <div class="step-card" *ngFor="let step of steps; let i = index">
+      <div class="step-icon-wrapper">
+        <div class="step-icon-background" [ngClass]="step.bgColor"></div>
+        <div class="step-icon" [ngClass]="step.iconColor">
+          <svg *ngIf="step.icon === 'user'" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+          <svg *ngIf="step.icon === 'waste'" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          </svg>
+          <svg *ngIf="step.icon === 'recycle'" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2a3 3 0 015.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+      </div>
+      
+      <div class="step-content" [ngClass]="step.bgColor">
+        <h3 class="step-title">
+          @if (step.titleDefault) {
+            {{ translation.t(step.titleKey) !== step.titleKey ? translation.t(step.titleKey) : step.titleDefault }}
+          } @else {
+            {{ translation.t(step.titleKey) }}
+          }
+        </h3>
+        <p class="step-description">
+          @if (step.descDefault) {
+            {{ translation.t(step.descKey) !== step.descKey ? translation.t(step.descKey) : step.descDefault }}
+          } @else {
+            {{ translation.t(step.descKey) }}
+          }
+        </p>
+      </div>
+      
+      <!-- Connector after each step (except last) -->
+      <div class="step-connector" *ngIf="i < steps.length - 1">
+        <div class="connector-line"></div>
+        <div class="connector-dot"></div>
+        <div class="connector-line"></div>
+      </div>
+    </div>
+  </div>
+</section>

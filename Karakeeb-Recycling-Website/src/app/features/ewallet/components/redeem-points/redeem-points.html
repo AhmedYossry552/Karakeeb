@@ -1,0 +1,159 @@
+<div class="modal-overlay" *ngIf="show" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">
+        {{ translation.t('Redeem Eco Points') || 'Redeem Eco Points' }}
+      </h2>
+      <button type="button" (click)="closeModal()" class="close-btn">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- Points Display -->
+      <div class="points-display">
+        <p class="points-label">{{ translation.t('Available Points') || 'Available Points' }}</p>
+        <p class="points-value" *ngIf="!pointsLoading()">
+          {{ totalPoints | number }} {{ translation.t('pts') || 'pts' }}
+        </p>
+        <div *ngIf="pointsLoading()" class="loading-spinner"></div>
+      </div>
+
+      <!-- Option Tabs -->
+      <div class="option-tabs">
+        <button
+          type="button"
+          [class.active]="activeOption === 'money'"
+          (click)="setActiveOption('money')"
+          class="tab-btn"
+        >
+          {{ translation.t('Cash Out') || 'Cash Out' }}
+        </button>
+        <button
+          type="button"
+          [class.active]="activeOption === 'voucher'"
+          (click)="setActiveOption('voucher')"
+          class="tab-btn"
+        >
+          {{ translation.t('Vouchers') || 'Vouchers' }}
+        </button>
+      </div>
+
+      <!-- Money Option -->
+      <div *ngIf="activeOption === 'money'" class="option-content">
+        <form [formGroup]="redeemForm" (ngSubmit)="handleRedeem()">
+          <div class="form-group">
+            <label class="form-label">
+              {{ translation.t('Amount to Redeem (EGP)') || 'Amount to Redeem (EGP)' }}
+            </label>
+            <input
+              type="number"
+              formControlName="amount"
+              [placeholder]="translation.t('Enter amount') || 'Enter amount'"
+              class="form-input"
+              min="1"
+              [max]="calculations().maxAvailable"
+            />
+            <p class="form-hint">
+              {{ translation.t('Exchange Rate: 19 Points = 1 EGP') || 'Exchange Rate: 19 Points = 1 EGP' }}
+            </p>
+            <p class="form-hint" *ngIf="calculations().maxAvailable > 0">
+              {{ translation.t('Max available') || 'Max available' }}: {{ calculations().maxAvailable }} {{ translation.t('EGP') || 'EGP' }}
+            </p>
+          </div>
+
+          <div class="calculation-info">
+            <div class="calc-row">
+              <span>{{ translation.t('Required points') || 'Required points' }}:</span>
+              <span class="calc-value">{{ calculations().requiredPoints | number }}</span>
+            </div>
+            <div class="calc-row">
+              <span>{{ translation.t('Remaining points') || 'Remaining points' }}:</span>
+              <span class="calc-value" [class.negative]="calculations().remainingPoints < 0">
+                {{ calculations().remainingPoints | number }}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="!calculations().isValidAmount || isProcessing()"
+            class="redeem-btn"
+          >
+            <span *ngIf="isProcessing()" class="spinner-small"></span>
+            {{ isProcessing() 
+                  ? (translation.t('Processing...') || 'Processing...')
+              : (translation.t('Transfer to Account') || 'Transfer to Account')
+            }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Voucher Option -->
+      <div *ngIf="activeOption === 'voucher'" class="option-content">
+        <div class="vouchers-grid">
+          @for (voucher of voucherStates(); track voucher.id) {
+            <div
+              class="voucher-card"
+              [class.selected]="voucher.isSelected"
+              [class.redeemed]="voucher.isRedeemed"
+              [class.disabled]="!voucher.canRedeem"
+              (click)="selectVoucher(voucher.id)"
+            >
+              <div class="voucher-header">
+                <h3 class="voucher-name">{{ voucher.name }}</h3>
+                <span class="voucher-value">{{ voucher.value }}</span>
+              </div>
+              <div class="voucher-footer">
+                <span class="voucher-points">{{ voucher.points }} {{ translation.t('pts') || 'pts' }}</span>
+                @if (voucher.isRedeemed) {
+                  <span class="voucher-status redeemed">{{ translation.t('Redeemed') || 'Redeemed' }}</span>
+                } @else if (!voucher.canRedeem) {
+                  <span class="voucher-status needs-more">
+                    {{ translation.t('You need') || 'You need' }} {{ voucher.needsMorePoints }} {{ translation.t('more points') || 'more points' }}
+                  </span>
+                } @else {
+                  <span class="voucher-status available">{{ translation.t('Redeem') || 'Redeem' }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <button
+          type="button"
+          (click)="handleRedeem()"
+          [disabled]="!selectedVoucher || isProcessing()"
+          class="redeem-btn"
+        >
+          <span *ngIf="isProcessing()" class="spinner-small"></span>
+          {{ isProcessing() 
+            ? (translation.t('Processing...') || 'Processing...')
+            : (translation.t('Redeem Voucher') || 'Redeem Voucher')
+          }}
+        </button>
+      </div>
+
+      <!-- QR Code Display -->
+      <!-- <div *ngIf="qrVisible()" class="qr-section">
+        <h3 class="qr-title">{{ translation.t('Your Voucher QR Code') || 'Your Voucher QR Code' }}</h3>
+        <div class="qr-code-container">
+          <div class="qr-code" #qrCode>
+           
+            <div class="qr-placeholder">
+              <p>{{ qrValue() }}</p>
+            </div>
+          </div>
+        </div>
+        <button type="button" (click)="downloadQR()" class="download-qr-btn">
+            {{ translation.t('Download QR Code') || 'Download QR Code' }}
+        </button>
+      </div> -->
+    </div>
+  </div>
+</div>
+

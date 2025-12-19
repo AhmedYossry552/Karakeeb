@@ -1,0 +1,89 @@
+<div class="rewards-container" *ngIf="user() && !loading()">
+  <div class="rewards-content">
+    <!-- Header Section -->
+    <div class="header-card">
+      <h2 class="welcome-title">
+        {{ translation.t('Welcome back') || 'Welcome back' }}, {{ user()?.name }}
+      </h2>
+      <div class="tier-badge">
+        <span class="badge-icon">{{ getCurrentLevel().badge }}</span>
+        <span class="badge-text">{{ getTierName(getCurrentLevel()) }}</span>
+      </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stats-card">
+      <div class="stats-content">
+        <p class="stats-number">{{ totalCompletedOrders() }}</p>
+        <p class="stats-label">{{ translation.t('Recycling Orders') || 'Recycling Orders' }}</p>
+      </div>
+    </div>
+
+    <!-- Progress Card -->
+    <div class="progress-card" *ngIf="getNextLevel()">
+      <div class="progress-path">
+        <!-- Current Level -->
+        <div class="level-badge current">
+          <div class="badge-icon-large">{{ getCurrentLevel().badge }}</div>
+          <span class="level-name">{{ getTierName(getCurrentLevel()) }}</span>
+        </div>
+
+        <!-- Progress Line -->
+        <div class="progress-line">
+          <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+        </div>
+
+        <!-- Next Level -->
+        <div class="level-badge next">
+          <div class="badge-icon-large">{{ getNextLevel()!.badge }}</div>
+          <span class="level-name">{{ getTierName(getNextLevel()!) }}</span>
+        </div>
+      </div>
+
+      <!-- Remaining Orders Message -->
+      <div class="progress-message">
+        <div class="message-badge">
+          <span class="message-number">{{ getOrdersToNext() }}</span>
+          <p class="message-text">
+            {{ translation.t('Only {{count}} more recycles to reach {{level}}') || 'Only {{count}} more recycles to reach {{level}}' }}
+          </p>
+          <span class="message-icon">{{ getNextLevel()!.badge }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Points Activity -->
+    <app-points-activity [userPoints]="userPoints()"></app-points-activity>
+
+    <!-- Levels Overview -->
+    <div class="levels-section">
+      <h2 class="levels-title">{{ translation.t('Reward Levels') || 'Reward Levels' }}</h2>
+      <div class="levels-grid">
+        @for (level of rewardLevels; track level.id) {
+          <div class="level-card" [class.current]="isCurrentLevel(level)" [class.unlocked]="isUnlocked(level)">
+            <div class="level-header">
+              <div class="level-icon">{{ level.badge }}</div>
+              <h3 class="level-title">{{ getTierName(level) }}</h3>
+            </div>
+            <div class="level-range">
+                {{ level.minRecycles }} - {{ level.maxRecycles === 999999 ? '∞' : level.maxRecycles }} {{ translation.t('recycles') || 'recycles' }}
+            </div>
+            <ul class="benefits-list">
+              @for (benefit of getBenefits(level); track benefit) {
+                <li class="benefit-item">{{ benefit }}</li>
+              }
+            </ul>
+            @if (isCurrentLevel(level)) {
+              <div class="current-badge">Current Level</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading()">
+  <div class="spinner"></div>
+</div>
+
