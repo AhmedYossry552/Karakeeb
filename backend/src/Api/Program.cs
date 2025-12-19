@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,6 +18,15 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Railway terminates TLS at the edge and forwards requests to the container.
+// Respect X-Forwarded-Proto so HTTPS redirection doesn't cause loops.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtSettings = jwtSection.Get<JwtSettings>()!;
@@ -61,6 +71,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<TranscriptionService>();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 using (var scope = app.Services.CreateScope())
 {

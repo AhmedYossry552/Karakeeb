@@ -8,6 +8,13 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        if (args.Length > 0 && string.Equals(args[0], "copy-sqlserver-to-postgres", StringComparison.OrdinalIgnoreCase))
+        {
+            var remainingArgs = args.Length > 1 ? args[1..] : Array.Empty<string>();
+            Environment.ExitCode = await SqlServerToPostgresCopy.RunAsync(remainingArgs);
+            return;
+        }
+
         Console.WriteLine("Starting Mongo JSON import into SQL Server...");
 
         const string connectionString = "Server=localhost;Database=RecyclingDb;Trusted_Connection=True;TrustServerCertificate=True;";
