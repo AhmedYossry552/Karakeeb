@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.pdb
+**/*.log
+**/node_modules/
+
+# Frontend
+Karakeeb-Recycling-Website/
