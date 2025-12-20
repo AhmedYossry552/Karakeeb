@@ -17,4 +17,4 @@ RUN npm install -g serve
 COPY --from=build /app/dist ./dist
 
 EXPOSE 8080
-CMD ["sh", "-c", "serve -s dist/recycling-system-angular -l ${PORT:-8080}"]
+CMD ["sh", "-c", "serve -s dist/recycling-system-angular/browser -l ${PORT:-8080}"]
