@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using Recycling.Application.Abstractions;
 using Recycling.Application.Services;
 
@@ -109,6 +110,54 @@ public class TranscriptionController : ControllerBase
             return StatusCode(500, new { success = false, message = "Unexpected error during voice cart processing.", details = ex.Message });
         }
     }
+
+    [Authorize]
+    [HttpPost("extract-materials")]
+    public async Task<IActionResult> ExtractMaterials([FromBody] ExtractMaterialsRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Transcription))
+        {
+            return BadRequest(new { success = false, message = "Transcription is required." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.MaterialList))
+        {
+            return BadRequest(new { success = false, message = "Material list is required." });
+        }
+
+        try
+        {
+            var raw = await _transcriptionService.ExtractMaterialsFromTextAsync(request.Transcription, request.MaterialList);
+
+            object? items = null;
+            try
+            {
+                using var doc = JsonDocument.Parse(raw);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                    doc.RootElement.TryGetProperty("items", out var itemsElement) &&
+                    itemsElement.ValueKind == JsonValueKind.Array)
+                {
+                    items = JsonSerializer.Deserialize<object>(itemsElement.GetRawText());
+                }
+            }
+            catch
+            {
+                // ignore parsing errors; frontend can fallback if needed
+            }
+
+            return Ok(new { success = true, raw, items });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, new { success = false, message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = "Unexpected error during material extraction.", details = ex.Message });
+        }
+    }
+
+    public sealed record ExtractMaterialsRequest(string Transcription, string MaterialList);
 
     [Authorize]
     [HttpPost("describe-image")]

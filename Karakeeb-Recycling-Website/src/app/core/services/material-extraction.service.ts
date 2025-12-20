@@ -249,37 +249,61 @@ export class MaterialExtractionService {
     // Load items from backend if not cached
     await this.loadItemsFromBackend();
 
-    if (!environment.groqApiKey || environment.groqApiKey === 'YOUR_GROQ_API_KEY_HERE') {
-      throw new Error('Groq API key is not configured. Please add your Groq API key to environment.ts');
-    }
-
-    const client = new Groq({
-      apiKey: environment.groqApiKey,
-      dangerouslyAllowBrowser: true,
-    });
-
     // Build material list string for prompt
     const materialList = Object.entries(this.itemsCache || {})
       .map(([en, info]) => `- ${en} (${info.arname}) [${info.unit}]`)
       .join('\n');
 
-    const prompt = SYSTEM_PROMPT.replace('{MATERIAL_LIST}', materialList);
+    let rawContent: string | undefined;
 
-    const chatRes = await client.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      temperature: 0.25,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: prompt },
-        { role: 'user', content: `Input: ${transcription}` },
-      ],
-    });
+    // Production-safe path: call backend so Groq secret stays server-side.
+    if (!environment.groqApiKey || environment.groqApiKey === 'YOUR_GROQ_API_KEY_HERE') {
+      const res = await firstValueFrom(
+        this.api.post<{ success: boolean; raw?: string; items?: any[]; message?: string }>(
+          '/transcription/extract-materials',
+          {
+            transcription,
+            materialList,
+          }
+        )
+      );
 
-    console.log('🤖 AI raw output:', chatRes.choices[0].message.content);
+      if (!res || !res.success) {
+        throw new Error(res?.message || 'Material extraction failed on backend.');
+      }
+
+      if (Array.isArray(res.items)) {
+        rawContent = JSON.stringify({ items: res.items });
+      } else {
+        rawContent = res.raw;
+      }
+    } else {
+      // Dev-only path: direct Groq call (not recommended for production)
+      const client = new Groq({
+        apiKey: environment.groqApiKey,
+        dangerouslyAllowBrowser: true,
+      });
+
+      const prompt = SYSTEM_PROMPT.replace('{MATERIAL_LIST}', materialList);
+
+      const chatRes = await client.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        temperature: 0.25,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: prompt },
+          { role: 'user', content: `Input: ${transcription}` },
+        ],
+      });
+
+      rawContent = chatRes.choices[0].message.content || undefined;
+    }
+
+    console.log('🤖 AI raw output:', rawContent);
 
     let parsed: unknown[] = [];
     try {
-      const raw = JSON.parse(chatRes.choices[0].message.content || '[]');
+      const raw = JSON.parse(rawContent || '[]');
       console.log('📋 Parsed JSON structure:', raw);
       
       if (Array.isArray(raw)) {
