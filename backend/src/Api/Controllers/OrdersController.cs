@@ -210,6 +210,20 @@ public class OrdersController : ControllerBase
         return NoContent();
     }
 
+    // PUT /api/orders/{orderId}/auto-assign-courier
+    [HttpPut("{orderId}/auto-assign-courier")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> AutoAssignCourier(string orderId)
+    {
+        var success = await _orderService.AutoAssignCourierAsync(orderId);
+        if (!success)
+        {
+            return BadRequest("No suitable courier found or order address is missing.");
+        }
+
+        return NoContent();
+    }
+
     // PATCH /api/orders/{id}/cancel
     [HttpPatch("{id}/cancel")]
     public async Task<IActionResult> CancelOrder(string id, [FromBody] CancelOrderRequest request)

@@ -40,6 +40,7 @@ public class OrderRepository : IOrderRepository
     {
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
+        _context.Entry(order).State = EntityState.Detached;
     }
 
     public async Task UpdateAsync(Order order)

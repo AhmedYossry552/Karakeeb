@@ -19,6 +19,7 @@ public interface IOrderService
     Task<bool> AdminDeleteOrderAsync(string orderId);
     Task<bool> DeleteUserOrderAsync(string userId, string orderId);
     Task<bool> AssignCourierAsync(string orderId, string courierId, string status);
+    Task<bool> AutoAssignCourierAsync(string orderId);
     Task<IReadOnlyList<OrderDto>> GetCourierAssignedOrdersAsync(string courierUserId);
     Task<IReadOnlyList<OrderDto>> GetOrdersByCourierAsync(string courierUserId);
     Task<bool> CompleteOrderWithProofAsync(string courierUserId, string orderId, string? notes, string? quantityNotes, string? updatedQuantitiesJson, string? photoPath, string? photoUrl);

@@ -98,6 +98,24 @@ public class OrderService : IOrderService
         cart.UpdatedAt = now;
         await _cartRepository.UpdateAsync(cart);
 
+        // Try to auto-assign a courier based on address proximity and courier load.
+        // Ignore failures so order creation is not blocked if no suitable courier is found.
+        try
+        {
+            var assigned = await AutoAssignCourierAsync(order.Id);
+            if (assigned)
+            {
+                var updatedOrder = await _orderRepository.GetByIdAsync(order.Id);
+                if (updatedOrder != null)
+                {
+                    order = updatedOrder;
+                }
+            }
+        }
+        catch
+        {
+        }
+
         return MapOrder(order);
     }
 
@@ -599,6 +617,91 @@ public class OrderService : IOrderService
         }
 
         return true;
+    }
+
+    public async Task<bool> AutoAssignCourierAsync(string orderId)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null || string.IsNullOrWhiteSpace(order.AddressId))
+        {
+            return false;
+        }
+
+        var orderAddress = await _addressRepository.GetByIdAsync(order.AddressId);
+        if (orderAddress == null)
+        {
+            return false;
+        }
+
+        var allCouriers = await _userRepository.GetByRoleAsync("delivery");
+        var couriers = allCouriers
+            .Where(c => c.IsApproved)
+            .ToList();
+
+        if (couriers.Count == 0)
+        {
+            return false;
+        }
+
+        var activeStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "pending",
+            "assigntocourier",
+            "collected"
+        };
+
+        string? bestCourierId = null;
+        var bestDistanceScore = int.MaxValue;
+        var bestLoad = int.MaxValue;
+
+        foreach (var courier in couriers)
+        {
+            var courierAddresses = await _addressRepository.GetByUserIdAsync(courier.Id);
+            var courierAddress = courierAddresses.FirstOrDefault();
+
+            var distanceScore = ComputeAreaProximity(orderAddress, courierAddress);
+
+            var courierOrders = await _orderRepository.GetByCourierIdAsync(courier.Id);
+            var activeOrders = courierOrders.Count(o => activeStatuses.Contains(o.Status));
+
+            if (distanceScore < bestDistanceScore ||
+                (distanceScore == bestDistanceScore && activeOrders < bestLoad))
+            {
+                bestCourierId = courier.Id;
+                bestDistanceScore = distanceScore;
+                bestLoad = activeOrders;
+            }
+        }
+
+        if (bestCourierId == null)
+        {
+            return false;
+        }
+
+        return await AssignCourierAsync(order.Id, bestCourierId, "assigntocourier");
+    }
+
+    private static int ComputeAreaProximity(Address orderAddress, Address? courierAddress)
+    {
+        if (courierAddress == null)
+        {
+            return 2;
+        }
+
+        var sameCity = string.Equals(orderAddress.City, courierAddress.City, StringComparison.OrdinalIgnoreCase);
+        var sameArea = string.Equals(orderAddress.Area, courierAddress.Area, StringComparison.OrdinalIgnoreCase);
+
+        if (sameCity && sameArea)
+        {
+            return 0;
+        }
+
+        if (sameCity)
+        {
+            return 1;
+        }
+
+        return 2;
     }
 
     public async Task<bool> AssignCourierAsync(string orderId, string courierId, string status)
