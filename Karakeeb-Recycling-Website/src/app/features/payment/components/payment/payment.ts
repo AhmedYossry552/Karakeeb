@@ -44,6 +44,24 @@ export class PaymentComponent implements OnInit, AfterViewInit {
   private stripe: any;
   private cardElement: any;
 
+  private getUserId(): string | null {
+    const currentUser: any = this.user();
+    return (
+      currentUser?._id ||
+      currentUser?.id ||
+      currentUser?.userId ||
+      this.checkoutData?.user?.id ||
+      null
+    );
+  }
+
+  private requireLoggedIn(): void {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('User must be logged in to process payment');
+    }
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -119,14 +137,16 @@ export class PaymentComponent implements OnInit, AfterViewInit {
     this.errorMessage.set('');
 
     try {
-      const user = this.user();
-      if (!user?._id) {
+      this.requireLoggedIn();
+      const user: any = this.user();
+      const userId = this.getUserId();
+      if (!userId) {
         throw new Error('User must be logged in to process payment');
       }
 
       // Step 1: Ensure Stripe customer exists (required by backend)
       try {
-        await this.api.post(`/users/${user._id}/stripe-customer`, {}).toPromise();
+        await this.api.post(`/users/${userId}/stripe-customer`, {}).toPromise();
       } catch (stripeError: any) {
         console.error('Stripe customer creation error:', stripeError);
         // If it's a 400/500 error, throw it; 200/201 means success
@@ -157,13 +177,15 @@ export class PaymentComponent implements OnInit, AfterViewInit {
       const clientSecret = paymentIntent.clientSecret;
 
       // Step 3: Confirm payment with Stripe.js
+      const billingEmail = user?.email || this.checkoutData?.user?.email || '';
+      const billingPhone = user?.phoneNumber || this.checkoutData?.user?.phoneNumber || '';
       const confirmation = await this.stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: this.cardElement,
           billing_details: {
             name: this.paymentForm.value.cardholderName,
-            email: user.email,
-            phone: user.phoneNumber
+            email: billingEmail,
+            phone: billingPhone
           }
         }
       });
@@ -193,8 +215,9 @@ export class PaymentComponent implements OnInit, AfterViewInit {
   private async createOrderAfterPayment(paymentIntentId: string): Promise<void> {
     if (!this.checkoutData) return;
 
-    const user = this.user();
-    if (!user) {
+    try {
+      this.requireLoggedIn();
+    } catch {
       this.errorMessage.set('User not found. Please login again.');
       this.loading.set(false);
       return;
