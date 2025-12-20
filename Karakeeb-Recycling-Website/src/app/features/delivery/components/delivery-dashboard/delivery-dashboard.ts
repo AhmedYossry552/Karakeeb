@@ -282,7 +282,7 @@ export class DeliveryDashboardComponent implements OnInit {
         this.loading.set(false);
         this.isFetching.set(false);
         if (err.status !== 401) {
-          this.toastr.error(this.translation.t('courier.errorLoadingOrders') !== 'courier.errorLoadingOrders' ? this.translation.t('courier.errorLoadingOrders') : 'Failed to load orders');
+          this.toastr.error(this.translation.t('Error Loading Orders') || 'Failed to load orders');
         }
       }
     });
@@ -371,11 +371,11 @@ export class DeliveryDashboardComponent implements OnInit {
       const locale = this.translation.getLocale();
 
       order.items.forEach((item) => {
-        const correctUnit = item.measurement_unit === 1 ? 'kg' : (this.translation.t('common.piece') || 'piece');
+        const correctUnit = item.measurement_unit === 1 ? 'kg' : (this.translation.t('Piece') || 'piece');
         const isUnitMismatch = item.unit !== correctUnit;
         const itemName = typeof item.name === 'string' 
           ? item.name 
-          : (item.name?.[locale] || item.name?.en || this.translation.t('common.item') || 'Item');
+          : (item.name?.[locale] || item.name?.en || this.translation.t('Item') || 'Item');
 
         initialQuantities[item._id] = {
           originalQuantity: item.quantity,
@@ -446,14 +446,14 @@ export class DeliveryDashboardComponent implements OnInit {
         };
         reader.readAsDataURL(file);
       } else {
-        this.toastr.error(this.translation.t('courier.pleaseSelectImage') !== 'courier.pleaseSelectImage' ? this.translation.t('courier.pleaseSelectImage') : 'Please select an image file');
+        this.toastr.error(this.translation.t('Please Select Image') || 'Please select an image file');
       }
     }
   }
 
   completeOrderWithProof(): void {
     if (!this.proofPhoto) {
-      this.toastr.error(this.translation.t('courier.uploadProofPhoto') !== 'courier.uploadProofPhoto' ? this.translation.t('courier.uploadProofPhoto') : 'Please upload a delivery proof photo');
+      this.toastr.error(this.translation.t('Upload Proof Photo') || 'Please upload a delivery proof photo');
       return;
     }
 
@@ -468,7 +468,7 @@ export class DeliveryDashboardComponent implements OnInit {
       });
 
       if (hasChanges && !this.quantityNotes().trim()) {
-        this.toastr.error(this.translation.t('courier.addQuantityNotes') !== 'courier.addQuantityNotes' ? this.translation.t('courier.addQuantityNotes') : 'Please add notes about the quantity changes');
+        this.toastr.error(this.translation.t('Add Quantity Notes') || 'Please add notes about the quantity changes');
         return;
       }
 
@@ -477,7 +477,7 @@ export class DeliveryDashboardComponent implements OnInit {
       );
 
       if (hasEmptyQuantities) {
-        this.toastr.error(this.translation.t('courier.enterActualQuantities') !== 'courier.enterActualQuantities' ? this.translation.t('courier.enterActualQuantities') : 'Please enter actual quantities for all items');
+        this.toastr.error(this.translation.t('Enter Actual Quantities') || 'Please enter actual quantities for all items');
         return;
       }
     }
@@ -502,7 +502,7 @@ export class DeliveryDashboardComponent implements OnInit {
 
     this.api.post(`/orders/${order._id}/complete-with-proof`, formData).subscribe({
       next: () => {
-        this.toastr.success(this.translation.t('courier.orderCompletedSuccessfully') !== 'courier.orderCompletedSuccessfully' ? this.translation.t('courier.orderCompletedSuccessfully') : 'Order completed successfully!');
+        this.toastr.success(this.translation.t('Order Completed Successfully') || 'Order completed successfully!');
         this.showCompleteModal.set(false);
         this.resetModal();
         this.loadOrders();
@@ -540,7 +540,7 @@ export class DeliveryDashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error completing order:', err);
-        const errorMsg = err?.error?.message || this.translation.t('courier.errorCompletingOrder') || 'Error completing order';
+        const errorMsg = err?.error?.message || this.translation.t('Error Completing Order') || 'Error completing order';
         this.toastr.error(errorMsg);
         this.completing.set(false);
       }
@@ -567,10 +567,10 @@ export class DeliveryDashboardComponent implements OnInit {
 
   getStatusBadge(status: string): string {
     const statusMap: Record<string, string> = {
-      'assigntocourier': this.translation.t('courier.readyForDelivery') || 'Ready for Delivery',
-      'completed': this.translation.t('courier.status.completed') || 'Completed',
-      'pending': this.translation.t('courier.status.pending') || 'Pending',
-      'cancelled': this.translation.t('courier.status.cancelled') || 'Cancelled'
+      'assigntocourier': this.translation.t('Ready For Delivery') || 'Ready for Delivery',
+      'completed': this.translation.t('Completed') || 'Completed',
+      'pending': this.translation.t('Pending') || 'Pending',
+      'cancelled': this.translation.t('Cancelled') || 'Cancelled'
     };
     return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
   }
@@ -651,7 +651,7 @@ export class DeliveryDashboardComponent implements OnInit {
   getItemName(item: any): string {
     const locale = this.getCurrentLanguage();
     if (typeof item.name === 'string') return item.name;
-    return item.name?.[locale] || item.name?.en || this.translation.t('common.item') || 'Item';
+    return item.name?.[locale] || item.name?.en || this.translation.t('item') || 'Item';
   }
 
   hasQuantityChanges(): boolean {
@@ -689,10 +689,10 @@ export class DeliveryDashboardComponent implements OnInit {
     console.log('🔍 getActionButtonText - Order:', order._id, 'User Role:', userRole);
 
     if (userRole === 'customer') {
-      return this.translation.t('courier.collect') || 'Collect';
+      return this.translation.t('Collect') || 'Collect';
     }
  
-    return this.translation.t('courier.deliver') || 'Deliver';
+    return this.translation.t('Deliver') || 'Deliver';
   }
 
 
