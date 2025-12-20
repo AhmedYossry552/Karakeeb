@@ -155,23 +155,23 @@ The input text can be either:
 Rules:
 - CRITICAL: Only return valid JSON in this exact format:
 {{
-  \"items\": [
+    ""items"": [
     {{
-      \"material\": \"English name here\",
-      \"quantity\": float,
-      \"unit\": \"KG\" | \"pieces\"
+            ""material"": ""English name here"",
+            ""quantity"": float,
+            ""unit"": ""KG"" | ""pieces""
     }}
   ]
 }}
 - If you do not follow this, the system will fail.
 - Only use materials from the provided list (see below). If a material is not in the list, ignore it.
-- If a material appears multiple times with different phrases (e.g., \"2 laptop\" and \"3 motherboard laptop\"), treat them as SEPARATE items only if they are genuinely different materials.
-- If the same material is mentioned multiple times (e.g., \"2 laptop\" and \"1 laptop\"), merge them by summing their quantities.
+- If a material appears multiple times with different phrases (e.g., ""2 laptop"" and ""3 motherboard laptop""), treat them as SEPARATE items only if they are genuinely different materials.
+- If the same material is mentioned multiple times (e.g., ""2 laptop"" and ""1 laptop""), merge them by summing their quantities.
 - For each material, use the canonical English name from the list.
 - If the unit is missing or ambiguous, use the default unit for that material from the list.
 - Accept both Arabic and English names, and be robust to typos and variants.
 - If the quantity is missing, assume 1.
-- Accept both singular and plural units (\"piece\", \"pieces\", \"KG\").
+- Accept both singular and plural units (""piece"", ""pieces"", ""KG"").
 - Do not output any explanation, only the JSON object.
 
 Material List (English name, Arabic name, unit):
