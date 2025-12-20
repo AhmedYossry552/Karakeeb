@@ -18,8 +18,6 @@ public static class DependencyInjection
     {
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
-        services.Configure<EmailProviderSettings>(configuration.GetSection("Email"));
-        services.Configure<ResendEmailSettings>(configuration.GetSection("Resend"));
 
         static string? BuildPostgresConnectionStringFromDatabaseUrl(string? databaseUrl)
         {
@@ -99,30 +97,7 @@ public static class DependencyInjection
         services.AddScoped<IUserWalletRepository, UserWalletRepository>();
         services.AddScoped<IUserTransactionRepository, UserTransactionRepository>();
         services.AddScoped<IOtpRepository, OtpRepository>();
-
-        var emailProvider = (configuration.GetSection("Email").GetValue<string>("Provider") ?? "Smtp").Trim();
-        if (emailProvider.Equals("Resend", StringComparison.OrdinalIgnoreCase))
-        {
-            var resendApiKey = configuration.GetSection("Resend").GetValue<string>("ApiKey");
-            var resendFromAddress = configuration.GetSection("Resend").GetValue<string>("FromAddress");
-            if (string.IsNullOrWhiteSpace(resendApiKey) || string.IsNullOrWhiteSpace(resendFromAddress))
-            {
-                throw new InvalidOperationException(
-                    "Email provider is set to Resend, but Resend:ApiKey or Resend:FromAddress is missing.");
-            }
-
-            services.AddHttpClient<ResendEmailSender>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.resend.com/");
-            });
-
-            services.AddTransient<IEmailSender, ResendEmailSender>();
-        }
-        else
-        {
-            services.AddScoped<IEmailSender, SmtpEmailSender>();
-        }
-
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
