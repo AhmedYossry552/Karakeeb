@@ -31,6 +31,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtSettings = jwtSection.Get<JwtSettings>()!;
 
+if (jwtSettings == null || string.IsNullOrWhiteSpace(jwtSettings.Secret))
+{
+    throw new InvalidOperationException(
+        "JWT secret is not configured. Set Jwt__Secret (or Jwt:Secret) to a non-empty value.");
+}
+
 builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection("GoogleAuth"));
 
 builder.Services.AddAuthentication(options =>
