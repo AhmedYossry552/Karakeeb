@@ -4,7 +4,7 @@ export const environment = {
   // IMPORTANT:
   // Replace with your Railway backend public URL after deploying the API.
   // Example: 'https://<your-backend-service>.up.railway.app/api'
-  apiUrl: 'REPLACE_WITH_BACKEND_URL/api',
+  apiUrl: 'https://karakeeb-production.up.railway.app/api',
 
   googleClientId: '330056808594-7m8k48fm0s673e7cgvt1t80443vd4qdv.apps.googleusercontent.com',
 
