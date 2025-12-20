@@ -8,6 +8,11 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        // PostgreSQL (timestamptz) + Npgsql requires UTC DateTimes by default.
+        // Our source data contains DateTime Kind=Unspecified (from SQL Server), so
+        // enable legacy behavior for this import tool to avoid failing the copy.
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         if (args.Length > 0 && string.Equals(args[0], "copy-sqlserver-to-postgres", StringComparison.OrdinalIgnoreCase))
         {
             var remainingArgs = args.Length > 1 ? args[1..] : Array.Empty<string>();

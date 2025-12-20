@@ -9,6 +9,11 @@ using Recycling.Application.Services;
 using Recycling.Infrastructure;
 using Recycling.Infrastructure.Persistence;
 
+// PostgreSQL (timestamptz) + Npgsql requires UTC DateTimes by default.
+// This app historically stores DateTime values coming from SQL Server/clients as Kind=Unspecified.
+// Enabling legacy behavior avoids DbUpdateException at runtime.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

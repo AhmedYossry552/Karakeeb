@@ -17,6 +17,8 @@ internal static class SqlServerToPostgresCopy
             ?? BuildPostgresConnectionStringFromDatabaseUrl(Environment.GetEnvironmentVariable("DATABASE_URL"))
             ?? Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
+        targetConnectionString = NormalizePostgresConnectionString(targetConnectionString);
+
         var force = HasArg(args, "--force");
         var batchSize = TryGetInt(GetArgValue(args, "--batchSize"), 500);
 
@@ -24,6 +26,13 @@ internal static class SqlServerToPostgresCopy
         {
             Console.Error.WriteLine(
                 "Missing target Postgres connection. Provide --target or set DATABASE_URL/POSTGRES_CONNECTION_STRING.");
+            return 2;
+        }
+
+        if (targetConnectionString.Contains(".railway.internal", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.Error.WriteLine(
+                "Target Postgres host is a Railway internal address (.railway.internal). This is only reachable from services running inside Railway, not from your local machine. Use Railway Postgres public connection string/URL instead.");
             return 2;
         }
 
@@ -84,6 +93,24 @@ internal static class SqlServerToPostgresCopy
 
         Console.WriteLine("Copy completed successfully.");
         return 0;
+    }
+
+    private static string? NormalizePostgresConnectionString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        var trimmed = value.Trim().Trim('"').Trim('\'');
+
+        if (trimmed.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
+            || trimmed.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            return BuildPostgresConnectionStringFromDatabaseUrl(trimmed) ?? trimmed;
+        }
+
+        return trimmed;
     }
 
     private static async Task CopyUsersAsync(RecyclingDbContext source, RecyclingDbContext target, int batchSize)
