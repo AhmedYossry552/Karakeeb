@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, shareReplay, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface Category {
@@ -98,8 +98,30 @@ export interface DeliveryUser {
 })
 export class AdminService {
   private apiUrl = environment.apiUrl;
+  private cache = new Map<string, { data: any; timestamp: number }>();
+  private readonly CACHE_DURATION = 5000; // 5 seconds cache
 
   constructor(private http: HttpClient) {}
+
+  private getCacheKey(endpoint: string, params: any): string {
+    return `${endpoint}_${JSON.stringify(params)}`;
+  }
+
+  private getCached<T>(key: string): T | null {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      return cached.data as T;
+    }
+    return null;
+  }
+
+  private setCache(key: string, data: any): void {
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+
+  clearCache(): void {
+    this.cache.clear();
+  }
 
   // Categories
   getCategories(page: number = 1, limit: number = 10, search?: string, language: string = 'en'): Observable<any> {
@@ -146,7 +168,26 @@ export class AdminService {
       params = params.set('search', search);
     }
 
-    return this.http.get<any>(`${this.apiUrl}/users`, { params });
+    const cacheKey = this.getCacheKey('users', { page, limit, role, search });
+    const cached = this.getCached<any>(cacheKey);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/users`, { params }).pipe(
+      map(response => {
+        this.setCache(cacheKey, response);
+        return response;
+      }),
+      shareReplay(1),
+      catchError(error => {
+        const cached = this.getCached<any>(cacheKey);
+        if (cached) {
+          return of(cached);
+        }
+        throw error;
+      })
+    );
   }
 
   updateUserRole(userId: string, role: string): Observable<any> {
@@ -168,7 +209,27 @@ export class AdminService {
     if (date) params = params.set('date', date);
     if (search) params = params.set('search', search);
 
-    return this.http.get<any>(`${this.apiUrl}/admin/orders`, { params });
+    const cacheKey = this.getCacheKey('admin/orders', { page, limit, userRole, status, date, search });
+    const cached = this.getCached<any>(cacheKey);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/admin/orders`, { params }).pipe(
+      map(response => {
+        this.setCache(cacheKey, response);
+        return response;
+      }),
+      shareReplay(1),
+      catchError(error => {
+        // Return cached data on error if available
+        const cached = this.getCached<any>(cacheKey);
+        if (cached) {
+          return of(cached);
+        }
+        throw error;
+      })
+    );
   }
 
   updateOrderStatus(orderId: string, status: string, reason?: string): Observable<any> {
@@ -192,6 +253,38 @@ export class AdminService {
       courierId: courierId, 
       status: 'assignToCourier' 
     });
+  }
+
+  autoAssignCourier(orderId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/${orderId}/auto-assign-courier`, {}, {
+      observe: 'response'
+    }).pipe(
+      map(response => {
+        // 204 NoContent means success - courier was assigned
+        // Return the status code so we can verify assignment
+        return { status: response.status, success: response.status === 204 };
+      }),
+      catchError(error => {
+        // Handle 400 BadRequest (no courier found) and other errors
+        if (error.status === 400) {
+          let errorMessage = 'No suitable courier found for this order';
+          // Try to extract error message from different possible formats
+          if (error.error) {
+            if (typeof error.error === 'string') {
+              errorMessage = error.error;
+            } else if (error.error?.message) {
+              errorMessage = error.error.message;
+            } else if (error.error?.error) {
+              errorMessage = error.error.error;
+            }
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          throw { status: 400, error: { message: errorMessage }, originalError: error };
+        }
+        throw error;
+      })
+    );
   }
 
   getCouriers(): Observable<any> {

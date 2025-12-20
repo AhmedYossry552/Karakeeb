@@ -343,6 +343,114 @@
             />
             <span *ngIf="!criminalRecordFile" class="error-text">Criminal record certificate is required</span>
           </div>
+
+          <h3 class="section-title">Delivery Address</h3>
+          <p class="section-subtitle">This address will be used to automatically assign orders to you based on proximity</p>
+
+          <div class="form-group">
+            <label for="delivery-city">City <span class="required">*</span></label>
+            <select
+              id="delivery-city"
+              formControlName="city"
+              class="form-input"
+              [class.error]="registerForm.get('city')?.invalid && registerForm.get('city')?.touched"
+            >
+              <option value="">Select City</option>
+              <option value="Cairo">Cairo</option>
+              <option value="Giza">Giza</option>
+              <option value="Alexandria">Alexandria</option>
+              <option value="Mansoura">Mansoura</option>
+              <option value="Aswan">Aswan</option>
+            </select>
+            <span *ngIf="registerForm.get('city')?.invalid && registerForm.get('city')?.touched" class="error-text">
+              City is required
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-area">Area <span class="required">*</span></label>
+            <input
+              id="delivery-area"
+              type="text"
+              formControlName="area"
+              placeholder="Enter your area"
+              class="form-input"
+              [class.error]="registerForm.get('area')?.invalid && registerForm.get('area')?.touched"
+            />
+            <span *ngIf="registerForm.get('area')?.invalid && registerForm.get('area')?.touched" class="error-text">
+              Area is required
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-street">Street <span class="required">*</span></label>
+            <input
+              id="delivery-street"
+              type="text"
+              formControlName="street"
+              placeholder="Enter street name"
+              class="form-input"
+              [class.error]="registerForm.get('street')?.invalid && registerForm.get('street')?.touched"
+            />
+            <span *ngIf="registerForm.get('street')?.invalid && registerForm.get('street')?.touched" class="error-text">
+              Street is required
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-building">Building</label>
+            <input
+              id="delivery-building"
+              type="text"
+              formControlName="building"
+              placeholder="Enter building number"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-floor">Floor</label>
+            <input
+              id="delivery-floor"
+              type="text"
+              formControlName="floor"
+              placeholder="Enter floor number"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-apartment">Apartment</label>
+            <input
+              id="delivery-apartment"
+              type="text"
+              formControlName="apartment"
+              placeholder="Enter apartment number"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-landmark">Landmark</label>
+            <input
+              id="delivery-landmark"
+              type="text"
+              formControlName="landmark"
+              placeholder="Enter nearby landmark (optional)"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-notes">Additional Notes</label>
+            <textarea
+              id="delivery-notes"
+              formControlName="notes"
+              placeholder="Any additional delivery instructions (optional)"
+              class="form-input"
+              rows="3"
+            ></textarea>
+          </div>
         </div>
 
         <!-- Password fields - hidden for Google users -->

@@ -6,6 +6,7 @@ import { AuthService, User } from '../../../../core/services/auth.service';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { AuthApiService } from '../../../../core/services/auth-api.service';
 import { AuthenticationContextService } from '../../../../core/services/authentication-context.service';
+import { AddressService } from '../../../../core/services/address.service';
 import { ToastrService } from 'ngx-toastr';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
@@ -66,6 +67,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private authApi: AuthApiService,
     public authContext: AuthenticationContextService,
+    private addressService: AddressService,
     private toastr: ToastrService
   ) {}
 
@@ -496,6 +498,16 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.registerForm.addControl('vehicleType', this.fb.control('', [Validators.required]));
     this.registerForm.addControl('nationalId', this.fb.control(''));
     this.registerForm.addControl('emergencyContact', this.fb.control(''));
+    
+    // Add address fields
+    this.registerForm.addControl('city', this.fb.control('', [Validators.required]));
+    this.registerForm.addControl('area', this.fb.control('', [Validators.required]));
+    this.registerForm.addControl('street', this.fb.control('', [Validators.required]));
+    this.registerForm.addControl('building', this.fb.control(''));
+    this.registerForm.addControl('floor', this.fb.control(''));
+    this.registerForm.addControl('apartment', this.fb.control(''));
+    this.registerForm.addControl('landmark', this.fb.control(''));
+    this.registerForm.addControl('notes', this.fb.control(''));
   }
 
   removeDeliveryFields(): void {
@@ -504,6 +516,16 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.registerForm.removeControl('vehicleType');
     this.registerForm.removeControl('nationalId');
     this.registerForm.removeControl('emergencyContact');
+    
+    // Remove address fields
+    this.registerForm.removeControl('city');
+    this.registerForm.removeControl('area');
+    this.registerForm.removeControl('street');
+    this.registerForm.removeControl('building');
+    this.registerForm.removeControl('floor');
+    this.registerForm.removeControl('apartment');
+    this.registerForm.removeControl('landmark');
+    this.registerForm.removeControl('notes');
     
     // Clear file uploads
     this.deliveryImageFile = null;
@@ -790,12 +812,37 @@ export class AuthComponent implements OnInit, AfterViewInit {
           vehicleImage,
           criminalRecord
         }).subscribe({
-          next: (res) => {
+          next: async (res) => {
             const user = res.user;
             const token = res.accessToken;
 
             this.authService.setUser(user);
             this.authService.setToken(token);
+
+            // Create address for delivery user after successful registration
+            const { city, area, street, building, floor, apartment, landmark, notes } = this.registerForm.value;
+            if (city && area && street) {
+              try {
+                const addressData: any = {
+                  city: city.trim(),
+                  area: area.trim(),
+                  street: street.trim()
+                };
+                
+                if (building?.trim()) addressData.building = building.trim();
+                if (floor?.trim()) addressData.floor = floor.trim();
+                if (apartment?.trim()) addressData.apartment = apartment.trim();
+                if (landmark?.trim()) addressData.landmark = landmark.trim();
+                if (notes?.trim()) addressData.notes = notes.trim();
+                
+                await this.addressService.createAddress(addressData);
+                console.log('✅ Delivery address created successfully');
+              } catch (addressError) {
+                console.error('⚠️ Error creating delivery address:', addressError);
+                // Don't block registration if address creation fails
+                this.toastr.warning('Registration successful, but address could not be saved. Please add your address in profile settings.');
+              }
+            }
 
             this.toastr.success('Delivery registration successful! Awaiting admin approval.');
             

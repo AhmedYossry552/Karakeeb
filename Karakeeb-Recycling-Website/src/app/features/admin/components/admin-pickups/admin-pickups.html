@@ -97,6 +97,7 @@
             <th>User</th>
             <th>Order ID</th>
             <th>Status</th>
+            <th>Courier</th>
             <th>Date</th>
             <th>Actions</th>
           </tr>
@@ -147,6 +148,20 @@
                     </span>
                   }
                 </div>
+              </td>
+              <td>
+                @if (order.courier) {
+                  <div class="courier-cell">
+                    <div class="courier-name">{{ order.courier.name || order.courier.userName || 'Unknown Courier' }}</div>
+                    @if (order.courier.phoneNumber) {
+                      <div class="courier-phone">{{ order.courier.phoneNumber }}</div>
+                    }
+                  </div>
+                } @else if (order.status?.toLowerCase() === 'assigntocourier') {
+                  <span class="courier-pending">Assigning...</span>
+                } @else {
+                  <span class="courier-none">—</span>
+                }
               </td>
               <td>{{ formatDate(order.createdAt) }}</td>
               <td>

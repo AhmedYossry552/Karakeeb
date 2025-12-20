@@ -286,6 +286,35 @@ $card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 
   text-transform: capitalize;
 }
 
+.courier-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.courier-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+}
+
+.courier-phone {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.courier-pending {
+  color: #f59e0b;
+  font-size: 0.875rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.courier-none {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
 .order-id-link {
   background: none;
   border: none;

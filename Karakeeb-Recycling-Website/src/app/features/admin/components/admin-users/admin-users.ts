@@ -68,8 +68,8 @@ export class AdminUsersComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Error loading users:', error);
-        this.toastr.error('Failed to load users');
+        const errorMessage = error?.error?.message || error.message || 'Failed to load users';
+        this.toastr.error(errorMessage);
         this.isLoading.set(false);
       }
     });
@@ -80,11 +80,13 @@ export class AdminUsersComponent implements OnInit {
   }
 
   onPageChange(page: number): void {
+    if (this.currentPage() === page) return; // Prevent unnecessary reload
     this.currentPage.set(page);
     this.loadUsers();
   }
 
   onItemsPerPageChange(items: number): void {
+    if (this.itemsPerPage() === items) return; // Prevent unnecessary reload
     this.itemsPerPage.set(items);
     this.currentPage.set(1);
     this.loadUsers();
@@ -101,11 +103,13 @@ export class AdminUsersComponent implements OnInit {
       this.adminService.deleteUser(user._id).subscribe({
         next: () => {
           this.toastr.success('User deleted successfully');
+          // Clear cache and reload
+          this.adminService.clearCache();
           this.loadUsers();
         },
         error: (error) => {
-          console.error('Error deleting user:', error);
-          this.toastr.error('Failed to delete user');
+          const errorMessage = error?.error?.message || 'Failed to delete user';
+          this.toastr.error(errorMessage);
         }
       });
     }
@@ -119,16 +123,19 @@ export class AdminUsersComponent implements OnInit {
         this.toastr.success('Role updated successfully');
         this.showRoleModal.set(false);
         this.selectedUser = null;
+        // Clear cache and reload
+        this.adminService.clearCache();
         this.loadUsers();
       },
       error: (error) => {
-        console.error('Error updating role:', error);
-        this.toastr.error('Failed to update role');
+        const errorMessage = error?.error?.message || 'Failed to update role';
+        this.toastr.error(errorMessage);
       }
     });
   }
 
   filterByRole(role: string): void {
+    if (this.selectedRole === role) return; // Prevent unnecessary reload
     this.selectedRole = role;
     this.currentPage.set(1);
     this.loadUsers();

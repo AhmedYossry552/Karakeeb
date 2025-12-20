@@ -84,15 +84,8 @@ export class AdminPickupsComponent implements OnInit {
       this.searchTerm() || undefined
     ).subscribe({
       next: (response) => {
-        console.log('📦 Admin Orders Response:', response);
         if (response.success && response.data) {
           const orders = response.data;
-          // Log first order to see structure
-          if (orders.length > 0) {
-            console.log('📦 First Order:', orders[0]);
-            console.log('📦 First Order User:', orders[0].user);
-            console.log('📦 First Order User Keys:', orders[0].user ? Object.keys(orders[0].user) : 'No user');
-          }
           this.orders.set(orders);
           this.totalPages.set(response.totalPages || 1);
           this.totalItems.set(response.totalOrders || 0);
@@ -102,8 +95,6 @@ export class AdminPickupsComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Error loading orders:', error);
-        
         // Handle specific error cases
         if (error.status === 401) {
           this.toastr.error('Session expired. Please log in again.');
@@ -126,11 +117,13 @@ export class AdminPickupsComponent implements OnInit {
   }
 
   onPageChange(page: number): void {
+    if (this.currentPage() === page) return; // Prevent unnecessary reload
     this.currentPage.set(page);
     this.loadOrders();
   }
 
   onItemsPerPageChange(items: number): void {
+    if (this.itemsPerPage() === items) return; // Prevent unnecessary reload
     this.itemsPerPage.set(items);
     this.currentPage.set(1);
     this.loadOrders();
@@ -144,19 +137,21 @@ export class AdminPickupsComponent implements OnInit {
   handleDeleteConfirm(): void {
     if (!this.selectedOrderForDelete) return;
 
-    this.adminService.deleteOrder(this.selectedOrderForDelete._id).subscribe({
-      next: () => {
-        this.toastr.success('Order deleted successfully');
-        this.isDeleteConfirmationOpen.set(false);
-        this.selectedOrderForDelete = null;
-        this.loadOrders();
-      },
-      error: (error) => {
-        console.error('Error deleting order:', error);
-        this.toastr.error('Failed to delete order');
-        this.isDeleteConfirmationOpen.set(false);
-        this.selectedOrderForDelete = null;
-      }
+        this.adminService.deleteOrder(this.selectedOrderForDelete._id).subscribe({
+        next: () => {
+          this.toastr.success('Order deleted successfully');
+          this.isDeleteConfirmationOpen.set(false);
+          this.selectedOrderForDelete = null;
+          // Clear cache and reload
+          this.adminService.clearCache();
+          this.loadOrders();
+        },
+        error: (error) => {
+          const errorMessage = error?.error?.message || 'Failed to delete order';
+          this.toastr.error(errorMessage);
+          this.isDeleteConfirmationOpen.set(false);
+          this.selectedOrderForDelete = null;
+        }
     });
   }
 
@@ -171,12 +166,14 @@ export class AdminPickupsComponent implements OnInit {
   }
 
   changeTab(tab: UserRole): void {
+    if (this.activeTab() === tab) return; // Prevent unnecessary reload
     this.activeTab.set(tab);
     this.currentPage.set(1);
     this.loadOrders();
   }
 
   filterByStatus(status: string): void {
+    if (this.selectedStatus === status) return; // Prevent unnecessary reload
     this.selectedStatus = status;
     this.currentPage.set(1);
     this.loadOrders();
@@ -211,11 +208,35 @@ export class AdminPickupsComponent implements OnInit {
       return;
     }
 
-    // If changing to assign to courier, show courier selection modal
+    // If changing to assign to courier, automatically assign using backend auto-assign
     if (newStatus === 'assigntocourier') {
-      this.selectedOrderForCourier = order;
-      this.loadCouriers();
-      this.isCourierModalOpen.set(true);
+      this.adminService.autoAssignCourier(order._id).subscribe({
+        next: (response) => {
+          // Backend returns 204 NoContent on success - courier was automatically assigned
+          if (response?.status === 204 || response?.success) {
+            // Show success message - courier was automatically assigned
+            this.toastr.success('Order automatically assigned to nearest available courier');
+            // Clear cache and reload orders
+            this.adminService.clearCache();
+            this.loadOrders();
+          } else {
+            // Unexpected response - treat as no courier found, open manual selection
+            this.toastr.info('No courier found near this address. Please select a courier manually.');
+            this.selectedOrderForCourier = order;
+            this.loadCouriers();
+            this.isCourierModalOpen.set(true);
+          }
+        },
+        error: (error) => {
+          // Backend returns 400 BadRequest when no courier is found near the address
+          // Open manual courier selection for admin to assign manually
+          this.toastr.info('No courier found near this address. Please select a courier manually.');
+          this.selectedOrderForCourier = order;
+          this.loadCouriers();
+          this.isCourierModalOpen.set(true);
+          // Keep the status as assigntocourier in dropdown - don't revert
+        }
+      });
       return;
     }
 
@@ -223,28 +244,18 @@ export class AdminPickupsComponent implements OnInit {
     if (isCollectedToCompleted) {
       this.selectedOrderForComplete = order;
       this.pendingStatusChange = newStatus;
-      // Debug: Log order data to see delivery proof structure
-      console.log('📦 Order selected for completion:', order);
-      console.log('📦 Order deliveryProof:', order.deliveryProof);
-      console.log('📦 Order keys:', Object.keys(order));
-      console.log('📦 Full order object:', JSON.stringify(order, null, 2));
-      
       // If delivery proof is not in the order, try to fetch full order details
       if (!order.deliveryProof && !(order as any).proofPhoto && !(order as any).collectedProof) {
-        console.log('📦 Delivery proof not found, fetching full order details...');
         this.adminService.getOrderById(order._id).subscribe({
           next: (response) => {
             const fullOrder = response.success && response.data ? response.data : (response as any);
-            console.log('📦 Full order details fetched:', fullOrder);
-            console.log('📦 Full order deliveryProof:', (fullOrder as any).deliveryProof);
             // Update the selected order with full details
             if (fullOrder) {
               this.selectedOrderForComplete = { ...order, ...fullOrder } as Order;
             }
             this.isCompleteConfirmationOpen.set(true);
           },
-          error: (error) => {
-            console.error('Error fetching full order details:', error);
+          error: () => {
             // Still show the dialog even if we can't fetch full details
             this.isCompleteConfirmationOpen.set(true);
           }
@@ -256,14 +267,16 @@ export class AdminPickupsComponent implements OnInit {
     }
 
     // For other status changes, update directly
-    this.adminService.updateOrderStatus(order._id, newStatus).subscribe({
-      next: () => {
-        this.toastr.success('Order status updated successfully');
-        this.loadOrders();
-      },
+        this.adminService.updateOrderStatus(order._id, newStatus).subscribe({
+        next: () => {
+          this.toastr.success('Order status updated successfully');
+          // Clear cache and reload
+          this.adminService.clearCache();
+          this.loadOrders();
+        },
       error: (error) => {
-        console.error('Error updating order status:', error);
-        this.toastr.error('Failed to update order status');
+        const errorMessage = error?.error?.message || 'Failed to update order status';
+        this.toastr.error(errorMessage);
         // Revert the select dropdown to original status
         order.status = this.orderStatusMap.get(order._id) || order.status;
       }
@@ -276,9 +289,7 @@ export class AdminPickupsComponent implements OnInit {
         const couriersData = response?.data || response || [];
         this.couriers.set(couriersData);
       },
-      error: (error) => {
-        console.error('Error loading couriers:', error);
-        this.toastr.error('Failed to load couriers');
+      error: () => {
         this.couriers.set([]);
       }
     });
@@ -287,16 +298,18 @@ export class AdminPickupsComponent implements OnInit {
   handleCancelConfirm(reason: string): void {
     if (!this.selectedOrderForCancel) return;
 
-    this.adminService.updateOrderStatus(this.selectedOrderForCancel._id, 'cancelled', reason).subscribe({
-      next: () => {
-        this.toastr.success('Order cancelled successfully');
-        this.isCancelModalOpen.set(false);
-        this.selectedOrderForCancel = null;
-        this.loadOrders();
-      },
+        this.adminService.updateOrderStatus(this.selectedOrderForCancel._id, 'cancelled', reason).subscribe({
+        next: () => {
+          this.toastr.success('Order cancelled successfully');
+          this.isCancelModalOpen.set(false);
+          this.selectedOrderForCancel = null;
+          // Clear cache and reload
+          this.adminService.clearCache();
+          this.loadOrders();
+        },
       error: (error) => {
-        console.error('Error cancelling order:', error);
-        this.toastr.error('Failed to cancel order');
+        const errorMessage = error?.error?.message || 'Failed to cancel order';
+        this.toastr.error(errorMessage);
       }
     });
   }
@@ -335,21 +348,24 @@ export class AdminPickupsComponent implements OnInit {
         this.loadingCourierId = null;
         this.isCourierModalOpen.set(false);
         this.selectedOrderForCourier = null;
+        // Clear cache and reload
+        this.adminService.clearCache();
         this.loadOrders();
       },
       error: (error) => {
-        console.error('Failed to assign courier:', error);
-        this.toastr.error('Failed to assign courier to order');
+        const errorMessage = error?.error?.message || 'Failed to assign courier to order';
+        this.toastr.error(errorMessage);
         this.loadingCourierId = null;
       }
     });
   }
 
   handleCourierClose(): void {
-    // Revert the select dropdown to original status
+    // Revert the select dropdown to original status if modal was closed without selecting
     if (this.selectedOrderForCourier) {
       const originalStatus = this.orderStatusMap.get(this.selectedOrderForCourier._id);
-      if (originalStatus) {
+      // Only revert if it wasn't already assigntocourier (user might have selected it intentionally)
+      if (originalStatus && originalStatus !== 'assigntocourier') {
         this.selectedOrderForCourier.status = originalStatus;
       }
     }
@@ -462,11 +478,13 @@ export class AdminPickupsComponent implements OnInit {
         this.isCompleteConfirmationOpen.set(false);
         this.selectedOrderForComplete = null;
         this.pendingStatusChange = null;
+        // Clear cache and reload
+        this.adminService.clearCache();
         this.loadOrders();
       },
       error: (error) => {
-        console.error('Error updating order status:', error);
-        this.toastr.error('Failed to update order status');
+        const errorMessage = error?.error?.message || 'Failed to update order status';
+        this.toastr.error(errorMessage);
         // Revert the select dropdown to original status
         if (this.selectedOrderForComplete) {
           this.selectedOrderForComplete.status = this.orderStatusMap.get(this.selectedOrderForComplete._id) || this.selectedOrderForComplete.status;
@@ -493,25 +511,19 @@ export class AdminPickupsComponent implements OnInit {
 
   handleViewDeliveryProof(order: Order): void {
     this.selectedOrderForProof = order;
-    console.log('📸 Viewing delivery proof for order:', order);
-    console.log('📸 Order deliveryProof:', order.deliveryProof);
     
     // If delivery proof is not in the order, try to fetch full order details
     if (!order.deliveryProof && !(order as any).proofPhoto && !(order as any).collectedProof) {
-      console.log('📦 Delivery proof not found, fetching full order details...');
       this.adminService.getOrderById(order._id).subscribe({
         next: (response) => {
           const fullOrder = response.success && response.data ? response.data : (response as any);
-          console.log('📦 Full order details fetched:', fullOrder);
-          console.log('📦 Full order deliveryProof:', (fullOrder as any).deliveryProof);
           // Update the selected order with full details
           if (fullOrder) {
             this.selectedOrderForProof = { ...order, ...fullOrder } as Order;
           }
           this.isDeliveryProofModalOpen.set(true);
         },
-        error: (error) => {
-          console.error('Error fetching full order details:', error);
+        error: () => {
           // Still show the modal even if we can't fetch full details
           this.isDeliveryProofModalOpen.set(true);
         }
@@ -565,7 +577,6 @@ export class AdminPickupsComponent implements OnInit {
       };
     }
     
-    console.log('🔍 No delivery proof found in order:', order);
     return null;
   }
 }

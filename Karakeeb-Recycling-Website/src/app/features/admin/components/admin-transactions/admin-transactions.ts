@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, Payment } from '../../../../core/services/admin.service';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { ToastrService } from 'ngx-toastr';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Subject, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-transactions',
@@ -70,10 +71,102 @@ export class AdminTransactionsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadPayments();
-    this.loadWalletSummary();
-    this.loadCashbacks();
-    this.loadBuyerCashOrders();
+    // Load all data in parallel for better performance
+    this.isLoading.set(true);
+    forkJoin({
+      payments: this.loadPaymentsObservable(),
+      walletSummary: this.loadWalletSummaryObservable(),
+      cashbacks: this.loadCashbacksObservable(),
+      buyerCashOrders: this.loadBuyerCashOrdersObservable()
+    }).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading transactions data:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // Observable versions for parallel loading
+  private loadPaymentsObservable() {
+    const filters: any = {};
+    if (this.selectedStatus) filters.status = this.selectedStatus;
+    if (this.startDate) filters.startDate = this.startDate;
+    if (this.endDate) filters.endDate = this.endDate;
+    if (this.selectedCurrency) filters.currency = this.selectedCurrency;
+    if (this.searchTerm()) filters.search = this.searchTerm();
+
+    return this.adminService.getPayments(this.currentPage(), this.itemsPerPage(), filters).pipe(
+      map((response) => {
+        if (response.success && response.data) {
+          this.payments.set(response.data);
+          this.paymentStats.set(response.stats || null);
+          if (response.pagination) {
+            this.totalPages.set(response.pagination.totalPages || 1);
+            this.totalItems.set(response.pagination.total || 0);
+          } else {
+            this.totalPages.set(1);
+            this.totalItems.set(response.data.length || 0);
+          }
+        } else {
+          this.payments.set([]);
+          this.paymentStats.set(null);
+        }
+        this.recalculateTotals();
+        return response;
+      })
+    );
+  }
+
+  private loadWalletSummaryObservable() {
+    return this.adminService.getWalletSummary().pipe(
+      map((response) => {
+        const data = response?.data || response || {};
+        this.walletSummary.set({
+          totalCashback: data.totalCashback || 0,
+          totalWithdrawals: data.totalWithdrawals || 0,
+          buyerCashTotal: data.buyerCashTotal || 0,
+          totalCustomerPoints: data.totalCustomerPoints || 0,
+          remainingPointsValue: data.remainingPointsValue || 0
+        });
+        return response;
+      })
+    );
+  }
+
+  private loadCashbacksObservable() {
+    return this.adminService.getCashbackTransactions(this.cashbackPage(), 10).pipe(
+      map((response) => {
+        if (response?.success && Array.isArray(response.data)) {
+          this.cashbackTransactions.set(response.data);
+          const pagination = response.pagination || {};
+          this.cashbackTotalPages.set(pagination.totalPages || 1);
+        } else {
+          this.cashbackTransactions.set([]);
+          this.cashbackTotalPages.set(1);
+        }
+        return response;
+      })
+    );
+  }
+
+  private loadBuyerCashOrdersObservable() {
+    this.buyerCashOrdersLoading.set(true);
+    return this.adminService.getOrders(this.buyerCashOrdersPage(), 10, 'buyer').pipe(
+      map((response) => {
+        const data = response?.data || response || [];
+        const orders = Array.isArray(data) ? data : [];
+        const cashOrders = orders.filter((o: any) =>
+          (o.paymentMethod || '').toLowerCase() === 'cash'
+        );
+        this.buyerCashOrders.set(cashOrders);
+        this.buyerCashOrdersTotalPages.set(response?.totalPages || 1);
+        this.buyerCashOrdersLoading.set(false);
+        return response;
+      })
+    );
   }
 
   loadPayments(): void {

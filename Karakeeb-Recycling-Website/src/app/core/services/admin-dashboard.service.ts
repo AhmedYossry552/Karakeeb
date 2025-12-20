@@ -52,9 +52,8 @@ export class AdminDashboardService {
       categories: this.http.get<any>(`${this.apiUrl}/categories`).pipe(
         catchError(() => of([]))
       ),
-      orders: this.http.get<any>(`${this.apiUrl}/admin/orders?limit=1000`).pipe(
-        catchError(() => of({ success: false, data: [] }))
-      )
+      // Removed large order fetch - use analytics data instead for better performance
+      orders: of({ success: true, data: [] })
     }).pipe(
       map((results) => {
         // Process analytics
@@ -70,25 +69,8 @@ export class AdminDashboardService {
 
         // Process users
         let topUsers = results.users?.success ? (results.users.data || []) : [];
-
-        // Calculate order counts per user
-        if (results.orders?.success && results.orders.data?.data) {
-          const orders = results.orders.data.data;
-          const orderCounts: { [userId: string]: number } = {};
-          
-          orders.forEach((order: any) => {
-            const userId = order.userId || order.user?._id || order.user?.id;
-            if (userId) {
-              orderCounts[userId] = (orderCounts[userId] || 0) + 1;
-            }
-          });
-
-          // Merge order counts into topUsers
-          topUsers = topUsers.map((user: any) => ({
-            ...user,
-            orderCount: orderCounts[user._id || user.id || user.userId] || 0
-          }));
-        }
+        
+        // Note: Order counts removed to improve performance - can be added back if needed via separate endpoint
 
         // Process materials
         const topMaterials = Array.isArray(results.materials) ? results.materials : [];
