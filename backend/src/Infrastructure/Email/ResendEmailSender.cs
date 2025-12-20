@@ -45,7 +45,7 @@ public sealed class ResendEmailSender : IEmailSender
             html = htmlBody
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "emails")
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails")
         {
             Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
         };

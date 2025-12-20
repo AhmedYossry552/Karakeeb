@@ -111,12 +111,10 @@ public static class DependencyInjection
                     "Email provider is set to Resend, but Resend:ApiKey or Resend:FromAddress is missing.");
             }
 
-            services.AddHttpClient<ResendEmailSender>(client =>
+            services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
             {
                 client.BaseAddress = new Uri("https://api.resend.com/");
             });
-
-            services.AddTransient<IEmailSender, ResendEmailSender>();
         }
         else
         {
