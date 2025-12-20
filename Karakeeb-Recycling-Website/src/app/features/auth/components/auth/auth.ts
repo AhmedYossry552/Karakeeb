@@ -407,9 +407,12 @@ export class AuthComponent implements OnInit, AfterViewInit {
       next: (res) => {
         if (res.exists) {
           // Existing user - login
-          if (res.accessToken && res.user) {
-            this.authService.setUser(res.user);
-            this.authService.setToken(res.accessToken);
+          const anyRes: any = res as any;
+          const user = anyRes?.user || anyRes?.data?.user || anyRes?.data || null;
+          const token = anyRes?.accessToken || anyRes?.data?.accessToken || anyRes?.token || anyRes?.data?.token || null;
+          if (token && user) {
+            this.authService.setUser(user);
+            this.authService.setToken(token);
             const loginMsg = this.translation.t('auth.login.loginSuccess');
             const successTitle = this.translation.t('auth.login.success');
             this.toastr.success(
@@ -417,6 +420,13 @@ export class AuthComponent implements OnInit, AfterViewInit {
               successTitle !== 'auth.login.success' ? successTitle : 'Success'
             );
             this.router.navigate([this.returnUrl]);
+          } else {
+            const googleErrorMsg = this.translation.t('auth.errors.googleLoginFailed');
+            const errorTitle = this.translation.t('auth.errors.error');
+            this.toastr.error(
+              googleErrorMsg !== 'auth.errors.googleLoginFailed' ? googleErrorMsg : 'Google login failed. Please try again.',
+              errorTitle !== 'auth.errors.error' ? errorTitle : 'Error'
+            );
           }
         } else {
           // New user - store Google user data and go to signup flow

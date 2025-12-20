@@ -70,11 +70,16 @@ export class SocialButtonsComponent implements OnInit, AfterViewInit {
       next: (res) => {
         if (res.exists) {
           // Existing user
-          if (res.accessToken && res.user) {
-            this.authService.setUser(res.user);
-            this.authService.setToken(res.accessToken);
+          const anyRes: any = res as any;
+          const user = anyRes?.user || anyRes?.data?.user || anyRes?.data || null;
+          const token = anyRes?.accessToken || anyRes?.data?.accessToken || anyRes?.token || anyRes?.data?.token || null;
+          if (token && user) {
+            this.authService.setUser(user);
+            this.authService.setToken(token);
+            this.router.navigate(['/']);
+          } else {
+            this.toastr.error('Google login failed');
           }
-          this.router.navigate(['/']);
         } else {
           // First time login → go to role selection
           this.authContext.setGoogleUser({

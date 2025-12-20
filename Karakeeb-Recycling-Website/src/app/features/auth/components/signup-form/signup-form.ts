@@ -111,16 +111,24 @@ export class SignUpFormComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.exists) {
           // Existing user - login
-          if (res.accessToken && res.user) {
-            this.authService.setUser(res.user);
-            this.authService.setToken(res.accessToken);
+          const anyRes: any = res as any;
+          const user = anyRes?.user || anyRes?.data?.user || anyRes?.data || null;
+          const token = anyRes?.accessToken || anyRes?.data?.accessToken || anyRes?.token || anyRes?.data?.token || null;
+          if (token && user) {
+            this.authService.setUser(user);
+            this.authService.setToken(token);
             const loginMsg = this.translation.t('auth.login.loginSuccess');
             const successTitle = this.translation.t('auth.login.success');
             this.toastr.success(
               loginMsg !== 'auth.login.loginSuccess' ? loginMsg : 'Welcome back!',
               successTitle !== 'auth.login.success' ? successTitle : 'Success'
             );
-            this.navigateAfterSignup(res.user);
+            this.navigateAfterSignup(user);
+          } else {
+            this.toastr.error(
+              'Login failed. Please try again.',
+              this.translation.t('auth.errors.error') !== 'auth.errors.error' ? this.translation.t('auth.errors.error') : 'Error'
+            );
           }
         } else {
           // New user - store Google user data and continue with signup
@@ -294,9 +302,19 @@ export class SignUpFormComponent implements OnInit, OnDestroy {
           registerMsg !== 'auth.register.success' ? registerMsg : 'Registration successful!',
           successTitle !== 'auth.login.success' ? successTitle : 'Success'
         );
-        this.authService.setUser(res.user);
-        this.authService.setToken(res.accessToken);
-        this.navigateAfterSignup(res.user);
+        const anyRes: any = res as any;
+        const user = anyRes?.user || anyRes?.data?.user || anyRes?.data || null;
+        const token = anyRes?.accessToken || anyRes?.data?.accessToken || anyRes?.token || anyRes?.data?.token || null;
+        if (!token || !user) {
+          this.toastr.error(
+            'Registration succeeded but login token was not returned. Please login.',
+            this.translation.t('auth.errors.error') !== 'auth.errors.error' ? this.translation.t('auth.errors.error') : 'Error'
+          );
+          return;
+        }
+        this.authService.setUser(user);
+        this.authService.setToken(token);
+        this.navigateAfterSignup(user);
       },
       error: (err) => {
         console.error('Registration error:', err);

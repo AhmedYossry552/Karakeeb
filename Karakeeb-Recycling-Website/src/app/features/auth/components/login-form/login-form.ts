@@ -103,16 +103,24 @@ export class LoginFormComponent implements OnInit, AfterViewInit {
       next: (res) => {
         if (res.exists) {
           // Existing user - login
-          if (res.accessToken && res.user) {
-            this.authService.setUser(res.user);
-            this.authService.setToken(res.accessToken);
+          const anyRes: any = res as any;
+          const user = anyRes?.user || anyRes?.data?.user || anyRes?.data || null;
+          const token = anyRes?.accessToken || anyRes?.data?.accessToken || anyRes?.token || anyRes?.data?.token || null;
+          if (token && user) {
+            this.authService.setUser(user);
+            this.authService.setToken(token);
             const loginMsg = this.translation.t('auth.login.loginSuccess');
             const successTitle = this.translation.t('auth.login.success');
             this.toastr.success(
               loginMsg !== 'auth.login.loginSuccess' ? loginMsg : 'Welcome back!',
               successTitle !== 'auth.login.success' ? successTitle : 'Success'
             );
-            this.navigateAfterLogin(res.user);
+            this.navigateAfterLogin(user);
+          } else {
+            this.toastr.error(
+              'Login failed. Please try again.',
+              this.translation.t('auth.errors.error') !== 'auth.errors.error' ? this.translation.t('auth.errors.error') : 'Error'
+            );
           }
         } else {
           // New user - go to role selection
@@ -164,15 +172,25 @@ export class LoginFormComponent implements OnInit, AfterViewInit {
 
     this.authApi.login({ email, password }).subscribe({
       next: (res) => {
-        this.authService.setUser(res.user);
-        this.authService.setToken(res.accessToken);
+        const anyRes: any = res as any;
+        const user = anyRes?.user || anyRes?.data?.user || anyRes?.data || null;
+        const token = anyRes?.accessToken || anyRes?.data?.accessToken || anyRes?.token || anyRes?.data?.token || null;
+        if (!token || !user) {
+          this.toastr.error(
+            'Login failed. Please try again.',
+            this.translation.t('auth.errors.error') !== 'auth.errors.error' ? this.translation.t('auth.errors.error') : 'Error'
+          );
+          return;
+        }
+        this.authService.setUser(user);
+        this.authService.setToken(token);
         const loginMsg = this.translation.t('auth.login.loginSuccess');
         const successTitle = this.translation.t('auth.login.success');
         this.toastr.success(
           loginMsg !== 'auth.login.loginSuccess' ? loginMsg : 'Welcome back!',
           successTitle !== 'auth.login.success' ? successTitle : 'Success'
         );
-        this.navigateAfterLogin(res.user);
+        this.navigateAfterLogin(user);
       },
       error: (err) => {
         console.error('Login error:', err);
