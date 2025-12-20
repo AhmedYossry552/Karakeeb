@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,7 +24,7 @@ const VOUCHERS = [
   templateUrl: './redeem-points.html',
   styleUrls: ['./redeem-points.scss']
 })
-export class RedeemPointsComponent implements OnInit {
+export class RedeemPointsComponent implements OnInit, OnChanges {
   @Input() show = false;
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
@@ -73,9 +73,40 @@ export class RedeemPointsComponent implements OnInit {
     });
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    // Reload points when modal is opened
+    if (changes['show'] && changes['show'].currentValue === true && !changes['show'].previousValue) {
+      console.log('🔄 Redeem modal opened - reloading points...');
+      const user = this.user();
+      if (user?._id || user?.id || (user as any)?.userId) {
+        this.loadUserPoints();
+      }
+    }
+  }
+
   loadUserPoints(): void {
     const user = this.user();
-    if (!user?._id) return;
+    if (!user) {
+      console.log('⚠️ No user found for loading points');
+      this.userPoints.set({
+        totalPoints: 0,
+        pointsHistory: []
+      });
+      this.pointsLoading.set(false);
+      return;
+    }
+
+    // Get user ID - try multiple possible field names
+    const userId = user._id || user.id || (user as any).userId;
+    if (!userId) {
+      console.error('❌ User ID not found for loading points. User object:', JSON.stringify(user, null, 2));
+      this.userPoints.set({
+        totalPoints: 0,
+        pointsHistory: []
+      });
+      this.pointsLoading.set(false);
+      return;
+    }
 
     // Only load points for customers - admins, delivery, and buyers don't have points
     if (user.role !== 'customer') {
@@ -89,10 +120,12 @@ export class RedeemPointsComponent implements OnInit {
     }
 
     this.pointsLoading.set(true);
-    // Use /points/me endpoint which is authorized for the current user
-    // This ensures we get the latest points including points from completed orders
+    console.log('🔄 Loading points for user:', userId, 'role:', user.role, 'provider:', user.provider);
+    
+    // Try /points/me endpoint first (authorized for current user)
     this.pointsService.getUserPoints().subscribe({
       next: (response) => {
+        console.log('✅ Points loaded successfully:', response);
         const total = response.totalPoints || 0;
         const history = response.pointsHistory || [];
 
@@ -101,13 +134,37 @@ export class RedeemPointsComponent implements OnInit {
           pointsHistory: history
         });
 
- 
+        console.log('📊 Points set - Total:', total, 'History entries:', history.length);
         this.pointsLoading.set(false);
       },
       error: (error) => {
-        console.error('Failed to load user points:', error);
-        // Fallback: try direct API call
-        this.pointsLoading.set(false);
+        console.error('❌ Failed to load user points from /points/me:', error);
+        // Fallback: try direct API call with user ID
+        console.log('🔄 Trying fallback: /users/' + userId + '/points');
+        this.api.get<any>(`/users/${userId}/points`, {
+          params: { page: 1, limit: 100 }
+        }).subscribe({
+          next: (fallbackResponse) => {
+            console.log('✅ Fallback points loaded:', fallbackResponse);
+            if (fallbackResponse?.success && fallbackResponse?.data) {
+              const total = fallbackResponse.data.totalPoints || 0;
+              const history = fallbackResponse.data.pointsHistory || [];
+              this.userPoints.set({
+                totalPoints: total,
+                pointsHistory: history
+              });
+            }
+            this.pointsLoading.set(false);
+          },
+          error: (fallbackError) => {
+            console.error('❌ Fallback also failed:', fallbackError);
+            this.userPoints.set({
+              totalPoints: 0,
+              pointsHistory: []
+            });
+            this.pointsLoading.set(false);
+          }
+        });
       }
     });
   }
@@ -165,7 +222,24 @@ export class RedeemPointsComponent implements OnInit {
     if (!this.activeOption || this.isProcessing()) return;
 
     const user = this.user();
-    if (!user?._id) return;
+    if (!user) {
+      this.toastr.error(
+        this.translation.t('ewallet.userNotFound') || 'User not found',
+        this.translation.t('ewallet.error') || 'Error'
+      );
+      return;
+    }
+
+    // Get user ID - try multiple possible field names
+    const userId = user._id || user.id || (user as any).userId;
+    if (!userId) {
+      console.error('❌ User ID not found for redemption. User object:', JSON.stringify(user, null, 2));
+      this.toastr.error(
+        this.translation.t('ewallet.userNotFound') || 'User ID not found',
+        this.translation.t('ewallet.error') || 'Error'
+      );
+      return;
+    }
 
     this.isProcessing.set(true);
 
@@ -173,36 +247,75 @@ export class RedeemPointsComponent implements OnInit {
       if (this.activeOption === 'money') {
         const calc = this.calculations();
         if (!calc.isValidAmount) {
+          const errorMsg = calc.remainingPoints < 0
+            ? (this.translation.t('ewallet.notEnoughPoints') || 'You don\'t have enough points')
+            : (this.translation.t('ewallet.invalidAmount') || 'Invalid amount');
           this.toastr.error(
-            this.translation.t('ewallet.notEnoughPoints') || 'You don\'t have enough points',
-            this.translation.t('ewallet.invalidAmount') || 'Invalid Amount'
+            errorMsg,
+            this.translation.t('ewallet.error') || 'Error'
           );
           this.isProcessing.set(false);
           return;
         }
 
         const amount = parseFloat(this.redeemForm.get('amount')?.value);
+        if (!amount || amount <= 0) {
+          this.toastr.error(
+            this.translation.t('ewallet.invalidAmount') || 'Please enter a valid amount',
+            this.translation.t('ewallet.error') || 'Error'
+          );
+          this.isProcessing.set(false);
+          return;
+        }
+
+        console.log('🔄 Converting points to wallet:', {
+          userId,
+          amount,
+          requiredPoints: calc.requiredPoints,
+          availablePoints: this.totalPoints
+        });
 
         // Use backend endpoint to convert points to wallet cashback in a single atomic operation
+        // Backend expects { Amount: number } or null
         const response: any = await firstValueFrom(
-          this.api.post(`/users/${user._id}/points/convert`, {
-            amount
+          this.api.post(`/users/${userId}/points/convert`, {
+            Amount: amount
           })
         );
 
+        console.log('✅ Points conversion response:', response);
+
+        if (!response?.success) {
+          throw new Error(response?.message || 'Points conversion failed');
+        }
+
         const cashAdded = response?.data?.cashAdded ?? amount;
+        const pointsUsed = response?.data?.pointsUsed ?? calc.requiredPoints;
+        const remainingPoints = response?.data?.remainingPoints ?? (this.totalPoints - pointsUsed);
+        const newBalance = response?.data?.newBalance;
+
+        console.log('✅ Conversion successful:', {
+          cashAdded,
+          pointsUsed,
+          remainingPoints,
+          newBalance
+        });
 
         this.toastr.success(
-          `${cashAdded} EGP has been added to your wallet!`,
+          `${cashAdded} EGP has been added to your wallet! ${pointsUsed} points deducted.`,
           this.translation.t('ewallet.success') || 'Success'
         );
         
         // Reload points to show updated balance
         this.loadUserPoints();
-        this.redeemForm.reset();
-        this.qrVisible.set(false);
-        this.activeOption = null;
-        this.success.emit(); // Emit success to parent to refresh points in profile
+        
+        // Reset form and close modal after a short delay to show success message
+        setTimeout(() => {
+          this.redeemForm.reset();
+          this.qrVisible.set(false);
+          this.activeOption = null;
+          this.success.emit(); // Emit success to parent to refresh points and wallet in profile
+        }, 1500);
       } else if (this.activeOption === 'voucher') {
         const voucher = this.vouchers.find(v => v.id === this.selectedVoucher);
         if (!voucher) {
@@ -214,15 +327,37 @@ export class RedeemPointsComponent implements OnInit {
           return;
         }
 
-        if (this.redeemedVouchers().has(voucher.id) || this.totalPoints < voucher.points) {
+        if (this.redeemedVouchers().has(voucher.id)) {
+          this.toastr.warning(
+            this.translation.t('ewallet.voucherAlreadyRedeemed') || 'This voucher has already been redeemed',
+            this.translation.t('ewallet.warning') || 'Warning'
+          );
           this.isProcessing.set(false);
           return;
         }
 
-        await firstValueFrom(this.pointsService.deductPoints(user._id, {
+        if (this.totalPoints < voucher.points) {
+          this.toastr.error(
+            this.translation.t('ewallet.notEnoughPoints') || `You need ${voucher.points} points to redeem this voucher`,
+            this.translation.t('ewallet.error') || 'Error'
+          );
+          this.isProcessing.set(false);
+          return;
+        }
+
+        console.log('🔄 Redeeming voucher:', {
+          userId,
+          voucher: voucher.name,
+          pointsRequired: voucher.points,
+          availablePoints: this.totalPoints
+        });
+
+        const deductResponse = await firstValueFrom(this.pointsService.deductPoints(userId, {
           points: voucher.points,
           reason: `Voucher redeemed: ${voucher.name}`
         }));
+
+        console.log('✅ Voucher redemption successful:', deductResponse);
 
         const qrText = `${this.translation.t('ewallet.voucher') || 'Voucher'}: ${voucher.name} - ${this.translation.t('ewallet.value') || 'Value'}: ${voucher.value}`;
         this.qrValue.set(qrText);
@@ -231,18 +366,43 @@ export class RedeemPointsComponent implements OnInit {
         this.selectedVoucher = null;
 
         this.toastr.success(
-          this.translation.t('ewallet.voucherReady') || 'Voucher ready!',
+          `${this.translation.t('ewallet.voucherReady') || 'Voucher ready!'} ${voucher.points} points deducted.`,
           this.translation.t('ewallet.success') || 'Success'
         );
 
         // Reload points to show updated balance
         this.loadUserPoints();
-        this.success.emit(); // Emit success to parent to refresh points in profile
+        
+        // Emit success after a short delay
+        setTimeout(() => {
+          this.success.emit(); // Emit success to parent to refresh points in profile
+        }, 1000);
       }
     } catch (error: any) {
-      console.error('Redemption failed:', error);
+      console.error('❌ Redemption failed:', error);
+      console.error('❌ Error details:', {
+        status: error?.status,
+        statusText: error?.statusText,
+        message: error?.message,
+        error: error?.error
+      });
+      
+      let errorMessage = this.translation.t('ewallet.couldNotDeductPoints') || 'Could not complete redemption';
+      
+      if (error?.error?.message) {
+        errorMessage = error.error.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.status === 400) {
+        errorMessage = this.translation.t('ewallet.invalidRequest') || 'Invalid request. Please check your input.';
+      } else if (error?.status === 403) {
+        errorMessage = this.translation.t('ewallet.unauthorized') || 'You are not authorized to perform this action.';
+      } else if (error?.status === 404) {
+        errorMessage = this.translation.t('ewallet.userNotFound') || 'User not found.';
+      }
+      
       this.toastr.error(
-        error?.error?.message || this.translation.t('ewallet.couldNotDeductPoints') || 'Could not deduct points',
+        errorMessage,
         this.translation.t('ewallet.error') || 'Error'
       );
     } finally {

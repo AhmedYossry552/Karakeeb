@@ -49,31 +49,69 @@ export class EWalletComponent implements OnInit {
   ngOnInit(): void {
     this.authService.user$.subscribe(user => {
       this.user.set(user);
-      if (user?._id) {
-        this.loadData();
+      if (user) {
+        // Get user ID - try multiple possible field names
+        const userId = user._id || user.id || (user as any).userId;
+        if (userId) {
+          this.loadData();
+        }
       }
     });
   }
 
   loadData(): void {
     const user = this.user();
-    if (!user?._id) return;
+    if (!user) {
+      console.log('⚠️ No user found for loading wallet data');
+      this.balance.set(0);
+      this.transactions.set([]);
+      this.recentTransactions.set([]);
+      this.loading.set(false);
+      return;
+    }
 
+    // Get user ID - try multiple possible field names
+    const userId = user._id || user.id || (user as any).userId;
+    if (!userId) {
+      console.error('❌ User ID not found for loading wallet data. User object:', JSON.stringify(user, null, 2));
+      this.balance.set(0);
+      this.transactions.set([]);
+      this.recentTransactions.set([]);
+      this.loading.set(false);
+      return;
+    }
+
+    // Only load wallet for customers
+    if (user.role !== 'customer') {
+      console.log('⚠️ Wallet is only available for customers. Current role:', user.role);
+      this.balance.set(0);
+      this.transactions.set([]);
+      this.recentTransactions.set([]);
+      this.loading.set(false);
+      return;
+    }
+
+    console.log('🔄 Loading wallet data for user:', userId);
     this.loading.set(true);
     
     // Load balance
-    this.ewalletService.getBalance(user._id).subscribe({
+    this.ewalletService.getBalance(userId).subscribe({
       next: (response: any) => {
-        this.balance.set(response.balance || 0);
+        const balance = response.balance || 0;
+        console.log('✅ Wallet balance loaded:', balance);
+        this.balance.set(balance);
       },
       error: (error) => {
-        console.error('Failed to load balance from wallet endpoint:', error);
+        console.error('❌ Failed to load balance from wallet endpoint:', error);
         // Try fallback to user endpoint
-        this.ewalletService.getBalanceFromUser(user._id).subscribe({
+        this.ewalletService.getBalanceFromUser(userId).subscribe({
           next: (userData: any) => {
-            this.balance.set(userData.balance || 0);
+            const balance = userData.balance || 0;
+            console.log('✅ Wallet balance loaded from fallback:', balance);
+            this.balance.set(balance);
           },
-          error: () => {
+          error: (fallbackError) => {
+            console.error('❌ Fallback wallet balance load also failed:', fallbackError);
             this.balance.set(0);
           }
         });
@@ -81,33 +119,59 @@ export class EWalletComponent implements OnInit {
     });
 
     // Load transactions
-    this.ewalletService.getTransactions(user._id).subscribe({
+    this.ewalletService.getTransactions(userId).subscribe({
       next: (response: any) => {
+        console.log('📥 Raw transactions response:', response);
         const raw = response.transactions || response || [];
         const transactionsArray = Array.isArray(raw) ? raw : [];
+        
+        // Map and format transactions
+        const formatted = transactionsArray.map((t: any) => ({
+          _id: t._id || t.Id || t.id || '',
+          type: (t.type || t.Type || 'cashback').toLowerCase(),
+          amount: t.amount || t.Amount || 0,
+          date: t.date || t.Date || t.transactionDate || t.TransactionDate || new Date().toISOString(),
+          description: t.description || t.Description || t.reason || t.Reason || '',
+          status: t.status || t.Status || 'completed',
+          gateway: t.gateway || t.Gateway || ''
+        }));
+        
         // Sort by date (newest first)
-        const sorted = transactionsArray.sort(
+        const sorted = formatted.sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
+        
+        console.log('✅ Formatted transactions:', sorted.length, 'entries');
         this.transactions.set(sorted);
         this.recentTransactions.set(sorted.slice(0, 5));
         this.loading.set(false);
       },
       error: (error) => {
-        console.error('Failed to load transactions:', error);
+        console.error('❌ Failed to load transactions:', error);
+        this.transactions.set([]);
+        this.recentTransactions.set([]);
         this.loading.set(false);
       }
     });
   }
 
   onWithdrawSuccess(): void {
-    this.loadData();
-    this.showWithdrawModal.set(false);
+    console.log('🔄 Refreshing wallet data after successful withdrawal...');
+    // Add a small delay to ensure backend has processed the transaction
+    setTimeout(() => {
+      this.loadData();
+    }, 500);
+    // Modal will be closed by withdraw component after showing success
   }
 
   onRedeemSuccess(): void {
-    this.loadData();
-    this.showRedeemPointsModal.set(false);
+    console.log('🔄 Refreshing wallet data after successful redemption...');
+    // Add a small delay to ensure backend has processed the transaction
+    setTimeout(() => {
+      this.loadData();
+    }, 500);
+    // Don't close modal immediately - let user see success message
+    // Modal will be closed by redeem component after showing success
   }
 
   getTransactionTypeLabel(type: string): string {

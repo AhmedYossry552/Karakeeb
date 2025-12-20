@@ -297,25 +297,47 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const user = this.user();
-    console.log('🔍 loadUserPoints called - user:', user?._id, 'role:', user?.role);
+    console.log('🔍 loadUserPoints called - user:', user);
+    console.log('🔍 User ID:', user?._id, 'User ID type:', typeof user?._id);
+    console.log('🔍 User role:', user?.role, 'Role type:', typeof user?.role);
+    console.log('🔍 User provider:', user?.provider);
+    console.log('🔍 Full user object keys:', user ? Object.keys(user) : 'null');
     
     // Track last load time
     (this as any).lastPointsLoad = Date.now();
     
-    if (!user?._id || user.role !== 'customer') {
-      console.log('⚠️ Cannot load points - user:', user?._id, 'role:', user?.role);
+    // Check if user exists and has required fields
+    if (!user) {
+      console.error('❌ No user found in auth service');
+      this.userPoints.set({ totalPoints: 0, pointsHistory: [] });
+      this.pointsLoading.set(false);
+      return;
+    }
+    
+    // Check for user ID - try multiple possible field names
+    const userId = user._id || user.id || (user as any).userId;
+    if (!userId) {
+      console.error('❌ User ID not found. User object:', JSON.stringify(user, null, 2));
+      this.userPoints.set({ totalPoints: 0, pointsHistory: [] });
+      this.pointsLoading.set(false);
+      return;
+    }
+    
+    // Check if user is a customer
+    if (user.role !== 'customer') {
+      console.log('⚠️ User is not a customer - role:', user.role);
       // Set empty points for non-customers
       this.userPoints.set({ totalPoints: 0, pointsHistory: [] });
       this.pointsLoading.set(false);
       return;
     }
 
-    console.log('🔄 Starting loadUserPoints for user:', user._id);
+    console.log('🔄 Starting loadUserPoints for user:', userId);
     this.pointsLoading.set(true);
     
     // Try /users/{userId}/points endpoint first (it wraps in { success: true, data: {...} })
-    console.log('🔄 Making API call to /users/' + user._id + '/points...');
-    const subscription = this.api.get<any>(`/users/${user._id}/points`, {
+    console.log('🔄 Making API call to /users/' + userId + '/points...');
+    const subscription = this.api.get<any>(`/users/${userId}/points`, {
       params: { page: 1, limit: 100 }
     }).subscribe({
         next: (response) => {
@@ -535,7 +557,17 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private addRetroactivePoints(): void {
     const user = this.user();
-    if (!user?._id || user.role !== 'customer') return;
+    if (!user || user.role !== 'customer') {
+      console.log('⚠️ Cannot add retroactive points - user:', user, 'role:', user?.role);
+      return;
+    }
+    
+    // Get user ID - try multiple possible field names
+    const userId = user._id || user.id || (user as any).userId;
+    if (!userId) {
+      console.error('❌ User ID not found for retroactive points. User object:', JSON.stringify(user, null, 2));
+      return;
+    }
 
     // Get all completed orders
     const completedOrders = this.allOrders().filter(o => this.isOrderCompleted(o.status));
@@ -574,7 +606,8 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('📋 Orders needing points:', ordersNeedingPoints);
     
     // Call the retroactive points endpoint to add points for completed orders that don't have them
-    this.api.post<any>(`/users/${user._id}/points/retroactive`, {}).subscribe({
+    console.log('🔄 Calling retroactive points endpoint for user:', userId);
+    this.api.post<any>(`/users/${userId}/points/retroactive`, {}).subscribe({
       next: (response) => {
         try {
           console.log('📥 Retroactive points response:', response);
@@ -646,23 +679,52 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private loadWalletBalance(): void {
     const user = this.user();
-    if (!user?._id) return;
+    if (!user) {
+      console.log('⚠️ No user found for loading wallet balance');
+      this.walletBalance.set(0);
+      this.walletLoading.set(false);
+      return;
+    }
 
+    // Get user ID - try multiple possible field names
+    const userId = user._id || user.id || (user as any).userId;
+    if (!userId) {
+      console.error('❌ User ID not found for loading wallet balance. User object:', JSON.stringify(user, null, 2));
+      this.walletBalance.set(0);
+      this.walletLoading.set(false);
+      return;
+    }
+
+    // Only load wallet for customers
+    if (user.role !== 'customer') {
+      console.log('⚠️ Wallet is only available for customers. Current role:', user.role);
+      this.walletBalance.set(0);
+      this.walletLoading.set(false);
+      return;
+    }
+
+    console.log('🔄 Loading wallet balance for user:', userId);
     this.walletLoading.set(true);
-    this.ewalletService.getBalance(user._id).subscribe({
+    
+    this.ewalletService.getBalance(userId).subscribe({
       next: (response) => {
-        this.walletBalance.set(response.balance || 0);
+        const balance = response.balance || 0;
+        console.log('✅ Wallet balance loaded:', balance);
+        this.walletBalance.set(balance);
         this.walletLoading.set(false);
       },
       error: (error) => {
-        console.error('Failed to load wallet balance:', error);
+        console.error('❌ Failed to load wallet balance:', error);
         // Try fallback
-        this.ewalletService.getBalanceFromUser(user._id).subscribe({
+        this.ewalletService.getBalanceFromUser(userId).subscribe({
           next: (userData) => {
-            this.walletBalance.set(userData.balance || 0);
+            const balance = userData.balance || 0;
+            console.log('✅ Wallet balance loaded from fallback:', balance);
+            this.walletBalance.set(balance);
             this.walletLoading.set(false);
           },
-          error: () => {
+          error: (fallbackError) => {
+            console.error('❌ Fallback wallet balance load also failed:', fallbackError);
             this.walletBalance.set(0);
             this.walletLoading.set(false);
           }
@@ -678,8 +740,8 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.pointsLoading.set(true);
     this.toastr.info(
-      this.translation.t('profile.points.refreshing') || 'Refreshing points...',
-      this.translation.t('common.info') || 'Info'
+      this.translation.t('Refreshing points...') || 'Refreshing points...',
+      this.translation.t('info') || 'Info'
     );
     
     // First reload points to see current state
@@ -929,20 +991,20 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     // Check if order can be cancelled (only pending orders)
     if (order.status !== 'pending') {
       this.toastr.warning(
-        this.translation.t('profile.orders.cannotCancel') || 
+        this.translation.t('cannotCancel') || 
         'Only pending orders can be cancelled',
-        this.translation.t('common.warning') || 'Warning'
+        this.translation.t('warning') || 'Warning'
       );
       return;
     }
 
     // Show confirmation dialog
     const confirmed = await this.confirmationService.confirm({
-      title: this.translation.t('profile.orders.cancelOrder') || 'Cancel Order',
-      message: this.translation.t('profile.orders.cancelConfirm') || 
+      title: this.translation.t('cancelOrder') || 'Cancel Order',
+      message: this.translation.t('cancelConfirm') || 
         'Are you sure you want to cancel this order? This action cannot be undone.',
-      confirmText: this.translation.t('profile.orders.cancel') || 'Cancel Order',
-      cancelText: this.translation.t('common.cancel') || 'Cancel'
+      confirmText: this.translation.t('cancel') || 'Cancel Order',
+      cancelText: this.translation.t('cancel') || 'Cancel'
     });
 
     if (!confirmed) return;
@@ -951,16 +1013,16 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     this.api.put(`/orders/${orderId}/status`, { status: 'cancelled' }).subscribe({
       next: () => {
         this.toastr.success(
-          this.translation.t('profile.orders.cancelled') !== 'profile.orders.cancelled' ? this.translation.t('profile.orders.cancelled') : 'Order cancelled successfully',
-          this.translation.t('pickup.success') !== 'pickup.success' ? this.translation.t('pickup.success') : 'Success'
+          this.translation.t('cancelled') || 'Order cancelled successfully',
+          this.translation.t('success') || 'Success'
         );
         this.loadOrders(); // Reload orders to reflect the change
       },
       error: (error) => {
         console.error('Failed to cancel order:', error);
         const errorMessage = error.error?.message || 
-          (this.translation.t('profile.orders.cancelError') !== 'profile.orders.cancelError' ? this.translation.t('profile.orders.cancelError') : 'Failed to cancel order. Please try again.');
-        this.toastr.error(errorMessage, this.translation.t('common.error') !== 'common.error' ? this.translation.t('common.error') : 'Error');
+          (this.translation.t('cancelError') || 'Failed to cancel order. Please try again.');
+        this.toastr.error(errorMessage, this.translation.t('error') || 'Error');
       }
     });
   }
@@ -975,7 +1037,7 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
         this.toastr.warning(
           this.translation.t('Only buyers can delete orders') || 
           'Only buyers can delete orders',
-          this.translation.t('common.warning') !== 'common.warning' ? this.translation.t('common.warning') : 'Warning'
+          this.translation.t('warning') || 'Warning'
         );
       return;
     }
@@ -986,7 +1048,7 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
       this.toastr.warning(
         this.translation.t('Only cancelled or completed orders can be deleted') || 
         'Only cancelled or completed orders can be deleted',
-        this.translation.t('common.warning') !== 'common.warning' ? this.translation.t('common.warning') : 'Warning'
+        this.translation.t('warning') || 'Warning'
       );
       return;
     }
@@ -997,7 +1059,7 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
       message: this.translation.t('Are you sure you want to delete this order? This action cannot be undone.') || 
         'Are you sure you want to delete this order? This action cannot be undone.',
       confirmText: this.translation.t('Delete') || 'Delete',
-      cancelText: this.translation.t('common.cancel') || 'Cancel'
+      cancelText: this.translation.t('cancel') || 'Cancel'
     });
 
     if (!confirmed) return;
@@ -1008,7 +1070,7 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
         this.toastr.success(
           this.translation.t('Order deleted successfully') || 
           'Order deleted successfully',
-          this.translation.t('common.success') !== 'common.success' ? this.translation.t('common.success') : 'Success'
+          this.translation.t('success') || 'Success'
         );
         this.loadOrders(); // Reload orders
       },
@@ -1020,7 +1082,7 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
         } else if (error.status === 403) {
           errorMessage = this.translation.t('You are not authorized to delete this order') || 'You are not authorized to delete this order';
         }
-        this.toastr.error(errorMessage, this.translation.t('common.error') !== 'common.error' ? this.translation.t('common.error') : 'Error');
+        this.toastr.error(errorMessage, this.translation.t('error') || 'Error');
       }
     });
   }
@@ -1076,8 +1138,8 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     // .NET backend doesn't have reviews endpoint - just show success
     // In production, you would implement this endpoint
     this.toastr.success(
-      this.translation.t('profile.reviews.deleted') || 'Review deleted successfully',
-      this.translation.t('pickup.success') || 'Success'
+          this.translation.t('reviewsDeleted') || 'Review deleted successfully',
+      this.translation.t('success') || 'Success'
     );
     this.loadReviews(); // Reload reviews
   }
@@ -1092,12 +1154,18 @@ export class ProfileComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onRedeemSuccess(): void {
-    // Reload user points after successful redemption
+    // Reload user points and wallet balance after successful redemption
     const user = this.user();
     if (user && user.role === 'customer') {
+      console.log('🔄 Refreshing points and wallet after successful redemption...');
       this.loadUserPoints();
+      // Add a small delay to ensure backend has processed the transaction
+      setTimeout(() => {
+        this.loadWalletBalance(); // Refresh wallet balance after redemption
+      }, 500);
     }
-    this.showRedeemModal.set(false);
+    // Don't close modal immediately - let user see success message
+    // Modal will be closed by redeem component after showing success
   }
 
   // Public method to refresh points (can be called from outside or on interval)

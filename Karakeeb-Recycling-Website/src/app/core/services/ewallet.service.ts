@@ -54,14 +54,26 @@ export class EWalletService {
     // .NET backend: GET /api/wallet/transactions
     return this.api.get<any>(`/wallet/transactions`).pipe(
       map(response => {
+        let transactions: any[] = [];
+        
         if (response?.success && response.data) {
-          return response.data.transactions || response.data || [];
+          transactions = response.data.transactions || response.data || [];
         } else if (Array.isArray(response)) {
-          return response;
+          transactions = response;
         } else if (response?.transactions) {
-          return response.transactions;
+          transactions = response.transactions;
         }
-        return [];
+        
+        // Map backend format to frontend format
+        return transactions.map((t: any) => ({
+          _id: t._id || t.Id || t.id || '',
+          type: (t.type || t.Type || 'cashback').toLowerCase(),
+          amount: t.amount || t.Amount || 0,
+          date: t.date || t.Date || t.transactionDate || t.TransactionDate || new Date().toISOString(),
+          description: t.description || t.Description || t.reason || t.Reason || '',
+          status: t.status || t.Status || 'completed',
+          gateway: t.gateway || t.Gateway || ''
+        }));
       })
     );
   }

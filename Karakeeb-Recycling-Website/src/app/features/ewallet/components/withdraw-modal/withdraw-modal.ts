@@ -89,10 +89,33 @@ export class WithdrawModalComponent {
   }
 
   async processPayment(): Promise<void> {
-    if (!this.selectedGateway() || !this.withdrawAmount()) return;
+    if (!this.selectedGateway() || !this.withdrawAmount()) {
+      this.toastr.warning(
+        this.translation.t('ewallet.selectGateway') || 'Please select a payment method',
+        this.translation.t('ewallet.warning') || 'Warning'
+      );
+      return;
+    }
 
     const user = this.authService.getUser();
-    if (!user?._id) return;
+    if (!user) {
+      this.toastr.error(
+        this.translation.t('ewallet.userNotFound') || 'User not found',
+        this.translation.t('ewallet.error') || 'Error'
+      );
+      return;
+    }
+
+    // Get user ID - try multiple possible field names
+    const userId = user._id || user.id || (user as any).userId;
+    if (!userId) {
+      console.error('❌ User ID not found for withdrawal. User object:', JSON.stringify(user, null, 2));
+      this.toastr.error(
+        this.translation.t('ewallet.userNotFound') || 'User ID not found',
+        this.translation.t('ewallet.error') || 'Error'
+      );
+      return;
+    }
 
     this.isProcessing.set(true);
     this.paymentStep.set(2);
@@ -104,32 +127,49 @@ export class WithdrawModalComponent {
       if (isNaN(amount) || amount <= 0) {
         this.toastr.error(this.translation.t('Invalid amount') || 'Invalid amount');
         this.paymentStep.set(1);
+        this.isProcessing.set(false);
         return;
       }
       
       if (amount > this.balance) {
         this.toastr.error(this.translation.t('Insufficient balance') || 'Insufficient balance');
         this.paymentStep.set(1);
+        this.isProcessing.set(false);
         return;
       }
       
       if (amount < 10) {
         this.toastr.error(this.translation.t('Minimum withdrawal is 10.00 EGP') || 'Minimum withdrawal is 10.00 EGP');
         this.paymentStep.set(1);
+        this.isProcessing.set(false);
         return;
       }
       
-      const response = await firstValueFrom(this.ewalletService.withdraw(user._id, amount, this.selectedGateway()));
-      console.log('Withdrawal response:', response);
+      console.log('🔄 Processing withdrawal:', {
+        userId,
+        amount,
+        gateway: this.selectedGateway(),
+        currentBalance: this.balance
+      });
+      
+      const response = await firstValueFrom(this.ewalletService.withdraw(userId, amount, this.selectedGateway()));
+      
+      console.log('✅ Withdrawal response:', response);
+      
+      const newBalance = response?.NewBalance ?? response?.newBalance ?? response?.data?.NewBalance ?? (this.balance - amount);
       
       this.processedAmount.set(this.withdrawAmount());
       this.paymentStep.set(3);
 
+      this.toastr.success(
+        `${amount} EGP withdrawal processed successfully via ${this.selectedGateway()}! New balance: ${newBalance} EGP`,
+        this.translation.t('ewallet.withdrawSuccess') !== 'ewallet.withdrawSuccess' ? this.translation.t('ewallet.withdrawSuccess') : 'Withdrawal Successful'
+      );
+
       setTimeout(() => {
         this.closeModal();
-        this.success.emit();
-        this.toastr.success(this.translation.t('ewallet.withdrawSuccess') !== 'ewallet.withdrawSuccess' ? this.translation.t('ewallet.withdrawSuccess') : 'Withdrawal processed successfully!');
-      }, 1000);
+        this.success.emit(); // Emit success to parent to refresh wallet balance
+      }, 2000);
     } catch (error: any) {
       console.error('Error processing payment:', error);
       let errorMessage = this.translation.t('ewallet.withdrawError') !== 'ewallet.withdrawError' ? this.translation.t('ewallet.withdrawError') : 'Failed to process payment';
