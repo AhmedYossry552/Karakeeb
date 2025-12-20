@@ -1,7 +1,6 @@
 using System;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Recycling.Application.Abstractions;
 
 namespace Recycling.Application.Services;
@@ -10,13 +9,11 @@ public class OtpService : IOtpService
 {
     private readonly IOtpRepository _otpRepository;
     private readonly IEmailSender _emailSender;
-    private readonly ILogger<OtpService> _logger;
 
-    public OtpService(IOtpRepository otpRepository, IEmailSender emailSender, ILogger<OtpService> logger)
+    public OtpService(IOtpRepository otpRepository, IEmailSender emailSender)
     {
         _otpRepository = otpRepository;
         _emailSender = emailSender;
-        _logger = logger;
     }
 
     public async Task CreateAndSendOtpAsync(string email)
@@ -42,15 +39,7 @@ public class OtpService : IOtpService
   <p style='font-size: 12px; color: #888;'>Tip: You can copy this code and paste it in the app.</p>
 </div>";
 
-                try
-                {
-                        await _emailSender.SendEmailAsync(email, subject, html);
-                }
-                catch (Exception ex)
-                {
-                        _logger.LogError(ex, "Failed to send OTP email to {Email}", email);
-                        throw new InvalidOperationException("Failed to send OTP email", ex);
-                }
+        await _emailSender.SendEmailAsync(email, subject, html);
     }
 
     public async Task VerifyOtpAsync(string email, string code)

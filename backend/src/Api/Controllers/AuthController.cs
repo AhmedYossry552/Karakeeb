@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -14,13 +13,11 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IWalletService _walletService;
-    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IAuthService authService, IWalletService walletService, ILogger<AuthController> logger)
+    public AuthController(IAuthService authService, IWalletService walletService)
     {
         _authService = authService;
         _walletService = walletService;
-        _logger = logger;
     }
 
     private void SetRefreshTokenCookie(string? refreshToken)
@@ -78,23 +75,11 @@ public class AuthController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            // Preserve previous behavior for known business rule
-            if (string.Equals(ex.Message, "Email already exists", StringComparison.OrdinalIgnoreCase))
-            {
-                return Conflict(new { message = ex.Message });
-            }
-
-            _logger.LogError(ex, "InitiateSignup failed for email {Email}", request.Email);
-            return StatusCode(500, new { message = "Failed to send OTP email" });
+            return Conflict(new { message = ex.Message });
         }
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "InitiateSignup crashed for email {Email}", request.Email);
-            return StatusCode(500, new { message = "Signup initiation failed" });
         }
     }
 
