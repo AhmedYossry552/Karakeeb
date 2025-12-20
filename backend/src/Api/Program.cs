@@ -76,6 +76,8 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddSingleton<TranscriptionService>();
 
+var swaggerEnabled = builder.Configuration.GetValue<bool>("Swagger:Enabled");
+
 var app = builder.Build();
 
 app.UseForwardedHeaders();
@@ -87,7 +89,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || swaggerEnabled)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
