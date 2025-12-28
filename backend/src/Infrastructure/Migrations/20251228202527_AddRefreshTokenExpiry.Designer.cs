@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Recycling.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Recycling.Infrastructure.Persistence;
 namespace Recycling.Infrastructure.Migrations
 {
     [DbContext(typeof(RecyclingDbContext))]
-    partial class RecyclingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251228202527_AddRefreshTokenExpiry")]
+    partial class AddRefreshTokenExpiry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

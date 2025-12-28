@@ -18,6 +18,7 @@ public class User
     public decimal? Rating { get; set; }
     public int TotalReviews { get; set; }
     public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
     public DateTime? LastActiveAt { get; set; }
     public int VoiceUsageCount { get; set; }
     public int? VoiceUsageLimit { get; set; }

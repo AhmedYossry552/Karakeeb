@@ -16,6 +16,15 @@ namespace Recycling.Api.Controllers;
 [Authorize]
 public class OrdersController : ControllerBase
 {
+        private static readonly HashSet<string> AllowedImageContentTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp"
+        };
+
+        private const long MaxProofImageBytes = 5 * 1024 * 1024; // 5 MB
     private readonly IOrderService _orderService;
     private readonly IPointsService _pointsService;
     private readonly IAddressService _addressService;
@@ -261,6 +270,8 @@ public class OrdersController : ControllerBase
     // POST /api/orders/{orderId}/complete-with-proof
     [HttpPost("{orderId}/complete-with-proof")]
     [Authorize(Roles = "delivery")]
+    [RequestSizeLimit(MaxProofImageBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxProofImageBytes)]
     public async Task<IActionResult> CompleteOrderWithProof(string orderId, [FromForm] CompleteOrderWithProofRequest request)
     {
         var courierId = GetUserId();
@@ -270,6 +281,16 @@ public class OrdersController : ControllerBase
 
         if (request.ProofPhoto != null && request.ProofPhoto.Length > 0)
         {
+            if (request.ProofPhoto.Length > MaxProofImageBytes)
+            {
+                return BadRequest($"Proof photo is too large. Max size is {MaxProofImageBytes / (1024 * 1024)}MB.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.ProofPhoto.ContentType) || !AllowedImageContentTypes.Contains(request.ProofPhoto.ContentType))
+            {
+                return BadRequest("Unsupported proof photo type. Allowed: jpeg, png, webp.");
+            }
+
             if (_imageUploadService.IsEnabled)
             {
                 try

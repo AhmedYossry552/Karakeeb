@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Recycling.Application;
@@ -8,6 +9,7 @@ using Recycling.Application.Options;
 using Recycling.Application.Services;
 using Recycling.Infrastructure;
 using Recycling.Infrastructure.Persistence;
+using System.Threading.RateLimiting;
 
 // PostgreSQL (timestamptz) + Npgsql requires UTC DateTimes by default.
 // This app historically stores DateTime values coming from SQL Server/clients as Kind=Unspecified.
@@ -81,6 +83,50 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddSingleton<TranscriptionService>();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    static string GetClientKey(HttpContext httpContext)
+    {
+        // Use IP address for simple per-client partitioning.
+        return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+
+    options.AddPolicy("auth-login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientKey(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("auth-otp", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientKey(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("auth-refresh", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientKey(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+});
+
 var swaggerEnabled = builder.Configuration.GetValue<bool>("Swagger:Enabled");
 
 var app = builder.Build();
@@ -103,10 +149,33 @@ if (app.Environment.IsDevelopment() || swaggerEnabled)
 }
 else
 {
+    app.UseHsts();
     app.UseHttpsRedirection();
 }
 
+// Security headers (avoid breaking Swagger UI).
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? string.Empty;
+    var isSwagger = path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase);
+
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
+
+    if (!isSwagger)
+    {
+        // This API shouldn't be embedded/execute scripts as a document.
+        context.Response.Headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+    }
+
+    await next();
+});
+
 app.UseCors("AllowFrontend");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

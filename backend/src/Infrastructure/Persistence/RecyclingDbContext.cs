@@ -36,6 +36,19 @@ public class RecyclingDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Ensure consistency with the existing schema (initial migrations use timestamptz).
+        // This prevents EF from generating bulk timestamp type changes across the model.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                {
+                    property.SetColumnType("timestamp with time zone");
+                }
+            }
+        }
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("users");
@@ -55,6 +68,7 @@ public class RecyclingDbContext : DbContext
             entity.Property(e => e.Rating).HasColumnName("rating").HasColumnType("decimal(4,2)");
             entity.Property(e => e.TotalReviews).HasColumnName("total_reviews").HasDefaultValue(0);
             entity.Property(e => e.RefreshToken).HasColumnName("refresh_token");
+            entity.Property(e => e.RefreshTokenExpiresAt).HasColumnName("refresh_token_expires_at");
             entity.Property(e => e.LastActiveAt).HasColumnName("last_active_at");
             entity.Property(e => e.VoiceUsageCount).HasColumnName("voice_usage_count").HasDefaultValue(0);
             entity.Property(e => e.VoiceUsageLimit).HasColumnName("voice_usage_limit");

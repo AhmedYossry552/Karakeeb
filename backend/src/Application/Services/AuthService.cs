@@ -1,10 +1,12 @@
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Options;
 using Recycling.Application.Abstractions;
 using Recycling.Application.Contracts.Auth;
 using Recycling.Application.Options;
+using Recycling.Application.Security;
 using Recycling.Domain.Entities;
 
 namespace Recycling.Application.Services;
@@ -37,9 +39,27 @@ public class AuthService : IAuthService
         _googleSettings = googleOptions.Value;
     }
 
+    private const int RefreshTokenDays = 7;
+
     private static string GenerateRefreshToken()
     {
-        return Guid.NewGuid().ToString("N");
+        // 256-bit random token (base64url) for refresh cookie.
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Base64UrlEncode(bytes);
+    }
+
+    private static string Base64UrlEncode(byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+    }
+
+    private static void SetRefreshToken(User user, string rawToken)
+    {
+        user.RefreshToken = RefreshTokenHasher.Sha256Hex(rawToken);
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -145,10 +165,15 @@ public class AuthService : IAuthService
             TotalPoints = 0,
             IsApproved = request.Role == "customer" || request.Role == "buyer",
             ImgUrl = imgUrl,
-            RefreshToken = GenerateRefreshToken(),
+            // Store hashed refresh token + expiry. Raw token is returned only to be set as HttpOnly cookie.
+            RefreshToken = null,
+            RefreshTokenExpiresAt = null,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
+        var refreshToken = GenerateRefreshToken();
+        SetRefreshToken(user, refreshToken);
 
         await _userRepository.AddAsync(user);
 
@@ -197,7 +222,7 @@ public class AuthService : IAuthService
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             LastActiveAt = user.LastActiveAt,
-            RefreshToken = user.RefreshToken
+            RefreshToken = refreshToken
         };
     }
 
@@ -256,8 +281,12 @@ public class AuthService : IAuthService
             IsApproved = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            RefreshToken = GenerateRefreshToken()
+            RefreshToken = null,
+            RefreshTokenExpiresAt = null
         };
+
+        var refreshToken = GenerateRefreshToken();
+        SetRefreshToken(user, refreshToken);
 
         await _userRepository.AddAsync(user);
 
@@ -285,7 +314,7 @@ public class AuthService : IAuthService
             Email = user.Email,
             Role = user.Role,
             Token = token,
-            RefreshToken = user.RefreshToken
+            RefreshToken = refreshToken
         };
     }
 
@@ -307,7 +336,7 @@ public class AuthService : IAuthService
         var token = _jwtTokenGenerator.GenerateToken(user);
         var refreshToken = GenerateRefreshToken();
 
-        user.RefreshToken = refreshToken;
+        SetRefreshToken(user, refreshToken);
         user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user);
@@ -386,7 +415,7 @@ public class AuthService : IAuthService
             var accessToken = _jwtTokenGenerator.GenerateToken(existingUser);
             var refreshToken = GenerateRefreshToken();
 
-            existingUser.RefreshToken = refreshToken;
+            SetRefreshToken(existingUser, refreshToken);
             existingUser.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(existingUser);
@@ -425,7 +454,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<string> RefreshAccessTokenAsync(string refreshToken)
+    public async Task<(string AccessToken, string RefreshToken)> RefreshAccessTokenAsync(string refreshToken)
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
@@ -438,15 +467,27 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("Invalid refresh token");
         }
 
+        // If expiry is present and is in the past, reject.
+        if (user.RefreshTokenExpiresAt.HasValue && user.RefreshTokenExpiresAt.Value < DateTime.UtcNow)
+        {
+            throw new InvalidOperationException("Refresh token expired");
+        }
+
         if (string.Equals(user.Role, "delivery", StringComparison.OrdinalIgnoreCase) &&
             !user.IsApproved)
         {
             throw new UnauthorizedAccessException("Delivery Not Approved Yet");
         }
 
-        var token = _jwtTokenGenerator.GenerateToken(user);
+        var accessToken = _jwtTokenGenerator.GenerateToken(user);
 
-        return token;
+        // Rotate refresh token on each refresh.
+        var newRefreshToken = GenerateRefreshToken();
+        SetRefreshToken(user, newRefreshToken);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user);
+
+        return (accessToken, newRefreshToken);
     }
 
     public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
@@ -507,6 +548,7 @@ public class AuthService : IAuthService
 
         user.Password = _passwordHasher.Hash(request.NewPassword);
         user.RefreshToken = null;
+        user.RefreshTokenExpiresAt = null;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user);

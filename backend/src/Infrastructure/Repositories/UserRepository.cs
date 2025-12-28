@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Recycling.Application.Abstractions;
+using Recycling.Application.Security;
 using Recycling.Domain.Entities;
 using Recycling.Infrastructure.Persistence;
 
@@ -34,7 +35,9 @@ public class UserRepository : IUserRepository
             return Task.FromResult<User?>(null);
         }
 
-        return _context.Users.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        // New format stores SHA-256 hash of the refresh token; legacy stored plaintext.
+        var hashed = RefreshTokenHasher.Sha256Hex(refreshToken);
+        return _context.Users.SingleOrDefaultAsync(u => u.RefreshToken == hashed || u.RefreshToken == refreshToken);
     }
 
     public async Task AddAsync(User user)

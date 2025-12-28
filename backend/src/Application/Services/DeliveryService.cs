@@ -83,6 +83,7 @@ public class DeliveryService : IDeliveryService
 
         user.IsApproved = false;
         user.RefreshToken = null;
+        user.RefreshTokenExpiresAt = null;
         user.UpdatedAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user);
 

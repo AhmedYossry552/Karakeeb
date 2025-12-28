@@ -17,6 +17,16 @@ public class ProfileController : ControllerBase
     private readonly IProfileService _profileService;
     private readonly IImageUploadService _imageUploadService;
 
+    private static readonly HashSet<string> AllowedImageContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp"
+    };
+
+    private const long MaxImageBytes = 5 * 1024 * 1024; // 5 MB
+
     public ProfileController(IProfileService profileService, IImageUploadService imageUploadService)
     {
         _profileService = profileService;
@@ -70,11 +80,23 @@ public class ProfileController : ControllerBase
 
     // POST /api/profile/upload-image
     [HttpPost("upload-image")]
+    [RequestSizeLimit(MaxImageBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxImageBytes)]
     public async Task<IActionResult> UploadProfileImage([FromForm] IFormFile image)
     {
         if (image == null || image.Length <= 0)
         {
             return BadRequest("Image is required.");
+        }
+
+        if (image.Length > MaxImageBytes)
+        {
+            return BadRequest($"Image is too large. Max size is {MaxImageBytes / (1024 * 1024)}MB.");
+        }
+
+        if (string.IsNullOrWhiteSpace(image.ContentType) || !AllowedImageContentTypes.Contains(image.ContentType))
+        {
+            return BadRequest("Unsupported image type. Allowed: jpeg, png, webp.");
         }
 
         var userId = GetUserId();

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Recycling.Application.Abstractions;
 using Recycling.Application.Contracts.Auth;
 
@@ -97,6 +98,7 @@ public class AuthController : ControllerBase
             if (user != null && !string.IsNullOrWhiteSpace(user.RefreshToken))
             {
                 user.RefreshToken = null;
+                user.RefreshTokenExpiresAt = null;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateAsync(user);
             }
@@ -111,6 +113,7 @@ public class AuthController : ControllerBase
                 if (user != null && !string.IsNullOrWhiteSpace(user.RefreshToken))
                 {
                     user.RefreshToken = null;
+                    user.RefreshTokenExpiresAt = null;
                     user.UpdatedAt = DateTime.UtcNow;
                     await _userRepository.UpdateAsync(user);
                 }
@@ -150,6 +153,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("initiateSignup")]
+    [EnableRateLimiting("auth-otp")]
     public async Task<IActionResult> InitiateSignup([FromBody] ForgotPasswordRequest request)
     {
         try
@@ -213,6 +217,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth-login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
@@ -281,6 +286,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("forgotPassword")]
+    [EnableRateLimiting("auth-otp")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         try
@@ -299,6 +305,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("resetPassword")]
+    [EnableRateLimiting("auth-otp")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
         try
@@ -317,6 +324,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting("auth-refresh")]
     public async Task<IActionResult> Refresh()
     {
         if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken) || string.IsNullOrWhiteSpace(refreshToken))
@@ -326,7 +334,8 @@ public class AuthController : ControllerBase
 
         try
         {
-            var accessToken = await _authService.RefreshAccessTokenAsync(refreshToken);
+            var (accessToken, newRefreshToken) = await _authService.RefreshAccessTokenAsync(refreshToken);
+            SetRefreshTokenCookie(newRefreshToken);
             return Ok(new { accessToken });
         }
         catch (UnauthorizedAccessException ex)

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Recycling.Application.Abstractions;
 using Recycling.Application.Contracts.Auth;
 using Recycling.Application.Contracts.Delivery;
@@ -23,24 +24,23 @@ public class DeliveryController : ControllerBase
     // POST /api/registerDelivery
     [HttpPost("registerDelivery")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-login")]
     public async Task<IActionResult> RegisterDelivery([FromBody] RegisterDeliveryRequest request)
     {
         try
         {
             var response = await _authService.RegisterDeliveryAsync(request);
-            if (!string.IsNullOrWhiteSpace(response.RefreshToken))
-            {
-                var cookieOptions = new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = HttpContext.Request.IsHttps,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = DateTimeOffset.UtcNow.AddDays(7),
-                    Path = "/"
-                };
 
-                Response.Cookies.Append("refreshToken", response.RefreshToken, cookieOptions);
-            }
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = HttpContext.Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                Path = "/"
+            };
+
+            Response.Cookies.Append("refreshToken", response.RefreshToken, cookieOptions);
 
             var user = new
             {

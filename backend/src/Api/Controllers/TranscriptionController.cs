@@ -11,6 +11,9 @@ namespace Recycling.Api.Controllers;
 [Route("api/[controller]")]
 public class TranscriptionController : ControllerBase
 {
+    private const long MaxAudioBytes = 25 * 1024 * 1024;
+    private const long MaxImageBytes = 10 * 1024 * 1024;
+
     private readonly TranscriptionService _transcriptionService;
     private readonly VoiceCartService _voiceCartService;
     private readonly IUserRepository _userRepository;
@@ -38,6 +41,8 @@ public class TranscriptionController : ControllerBase
 
     [Authorize]
     [HttpPost("transcribe")]
+    [RequestSizeLimit(MaxAudioBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxAudioBytes)]
     public async Task<IActionResult> Transcribe([FromForm] IFormFile audio, [FromForm] string language = "ar")
     {
         if (audio == null)
@@ -45,9 +50,16 @@ public class TranscriptionController : ControllerBase
             return BadRequest(new { success = false, message = "Audio file is missing." });
         }
 
-        if (audio.Length > 25 * 1024 * 1024)
+        if (audio.Length > MaxAudioBytes)
         {
             return BadRequest(new { success = false, message = "Audio file too large (max 25MB)." });
+        }
+
+        if (string.IsNullOrWhiteSpace(audio.ContentType) ||
+            (!audio.ContentType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)
+             && !string.Equals(audio.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase)))
+        {
+            return BadRequest(new { success = false, message = "Invalid audio file type." });
         }
 
         try
@@ -74,6 +86,8 @@ public class TranscriptionController : ControllerBase
 
     [Authorize]
     [HttpPost("voice-cart")]
+    [RequestSizeLimit(MaxAudioBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxAudioBytes)]
     public async Task<IActionResult> VoiceCart([FromForm] IFormFile audio, [FromForm] string language = "ar")
     {
         var userId = GetUserId();
@@ -89,9 +103,16 @@ public class TranscriptionController : ControllerBase
             return BadRequest(new { success = false, message = "Audio file is missing." });
         }
 
-        if (audio.Length > 25 * 1024 * 1024)
+        if (audio.Length > MaxAudioBytes)
         {
             return BadRequest(new { success = false, message = "Audio file too large (max 25MB)." });
+        }
+
+        if (string.IsNullOrWhiteSpace(audio.ContentType) ||
+            (!audio.ContentType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)
+             && !string.Equals(audio.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase)))
+        {
+            return BadRequest(new { success = false, message = "Invalid audio file type." });
         }
 
         try
@@ -161,6 +182,8 @@ public class TranscriptionController : ControllerBase
 
     [Authorize]
     [HttpPost("describe-image")]
+    [RequestSizeLimit(MaxImageBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxImageBytes)]
     public async Task<IActionResult> DescribeImage([FromForm] IFormFile image)
     {
         if (image == null)
@@ -168,7 +191,7 @@ public class TranscriptionController : ControllerBase
             return BadRequest(new { success = false, message = "Image file is missing." });
         }
 
-        if (image.Length > 10 * 1024 * 1024)
+        if (image.Length > MaxImageBytes)
         {
             return BadRequest(new { success = false, message = "Image file too large (max 10MB)." });
         }
