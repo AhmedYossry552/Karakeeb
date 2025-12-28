@@ -33,7 +33,7 @@ public class DeliveryController : ControllerBase
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = false,
+                    Secure = HttpContext.Request.IsHttps,
                     SameSite = SameSiteMode.Lax,
                     Expires = DateTimeOffset.UtcNow.AddDays(7),
                     Path = "/"

@@ -1,6 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -32,7 +33,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (token) {
     // Remove any quotes that might have been added by JSON.stringify
     const cleanToken = token.replace(/^["']|["']$/g, '');
-    console.log('🔑 Auth Interceptor: Adding token to request:', fullUrl, 'Token:', cleanToken.substring(0, 20) + '...');
+    if (!environment.production) {
+      console.log('🔑 Auth Interceptor: Adding token to request:', fullUrl);
+    }
     const clonedReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${cleanToken}`
@@ -41,7 +44,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(clonedReq);
   }
 
-  console.warn('⚠️ Auth Interceptor: No token found for request:', fullUrl);
+  if (!environment.production) {
+    console.warn('⚠️ Auth Interceptor: No token found for request:', fullUrl);
+  }
   // If no token and not an auth endpoint, still proceed (might be a public endpoint)
   return next(req);
 };

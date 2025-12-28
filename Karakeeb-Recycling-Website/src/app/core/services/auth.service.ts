@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, map } from 'rxjs';
 import { ApiService } from './api';
 import { StorageService } from './storage.service';
+import { environment } from '../../../environments/environment';
 
 export interface User {
   _id: string;
@@ -97,9 +98,7 @@ export class AuthService {
     let storedToken: string | null = null;
     if (typeof window !== 'undefined') {
       storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        console.log('🔑 Initializing auth: Token found in localStorage:', storedToken.substring(0, 20) + '...');
-      }
+      // Never log token contents (avoid leaking secrets in console).
       // Removed warning - it's expected that there might not be a token for unauthenticated users
     }
 
@@ -107,7 +106,9 @@ export class AuthService {
       this.userSubject.next(storedUser);
       this.tokenSubject.next(storedToken);
       this.determineDeliveryStatus(storedUser);
-      console.log('✅ Auth initialized: User and token loaded');
+      if (!environment.production) {
+        console.log('✅ Auth initialized: User and token loaded');
+      }
     }
     // Removed warning - it's expected that there might not be user/token for unauthenticated users
 
@@ -133,7 +134,9 @@ export class AuthService {
       // Store token as plain string, not JSON
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', token);
-        console.log('✅ Token stored in localStorage:', token.substring(0, 20) + '...');
+        if (!environment.production) {
+          console.log('✅ Token stored in localStorage');
+        }
       }
     } else {
       if (typeof window !== 'undefined') {
