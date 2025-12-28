@@ -162,6 +162,18 @@ export class AuthService {
   }
 
   logout(): void {
+    // Best-effort server-side logout (revokes refresh token + clears HttpOnly cookie).
+    // Do this before clearing localStorage so the request can still include Bearer token if needed.
+    try {
+      this.api.post('/auth/logout', {}).subscribe({
+        next: () => {},
+        error: () => {}
+      });
+    } catch {
+      // Ignore logout network errors; local logout still proceeds.
+    }
+
+    // Always clear local auth state.
     this.setUser(null);
     this.setToken(null);
     this.storage.removeItem('user');

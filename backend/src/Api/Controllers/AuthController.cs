@@ -12,11 +12,13 @@ namespace Recycling.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IUserRepository _userRepository;
     private readonly IWalletService _walletService;
 
-    public AuthController(IAuthService authService, IWalletService walletService)
+    public AuthController(IAuthService authService, IUserRepository userRepository, IWalletService walletService)
     {
         _authService = authService;
+        _userRepository = userRepository;
         _walletService = walletService;
     }
 
@@ -30,13 +32,95 @@ public class AuthController : ControllerBase
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = false,
+            Secure = HttpContext.Request.IsHttps,
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7),
             Path = "/"
         };
 
         Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+    }
+
+    private void ClearRefreshTokenCookie()
+    {
+        // Match the cookie path used when setting it.
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            Path = "/",
+            SameSite = SameSiteMode.Lax
+        });
+
+        // Extra safety for some clients: overwrite with expired cookie.
+        Response.Cookies.Append("refreshToken", string.Empty, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = HttpContext.Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            Path = "/"
+        });
+    }
+
+    private void ClearSessionCookie()
+    {
+        Response.Cookies.Delete("sessionId", new CookieOptions
+        {
+            Path = "/",
+            SameSite = SameSiteMode.Lax
+        });
+
+        Response.Cookies.Append("sessionId", string.Empty, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = HttpContext.Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            Path = "/"
+        });
+    }
+
+    // POST /api/auth/logout
+    // Revokes refresh token in DB (if present) and clears cookies.
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Logout()
+    {
+        string? cookieRefreshToken = null;
+        if (Request.Cookies.TryGetValue("refreshToken", out var refreshToken) && !string.IsNullOrWhiteSpace(refreshToken))
+        {
+            cookieRefreshToken = refreshToken;
+        }
+
+        if (!string.IsNullOrWhiteSpace(cookieRefreshToken))
+        {
+            var user = await _userRepository.GetByRefreshTokenAsync(cookieRefreshToken);
+            if (user != null && !string.IsNullOrWhiteSpace(user.RefreshToken))
+            {
+                user.RefreshToken = null;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(user);
+            }
+        }
+        else
+        {
+            // Fallback: if bearer token is present, revoke by user id.
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user != null && !string.IsNullOrWhiteSpace(user.RefreshToken))
+                {
+                    user.RefreshToken = null;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    await _userRepository.UpdateAsync(user);
+                }
+            }
+        }
+
+        ClearRefreshTokenCookie();
+        ClearSessionCookie();
+
+        return Ok(new { message = "Logged out" });
     }
 
     // GET /api/auth/validate

@@ -8,7 +8,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Get the full URL (could be absolute or relative)
   const fullUrl = req.url;
   
-  // Skip interceptor for auth endpoints (login, register, refresh, provider)
+  // Skip interceptor for auth endpoints that must NOT carry Authorization.
   const isAuthEndpoint = fullUrl.includes('/auth/login') || 
                          fullUrl.includes('/auth/register') || 
                          fullUrl.includes('/auth/refresh') || 
