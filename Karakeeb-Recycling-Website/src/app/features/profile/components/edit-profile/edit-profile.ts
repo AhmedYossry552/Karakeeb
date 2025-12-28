@@ -124,7 +124,7 @@ export class EditProfileComponent implements OnInit {
     this.imageError.set('');
     this.imageFile = file;
 
-    // Use Data URL (base64) so it can be sent as imgUrl without changing backend
+    // Use Data URL only for preview. Upload happens via /api/profile/upload-image.
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
@@ -174,11 +174,6 @@ export class EditProfileComponent implements OnInit {
       phoneNumber: `+20${this.phoneControl?.value}`
     };
 
-    // Now that backend ImgUrl column is nvarchar(max), we can safely send the image (base64 or URL)
-    if (this.imageFile && this.previewUrl()) {
-      updateData.imgUrl = this.previewUrl();
-    }
-
     // Use the single supported endpoint from backend: PUT /api/profile
     const endpoints = ['/profile'];
     let endpointIndex = 0;
@@ -206,29 +201,49 @@ export class EditProfileComponent implements OnInit {
               attachments: userData.Attachments || userData.attachments || this.user()?.attachments
             };
 
-            // If user selected a new image, override imgUrl (and profileImage attachment) locally
-            if (this.imageFile && this.previewUrl()) {
-              const img = this.previewUrl();
-              (user as any).imgUrl = img;
-              const attachments = (user as any).attachments || {};
-              attachments.profileImage = img;
-              (user as any).attachments = attachments;
+            const afterProfileUpdate = (updatedUser: User) => {
+              this.authService.setUser(updatedUser);
+              this.toastr.success('Profile updated successfully');
+
+              // Reset form state
+              this.imageFile = null;
+
+              // Role-based navigation
+              setTimeout(() => {
+                if (updatedUser.role === 'delivery') {
+                  this.router.navigate(['/deliverydashboard']);
+                } else {
+                  this.router.navigate(['/profile']);
+                }
+              }, 500);
+            };
+
+            // If image changed, upload it via backend endpoint (Cloudinary) then update local user with returned ImgUrl.
+            if (this.imageFile) {
+              const fd = new FormData();
+              fd.append('image', this.imageFile);
+              this.api.post<any>('/profile/upload-image', fd).subscribe({
+                next: (p: any) => {
+                  const imgUrl = p?.ImgUrl || p?.imgUrl;
+                  const merged: User = {
+                    ...user,
+                    imgUrl: imgUrl || user.imgUrl
+                  };
+                  const attachments = (merged as any).attachments || {};
+                  if (imgUrl) {
+                    attachments.profileImage = imgUrl;
+                  }
+                  (merged as any).attachments = attachments;
+                  afterProfileUpdate(merged);
+                },
+                error: () => {
+                  // If upload fails, still keep other profile fields updated.
+                  afterProfileUpdate(user);
+                }
+              });
+            } else {
+              afterProfileUpdate(user);
             }
-            
-            this.authService.setUser(user);
-            this.toastr.success('Profile updated successfully');
-            
-            // Reset form state
-            this.imageFile = null;
-            
-            // Role-based navigation
-            setTimeout(() => {
-              if (user.role === 'delivery') {
-                this.router.navigate(['/deliverydashboard']);
-              } else {
-                this.router.navigate(['/profile']);
-              }
-            }, 500);
           } else {
             // If response doesn't have user data, just update locally
             const currentUser = this.user();
@@ -240,28 +255,40 @@ export class EditProfileComponent implements OnInit {
                 updatedAt: new Date().toISOString()
               };
 
-              // Ensure local imgUrl / profileImage are updated even if backend doesn't return them
-              if (this.imageFile && this.previewUrl()) {
-                const img = this.previewUrl();
-                (updatedUser as any).imgUrl = img;
-                const attachments = (updatedUser as any).attachments || {};
-                attachments.profileImage = img;
-                (updatedUser as any).attachments = attachments;
-              }
+              const afterProfileUpdate = (finalUser: User) => {
+                this.authService.setUser(finalUser);
+                this.toastr.success('Profile updated successfully');
+                setTimeout(() => {
+                  if (finalUser.role === 'delivery') {
+                    this.router.navigate(['/deliverydashboard']);
+                  } else {
+                    this.router.navigate(['/profile']);
+                  }
+                }, 500);
+              };
 
-              // Ensure local imgUrl is updated even if backend doesn't return it
-              if (this.imageFile && this.previewUrl()) {
-                (updatedUser as any).imgUrl = this.previewUrl();
+              if (this.imageFile) {
+                const fd = new FormData();
+                fd.append('image', this.imageFile);
+                this.api.post<any>('/profile/upload-image', fd).subscribe({
+                  next: (p: any) => {
+                    const imgUrl = p?.ImgUrl || p?.imgUrl;
+                    const merged: User = {
+                      ...updatedUser,
+                      imgUrl: imgUrl || (updatedUser as any).imgUrl
+                    };
+                    const attachments = (merged as any).attachments || {};
+                    if (imgUrl) {
+                      attachments.profileImage = imgUrl;
+                    }
+                    (merged as any).attachments = attachments;
+                    afterProfileUpdate(merged);
+                  },
+                  error: () => afterProfileUpdate(updatedUser)
+                });
+              } else {
+                afterProfileUpdate(updatedUser);
               }
-              this.authService.setUser(updatedUser);
-              this.toastr.success('Profile updated successfully');
-              setTimeout(() => {
-                if (updatedUser.role === 'delivery') {
-                  this.router.navigate(['/deliverydashboard']);
-                } else {
-                  this.router.navigate(['/profile']);
-                }
-              }, 500);
             }
           }
           this.isSaving.set(false);

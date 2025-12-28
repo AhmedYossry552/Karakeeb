@@ -50,6 +50,14 @@ public class ProfileController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
+        if (!string.IsNullOrWhiteSpace(request.ImgUrl) && request.ImgUrl.Length > 1024)
+        {
+            return BadRequest(new
+            {
+                message = "Profile image payload is too large. Use /api/profile/upload-image instead of sending base64 in ImgUrl."
+            });
+        }
+
         var userId = GetUserId();
         var profile = await _profileService.UpdateProfileAsync(userId, request);
         if (profile == null)

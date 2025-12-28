@@ -113,11 +113,6 @@ export class EditProfileComponent implements OnInit {
         updateData.bio = this.profileForm.get('bio')?.value;
       }
 
-      // Send avatar image as imgUrl (base64) – backend ImgUrl is nvarchar(max)
-      if (this.selectedFile && this.imagePreview()) {
-        updateData.imgUrl = this.imagePreview();
-      }
-
       // Use the same single endpoint as customer/buyer: PUT /api/profile
       const response = await this.api.put<any>('/profile', updateData).toPromise();
 
@@ -142,13 +137,22 @@ export class EditProfileComponent implements OnInit {
           bio: userData.Bio || userData.bio || (updateData.bio ?? (currentUser as any).bio)
         };
 
-        // If a new image was selected, override imgUrl and deliveryImage locally
-        if (this.selectedFile && this.imagePreview()) {
-          const img = this.imagePreview();
-          (user as any).imgUrl = img;
-          const attachments = (user as any).attachments || {};
-          attachments.deliveryImage = img;
-          (user as any).attachments = attachments;
+        // If image changed, upload it via backend endpoint (Cloudinary) then update local user with returned ImgUrl.
+        if (this.selectedFile) {
+          const fd = new FormData();
+          fd.append('image', this.selectedFile);
+          try {
+            const p = await this.api.post<any>('/profile/upload-image', fd).toPromise();
+            const imgUrl = p?.ImgUrl || p?.imgUrl;
+            if (imgUrl) {
+              (user as any).imgUrl = imgUrl;
+              const attachments = (user as any).attachments || {};
+              attachments.deliveryImage = imgUrl;
+              (user as any).attachments = attachments;
+            }
+          } catch {
+            // ignore upload errors; profile data update already succeeded
+          }
         }
 
         this.authService.setUser(user);
@@ -162,12 +166,21 @@ export class EditProfileComponent implements OnInit {
           updatedAt: new Date().toISOString()
         };
 
-        if (this.selectedFile && this.imagePreview()) {
-          const img = this.imagePreview();
-          (updatedUser as any).imgUrl = img;
-          const attachments = (updatedUser as any).attachments || {};
-          attachments.deliveryImage = img;
-          (updatedUser as any).attachments = attachments;
+        if (this.selectedFile) {
+          const fd = new FormData();
+          fd.append('image', this.selectedFile);
+          try {
+            const p = await this.api.post<any>('/profile/upload-image', fd).toPromise();
+            const imgUrl = p?.ImgUrl || p?.imgUrl;
+            if (imgUrl) {
+              (updatedUser as any).imgUrl = imgUrl;
+              const attachments = (updatedUser as any).attachments || {};
+              attachments.deliveryImage = imgUrl;
+              (updatedUser as any).attachments = attachments;
+            }
+          } catch {
+            // ignore
+          }
         }
 
         this.authService.setUser(updatedUser);
