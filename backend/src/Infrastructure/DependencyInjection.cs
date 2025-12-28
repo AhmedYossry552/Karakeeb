@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Recycling.Application.Abstractions;
 using Recycling.Application.Options;
 using Recycling.Infrastructure.Authentication;
+using Recycling.Infrastructure.Media;
 using Recycling.Infrastructure.Persistence;
 using Recycling.Infrastructure.Repositories;
 using Recycling.Infrastructure.Email;
@@ -18,6 +19,7 @@ public static class DependencyInjection
     {
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
+        services.Configure<CloudinarySettings>(configuration.GetSection("Cloudinary"));
 
         static string? BuildPostgresConnectionStringFromDatabaseUrl(string? databaseUrl)
         {
@@ -110,6 +112,8 @@ public static class DependencyInjection
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<ISubscriberRepository, SubscriberRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
+
+        services.AddSingleton<IImageUploadService, CloudinaryImageUploadService>();
 
         return services;
     }

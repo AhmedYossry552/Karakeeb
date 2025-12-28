@@ -19,12 +19,18 @@ public class OrdersController : ControllerBase
     private readonly IOrderService _orderService;
     private readonly IPointsService _pointsService;
     private readonly IAddressService _addressService;
+    private readonly IImageUploadService _imageUploadService;
 
-    public OrdersController(IOrderService orderService, IPointsService pointsService, IAddressService addressService)
+    public OrdersController(
+        IOrderService orderService,
+        IPointsService pointsService,
+        IAddressService addressService,
+        IImageUploadService imageUploadService)
     {
         _orderService = orderService;
         _pointsService = pointsService;
         _addressService = addressService;
+        _imageUploadService = imageUploadService;
     }
 
     private string GetUserId()
@@ -264,14 +270,34 @@ public class OrdersController : ControllerBase
 
         if (request.ProofPhoto != null && request.ProofPhoto.Length > 0)
         {
-            // Store original file name as metadata
-            photoPath = request.ProofPhoto.FileName;
-
-            // Convert uploaded image to a Base64 data URL so it can be displayed directly in the browser,
-            // similar to how delivery registration images are stored.
-            using (var ms = new MemoryStream())
+            if (_imageUploadService.IsEnabled)
             {
-                await request.ProofPhoto.CopyToAsync(ms);
+                try
+                {
+                    await using var stream = request.ProofPhoto.OpenReadStream();
+                    var upload = await _imageUploadService.UploadImageAsync(
+                        stream,
+                        fileName: request.ProofPhoto.FileName,
+                        folder: "order-proofs",
+                        contentType: request.ProofPhoto.ContentType,
+                        cancellationToken: HttpContext.RequestAborted);
+
+                    // Store Cloudinary public_id as PhotoPath (lightweight identifier) and secure_url as PhotoUrl.
+                    photoPath = upload.PublicId;
+                    photoUrl = upload.SecureUrl;
+                }
+                catch
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Proof photo upload failed.");
+                }
+            }
+            else
+            {
+                // Fallback: Convert uploaded image to a Base64 data URL (keeps existing behavior for dev).
+                photoPath = request.ProofPhoto.FileName;
+
+                using var ms = new MemoryStream();
+                await request.ProofPhoto.CopyToAsync(ms, HttpContext.RequestAborted);
                 var bytes = ms.ToArray();
                 var base64 = Convert.ToBase64String(bytes);
 
