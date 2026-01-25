@@ -1,10 +1,8 @@
 export const environment = {
   production: true,
 
-  // IMPORTANT:
-  // Replace with your Railway backend public URL after deploying the API.
-  // Example: 'https://<your-backend-service>.up.railway.app/api'
-  apiUrl: 'https://karakeeb-production.up.railway.app/api',
+  // Hugging Face Backend URL
+  apiUrl: 'https://ahmedyossry552-karakeep-api.hf.space/api',
 
   googleClientId: '330056808594-7m8k48fm0s673e7cgvt1t80443vd4qdv.apps.googleusercontent.com',
 
