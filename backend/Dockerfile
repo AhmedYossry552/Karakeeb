@@ -20,6 +20,7 @@ COPY --from=build /app/publish .
 
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Railway sets PORT; default to 8080 locally.
-EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://0.0.0.0:${PORT:-8080} dotnet Recycling.Api.dll"]
+# Hugging Face Spaces uses port 7860
+EXPOSE 7860
+ENV PORT=7860
+ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://0.0.0.0:7860 dotnet Recycling.Api.dll"]
